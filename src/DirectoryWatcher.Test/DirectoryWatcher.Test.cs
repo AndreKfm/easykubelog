@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using Xunit;
 
-namespace DirectoryWatcher.Test
+namespace DirectoryWatching.Test
 {
     public class DirectoryWatcherTests
     {
@@ -13,10 +13,9 @@ namespace DirectoryWatcher.Test
         public void CreateDirectoryWatcher()
         {
             Mock<IFileSystemWatcher> watcher = new Mock<IFileSystemWatcher>();
-            
-            DirectoryWatcher w1 = new DirectoryWatcher();
-            DirectoryWatcher w2 = new DirectoryWatcher(null);
-            DirectoryWatcher w3 = new DirectoryWatcher(watcher.Object); ;
+            _ = new DirectoryWatcher();
+            _ = new DirectoryWatcher(null);
+            _ = new DirectoryWatcher(watcher.Object); ;
         }
 
         [Fact]
@@ -32,7 +31,16 @@ namespace DirectoryWatcher.Test
         {
             Mock<IFileSystemWatcher> watcher = new Mock<IFileSystemWatcher>();
             DirectoryWatcher w = new DirectoryWatcher(watcher.Object);
-            w.Open("/test.txt", "*.log");
+            w.Open("/test.txt", new FilterAndCallbackArgument("*.log"));
+        }
+
+        [Fact]
+        public void Open_Dispose()
+        {
+            Mock<IFileSystemWatcher> watcher = new Mock<IFileSystemWatcher>();
+            DirectoryWatcher w = new DirectoryWatcher(watcher.Object);
+            w.Open("/test.txt");
+            w.Dispose();
         }
 
         [Fact]
@@ -40,7 +48,7 @@ namespace DirectoryWatcher.Test
         {
             Mock<IFileSystemWatcher> watcher = new Mock<IFileSystemWatcher>();
             DirectoryWatcher w = new DirectoryWatcher(watcher.Object);
-            w.Open("/test.txt");
+            w.Open("/test1.txt");
             w.Dispose();
             Assert.Throws<System.NullReferenceException>(() => w.Open("/test2.txt"));            
         }
