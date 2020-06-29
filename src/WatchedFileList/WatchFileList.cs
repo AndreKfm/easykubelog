@@ -29,10 +29,11 @@ namespace WatchedFileList
 
         public void Call()
         {
-            if (stopwatch == null || stopwatch.ElapsedMilliseconds > _throttlingInMilliseconds)
+            if (_throttlingInMilliseconds <= 0 || stopwatch == null || stopwatch.ElapsedMilliseconds > _throttlingInMilliseconds)
             {
                 // Initially calldirectly or if stopwatch is elapsed
-                stopwatch = Stopwatch.StartNew();
+                if (_throttlingInMilliseconds > 0) 
+                    stopwatch = Stopwatch.StartNew();
                 _callback();
                 return; 
             }
@@ -71,8 +72,8 @@ namespace WatchedFileList
             source.Cancel();
         }
 
-        SemaphoreSlim _sem = new SemaphoreSlim(0);
-        CancellationTokenSource source = new CancellationTokenSource();
+        readonly SemaphoreSlim _sem = new SemaphoreSlim(0);
+        readonly CancellationTokenSource source = new CancellationTokenSource();
 
         Stopwatch stopwatch = null;
         readonly int _throttlingInMilliseconds;
@@ -80,7 +81,7 @@ namespace WatchedFileList
     }
 
 
-    public class WatchFileList
+    public class WatchFileList : IDisposable
     {
         public WatchFileList(string directoryToWatch, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
         {
@@ -98,13 +99,12 @@ namespace WatchedFileList
         public void Start(string fileFilter, Action<ReadOnlyCollection<FileEntry>> fileListChangeCallback)
         {
             DiscardOldWatcher();
-            lastCall = null;
             _watcher = new DirectoryWatcher(_watcherInterface);
             _watcher.Open(_directoryToWatch, new FilterAndCallbackArgument(fileFilter, Callback));
             _fileListChangeCallback = fileListChangeCallback;
             _throttleCalls = new ThrottleCalls(CallAfterChange, _updateRatioInMilliseconds);
-
         }
+
 
         void CallAfterChange()
         {
@@ -154,15 +154,19 @@ namespace WatchedFileList
 
         }
 
-        object syncListAccess = new object();
+        public void Dispose()
+        {
+            DiscardOldWatcher();
+        }
+
+        readonly object syncListAccess = new object();
         
         List<FileEntry> currentList;
 
-        Stopwatch lastCall = null;
         DirectoryWatcher _watcher;
-        IFileSystemWatcher _watcherInterface;
-        string _directoryToWatch;
-        int _updateRatioInMilliseconds;
+        readonly IFileSystemWatcher _watcherInterface;
+        readonly string _directoryToWatch;
+        readonly int _updateRatioInMilliseconds;
         Action<ReadOnlyCollection<FileEntry>>  _fileListChangeCallback;
         ThrottleCalls _throttleCalls;
     }

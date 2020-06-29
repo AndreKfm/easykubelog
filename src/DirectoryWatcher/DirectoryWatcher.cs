@@ -120,7 +120,7 @@ namespace DirectoryWatching
 
         public void SetCallback(Action<object, WatcherCallbackArgs> action)
         {
-            _watcher.EnableRaisingEvents = false; 
+            if (_watcher != null) _watcher.EnableRaisingEvents = false; 
             _callbackFileSystemChanged = action;
             WatcherSetEvents();
         }
@@ -144,7 +144,7 @@ namespace DirectoryWatching
 
         private void WatcherChanged(object sender, FileSystemEventArgs e)
         {
-            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, IFileSystemWatcherChangeType.Changed));
+            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, IFileSystemWatcherChangeType.Created));
         }
         private void WatcherCreated(object sender, FileSystemEventArgs e)
         {
