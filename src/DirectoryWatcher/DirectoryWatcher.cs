@@ -144,11 +144,11 @@ namespace DirectoryWatching
 
         private void WatcherChanged(object sender, FileSystemEventArgs e)
         {
-            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, IFileSystemWatcherChangeType.Created));
+            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, IFileSystemWatcherChangeType.Changed));
         }
         private void WatcherCreated(object sender, FileSystemEventArgs e)
         {
-            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, IFileSystemWatcherChangeType.Changed));
+            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, IFileSystemWatcherChangeType.Created));
         }
 
         private void WatcherRenamed(object sender, RenamedEventArgs e)
