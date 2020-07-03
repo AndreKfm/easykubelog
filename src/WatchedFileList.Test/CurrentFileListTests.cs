@@ -11,7 +11,7 @@ namespace WatchedFileList.Test
         [Fact]
         public void AddFile()
         {
-            Mock<IFileReadonlyWrapper> m = new Mock<IFileReadonlyWrapper>();
+            Mock<IFile> m = new Mock<IFile>();
             CurrentFileList c = new CurrentFileList();
             c.AddFile(new CurrentFileEntry("test1.txt", m.Object));
             var l = c.GetList();
@@ -22,7 +22,7 @@ namespace WatchedFileList.Test
         [Fact]
         public void RemoveFile()
         {
-            Mock<IFileReadonlyWrapper> m = new Mock<IFileReadonlyWrapper>();
+            Mock<IFile> m = new Mock<IFile>();
             CurrentFileList c = new CurrentFileList();
             Assert.False(c.RemoveFile("test1.txt"));
             Assert.True(c.AddFile(new CurrentFileEntry("test1.txt", m.Object)));

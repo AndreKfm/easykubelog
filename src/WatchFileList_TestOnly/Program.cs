@@ -17,6 +17,7 @@ namespace WatchFileList_TestOnly
 
         static void Main(string[] args)
         {
+
             string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\xwatchertest";
 
             CurrentFileListTest(directory); return; 
