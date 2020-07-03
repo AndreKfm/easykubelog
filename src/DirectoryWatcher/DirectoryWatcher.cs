@@ -169,6 +169,7 @@ namespace DirectoryWatching
                 _watcher = fileFilter == String.Empty ? new FileSystemWatcher(directoryPath) :
                                                         new FileSystemWatcher(directoryPath, fileFilter);
 
+                _watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.FileName | NotifyFilters.LastWrite;
                 if (callbackAndFilter != null)
                     SetCallback(callbackAndFilter.action);
                 return true;
