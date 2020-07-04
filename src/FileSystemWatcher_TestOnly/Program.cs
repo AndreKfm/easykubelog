@@ -79,7 +79,7 @@ namespace FileSystemWatcher_TestOnly
             w.Open(directory, new FilterAndCallbackArgument("*.txt", 
                 (object sender, WatcherCallbackArgs args) =>
                 {
-                    Console.WriteLine($"{args.ChangeType} {args.Name}");
+                    Console.WriteLine($"{args.ChangeType} {args.FileName}");
                 }
                 ));
             

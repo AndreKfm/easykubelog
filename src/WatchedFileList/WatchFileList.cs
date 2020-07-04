@@ -81,6 +81,7 @@ namespace WatchedFileList
     }
 
 
+
     public class WatchFileList : IDisposable
     {
         public WatchFileList(string directoryToWatch, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
@@ -136,7 +137,7 @@ namespace WatchedFileList
                 for (int i = 0; i < currentList.Count; ++i)
                 {
                     
-                    if (currentList[i].FileName == args.Name)
+                    if (currentList[i].FileName == args.FileName)
                     {
                         currentList[i].LastChanges |= args.ChangeType;
                         found = true;
@@ -146,7 +147,7 @@ namespace WatchedFileList
 
                 if (!found)
                 {
-                    currentList.Add(new FileEntry {FileName = args.Name, LastChanges = args.ChangeType });
+                    currentList.Add(new FileEntry {FileName = args.FileName, LastChanges = args.ChangeType });
                 }
 
                 _throttleCalls.Call();

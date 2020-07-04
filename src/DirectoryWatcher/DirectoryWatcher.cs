@@ -33,12 +33,12 @@ namespace DirectoryWatching
 
     public class WatcherCallbackArgs
     {
-        public WatcherCallbackArgs(string name, IFileSystemWatcherChangeType changeType)
+        public WatcherCallbackArgs(string fileName, IFileSystemWatcherChangeType changeType)
         {
-            Name = name;
+            FileName = fileName;
             ChangeType = changeType;
         }
-        public string Name { get; private set; }
+        public string FileName { get; private set; }
 
         public IFileSystemWatcherChangeType ChangeType { get; private set; }
     }

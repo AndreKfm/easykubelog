@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using WatchedFileList;
 
 namespace WatchFileList_TestOnly
@@ -10,8 +11,17 @@ namespace WatchFileList_TestOnly
         {
             AutoCurrentFileList a = new AutoCurrentFileList();
             a.Start(directory);
+            var task = a.BlockingReadAsyncNewOutput((output, token) =>
+            {
+                Console.WriteLine($"XXX: {output.Filename} {output.Lines}");
+                Task.Delay(100000).Wait();
+                //return AutoCurrentFileList.ReadAsyncOperation.ContinueRead;
+            });
             Console.WriteLine("CurrentFileListTest wait...");
             Console.ReadLine();
+            a.Stop();
+
+            Task.Delay(1000).Wait();
 
         }
 
