@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using WatchedFileList;
 
@@ -28,7 +29,10 @@ namespace WatchFileList_TestOnly
         static void Main(string[] args)
         {
 
-            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\xwatchertest";
+
+
+
+            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\logs";
 
             CurrentFileListTest(directory); return; 
 
