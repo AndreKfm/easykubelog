@@ -34,9 +34,8 @@ namespace EasyLogService.Services
         {
             try
             {
-                var replaced = line.Replace("\r", ""); // Ensure to ignore carriage returns
-                if (replaced.Trim().Length > 0)
-                    return JsonSerializer.Deserialize<KubernetesLogEntry>(replaced);
+                if (line.Length > 0)
+                    return JsonSerializer.Deserialize<KubernetesLogEntry>(line);
             }
             catch (Exception) { }
             return Default;
@@ -52,6 +51,8 @@ namespace EasyLogService.Services
     public interface ICentralLogService : IDisposable
     {
         Task<bool> AddLogEntry(LogEntry newEntry);
+        public void Start();
+        public void Stop();
     }
 
 
@@ -60,24 +61,30 @@ namespace EasyLogService.Services
 
     public class CentralLogServiceCache
     {
+        readonly int _maxLines;
+        public CentralLogServiceCache(int maxLines)
+        {
+            _maxLines = maxLines;
+        }
+
         TreeDictionary<DateTime, KubernetesLogEntry> _logCache = new TreeDictionary<DateTime, KubernetesLogEntry>();
         public void AddEntry(LogEntry entry)
         {
             var lines = entry.Lines.Split('\n');
             foreach (string line in lines)
             {
-                if (line.Trim().Length > 0)
+                if (line.Length > 0)
                 {
                     var newEntry = KubernetesLogEntry.Parse(line);
                     if (!newEntry.IsDefault)
                     {
-                        // 
+                        if (_logCache.Count > _maxLines)
+                            _logCache.Remove(_logCache.First().Key);
+                        _logCache.Add(newEntry.time, newEntry);
                     }
                 }
             }
-            //_logCache.Add()
         }
-
 
     }
 
@@ -96,13 +103,14 @@ namespace EasyLogService.Services
         }
 
 
-        void Start()
+        public void Start()
         {
             Stop();
+            _source = new CancellationTokenSource();
             _currentTask = Task.Factory.StartNew(WaitForNewEntriesAndWrite, TaskCreationOptions.LongRunning);
         }
 
-        void Stop()
+        public void Stop()
         {
             _source.Cancel();
             _currentTask.Wait();

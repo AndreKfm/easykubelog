@@ -22,7 +22,7 @@ namespace EasylogService.Test
             List<KubernetesLogEntry> list = new List<KubernetesLogEntry>();
             foreach (var line in lines)
             {
-                if (line.Trim().Length > 0)
+                if (line.Length > 0)
                 {
                     var parsed = KubernetesLogEntry.Parse(line);
                     Assert.True(parsed.IsDefault == false);

@@ -15,7 +15,6 @@ namespace WatchFileList_TestOnly
             var task = a.BlockingReadAsyncNewOutput((output, token) =>
             {
                 Console.WriteLine($"XXX: {output.Filename} {output.Lines}");
-                Task.Delay(100000).Wait();
                 //return AutoCurrentFileList.ReadAsyncOperation.ContinueRead;
             });
             Console.WriteLine("CurrentFileListTest wait...");
@@ -32,7 +31,7 @@ namespace WatchFileList_TestOnly
 
 
 
-            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\logs";
+            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\logtest";
 
             CurrentFileListTest(directory); return; 
 

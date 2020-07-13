@@ -32,8 +32,14 @@ namespace WatchedFileList
         public readonly string Filename;
     }
 
+    public interface IAutoCurrentFileList : IDisposable
+    {
+        public void Start(string directoryToWatch, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0);
+        public void Stop();
+        public Task BlockingReadAsyncNewOutput(Action<NewOutput, CancellationToken> callback); // Stop() will abort read
+    }
 
-    public class AutoCurrentFileList : IDisposable
+    public class AutoCurrentFileList : IAutoCurrentFileList
     {
         WatchFileList _watcher;
         CurrentFileList fileList;

@@ -7,13 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher", "..\Dire
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher.Test", "..\DirectoryWatcher.Test\DirectoryWatcher.Test.csproj", "{D0F45582-5615-4ADB-8847-6049628D18B0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystemWatcher_Console", "..\FileSystemWatcher_TestOnly\FileSystemWatcher_Console.csproj", "{9916CF7A-B631-4E2B-A131-897FA970C8A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystemWatcher.Console", "..\FileSystemWatcher_TestOnly\FileSystemWatcher.Console.csproj", "{9916CF7A-B631-4E2B-A131-897FA970C8A9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatchedFileList", "..\WatchedFileList\WatchedFileList.csproj", "{1A4D2EFA-DD92-4423-86F3-F54F87D9566B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatchedFileList.Test", "..\WatchedFileList.Test\WatchedFileList.Test.csproj", "{ECB4C9A1-D3D9-4825-8A07-0FFC33AA9C9C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatchFileList_Console", "..\WatchFileList_TestOnly\WatchFileList_Console.csproj", "{28EEC84F-4C6D-4423-B978-122E8E731FB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatchFileList.Console", "..\WatchFileList_TestOnly\WatchFileList.Console.csproj", "{28EEC84F-4C6D-4423-B978-122E8E731FB2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ConsoleTestApps", "ConsoleTestApps", "{9AC1FD91-034B-49F1-947B-CF52C5F826CC}"
 EndProject
@@ -21,9 +21,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DemonService", "DemonServic
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LogService", "LogService", "{E07F46A2-C8A9-4A87-9016-7475A595508F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyLogService", "EasyLogService\EasyLogService.csproj", "{93063EC9-AA3C-421D-B0F6-E88D1390134D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyLogService", "EasyLogService\EasyLogService.csproj", "{93063EC9-AA3C-421D-B0F6-E88D1390134D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasylogService.Test", "EasylogService.Test\EasylogService.Test.csproj", "{78C50860-B1CC-4848-9260-C8AD28C04128}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasylogService.Test", "EasylogService.Test\EasylogService.Test.csproj", "{78C50860-B1CC-4848-9260-C8AD28C04128}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LogSimulator", "LogSimulator", "{F169B6BA-B6B2-4F93-92E9-4386EC60628F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogSimulator.Console", "LogSimulator.Console\LogSimulator.Console.csproj", "{BE808EED-C802-4F7E-B12B-6D05E011E42F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +67,10 @@ Global
 		{78C50860-B1CC-4848-9260-C8AD28C04128}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78C50860-B1CC-4848-9260-C8AD28C04128}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78C50860-B1CC-4848-9260-C8AD28C04128}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE808EED-C802-4F7E-B12B-6D05E011E42F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE808EED-C802-4F7E-B12B-6D05E011E42F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE808EED-C802-4F7E-B12B-6D05E011E42F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE808EED-C802-4F7E-B12B-6D05E011E42F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -77,6 +85,7 @@ Global
 		{9AC1FD91-034B-49F1-947B-CF52C5F826CC} = {ABC4148E-CD11-4FBF-AC80-C7919A5BE4FB}
 		{93063EC9-AA3C-421D-B0F6-E88D1390134D} = {E07F46A2-C8A9-4A87-9016-7475A595508F}
 		{78C50860-B1CC-4848-9260-C8AD28C04128} = {E07F46A2-C8A9-4A87-9016-7475A595508F}
+		{BE808EED-C802-4F7E-B12B-6D05E011E42F} = {F169B6BA-B6B2-4F93-92E9-4386EC60628F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9D1BF3C4-FFEE-43FF-8016-7458E4F2617E}
