@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FileListClasses;
+using MediatR;
 
 namespace EasyLogService
 {
@@ -80,6 +81,8 @@ namespace EasyLogService
 
             services.AddServerSideBlazor();
 
+            services.AddMediatR(typeof(Startup));
+
         }
 
         public void ConfigureOwnServices(ICentralLogServiceWatcher centralWatcher)
@@ -110,6 +113,7 @@ namespace EasyLogService
                 endpoints.MapFallbackToPage("/Main");
             });
 
+            //app.AddComponent<App>("app");
 
             // Call ConfigureOwnServices with variable number of arguments automatically resolved by DI
             StartupHelper.RetrieveServicesAndCallMethod(this, "ConfigureOwnServices", app.ApplicationServices);

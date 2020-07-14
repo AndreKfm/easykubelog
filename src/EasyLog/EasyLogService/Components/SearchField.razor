@@ -1,15 +1,23 @@
-﻿<input @bind-value="text" @bind-value:event="oninput" @onkeypress="NewInput" />
-<p>You entered: @text</p>
-<p>By Event: @searchText</p>
+﻿@page "/searchfield"
+<input @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInput" />
+<p>You entered: @_text</p>
+<p>By Event: @_searchText</p>
+<p>Completed = @_completed</p>
+
+@inject IMediator  _mediator;
+@using EasyLogService.Commands;
+
 
 @code {
 
-    string searchText = String.Empty;
-    private string text = String.Empty;
+    string _searchText = String.Empty;
+    private string _text = String.Empty;
+    private bool _completed; 
 
 
-    private void NewInput()
+    private async Task NewInput()
     {
-        searchText = text;
+        _searchText = _text;
+        await _mediator.Send(new SearchRequest(_searchText));
     }
 }
