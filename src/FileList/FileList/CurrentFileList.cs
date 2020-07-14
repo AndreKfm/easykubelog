@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Reflection.Metadata.Ecma335;
 
-namespace WatchedFileList
+namespace FileListClasses
 {
 
     public interface IGetFile

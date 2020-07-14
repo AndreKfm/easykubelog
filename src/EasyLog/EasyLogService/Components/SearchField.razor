@@ -1,0 +1,15 @@
+﻿<input @bind-value="text" @bind-value:event="oninput" @onkeypress="NewInput" />
+<p>You entered: @text</p>
+<p>By Event: @searchText</p>
+
+@code {
+
+    string searchText = String.Empty;
+    private string text = String.Empty;
+
+
+    private void NewInput()
+    {
+        searchText = text;
+    }
+}

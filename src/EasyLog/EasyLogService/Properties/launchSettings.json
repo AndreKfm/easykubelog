@@ -21,7 +21,7 @@
       "commandName": "Project",
       "commandLineArgs": "WatchDirectory=C:\\test\\deleteme\\logtest",
       "launchBrowser": true,
-      "launchUrl": "weatherforecast",
+      "launchUrl": "/",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

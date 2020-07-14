@@ -11,11 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSystemWatcher_TestOnly"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestApps", "TestApps", "{0A8AF4A9-F513-483E-843F-87763B6D16A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchedFileList", "..\WatchedFileList\WatchedFileList.csproj", "{95A1D192-C983-4CC9-86DD-8F5119467DC3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileList", "..\FileList\FileList.csproj", "{95A1D192-C983-4CC9-86DD-8F5119467DC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchedFileList.Test", "..\WatchedFileList.Test\WatchedFileList.Test.csproj", "{3A368791-91EE-4387-8BC1-AFC52FFE5C0E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileList.Test", "..\FileList.Test\FileList.Test.csproj", "{3A368791-91EE-4387-8BC1-AFC52FFE5C0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatchFileList_TestOnly", "..\WatchFileList_TestOnly\WatchFileList_TestOnly.csproj", "{DFF6F5A5-A6AB-4C42-BFC9-65051CD7932E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileList_TestOnly", "..\FileList_TestOnly\FileList_TestOnly.csproj", "{DFF6F5A5-A6AB-4C42-BFC9-65051CD7932E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace WatchedFileList
+namespace FileListClasses
 {
     public class GetFileWrapper : IGetFile
     {
@@ -41,7 +41,7 @@ namespace WatchedFileList
 
     public class AutoCurrentFileList : IAutoCurrentFileList
     {
-        WatchFileList _watcher;
+        FileList _watcher;
         CurrentFileList fileList;
         string _directoryToWatch;
         readonly IGetFile _getFile;
@@ -66,7 +66,7 @@ namespace WatchedFileList
         {
             Stop();
             _directoryToWatch = directoryToWatch;
-            _watcher = new WatchFileList(directoryToWatch, watcherInterface, updateRatioInMilliseconds);
+            _watcher = new FileList(directoryToWatch, watcherInterface, updateRatioInMilliseconds);
             _source = new CancellationTokenSource(); ;
             fileList = new CurrentFileList();
 

@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 
 
-namespace WatchedFileList.Test
+
+namespace FileListClasses.Test
 {
     using Moq;
     using System.IO;
@@ -13,7 +14,7 @@ namespace WatchedFileList.Test
         [Fact]
         public void AddFile()
         {
-            Mock<WatchedFileList.IFile> m = new Mock<WatchedFileList.IFile>();
+            Mock<IFile> m = new Mock<IFile>();
             CurrentFileList c = new CurrentFileList();
             c.AddFile(new CurrentFileEntry("test1.txt", m.Object));
             var l = c.GetList();
@@ -24,7 +25,7 @@ namespace WatchedFileList.Test
         [Fact]
         public void RemoveFile()
         {
-            Mock<WatchedFileList.IFile> m = new Mock<WatchedFileList.IFile>();
+            Mock<IFile> m = new Mock<IFile>();
             CurrentFileList c = new CurrentFileList();
             Assert.False(c.RemoveFile("test1.txt"));
             Assert.True(c.AddFile(new CurrentFileEntry("test1.txt", m.Object)));
@@ -65,9 +66,9 @@ namespace WatchedFileList.Test
 
         public class FileStreamHelper
         {
-            Mock<WatchedFileList.IFileStream> m;
+            Mock<IFileStream> m;
 
-            public WatchedFileList.IFileStream Object()
+            public IFileStream Object()
             {
                 return m.Object;
             }
@@ -75,7 +76,7 @@ namespace WatchedFileList.Test
             public FileStreamHelper()
             {
                 ReturnString = String.Empty;
-                m = new Mock<WatchedFileList.IFileStream>();
+                m = new Mock<IFileStream>();
                 m.SetupGet(x => x.Position).Returns(() => { return position; });
 
 

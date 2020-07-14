@@ -1,19 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EasyLogService.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using WatchedFileList;
+using FileListClasses;
 
 namespace EasyLogService
 {
@@ -81,6 +76,10 @@ namespace EasyLogService
             services.AddSingleton<ICentralLogService, CentralLogService>();
             services.AddSingleton<ICentralLogServiceWatcher, CentralLogServiceWatcher>();
 
+            services.AddRazorPages();
+
+            services.AddServerSideBlazor();
+
         }
 
         public void ConfigureOwnServices(ICentralLogServiceWatcher centralWatcher)
@@ -98,6 +97,7 @@ namespace EasyLogService
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
             app.UseRouting();
 
@@ -106,6 +106,8 @@ namespace EasyLogService
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapBlazorHub();
+                endpoints.MapFallbackToPage("/Main");
             });
 
 

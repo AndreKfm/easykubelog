@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using WatchedFileList;
+using FileListClasses;
 
-namespace WatchFileList_TestOnly
+namespace FileListClasses_TestOnly
 {
     class Program
     {
@@ -35,7 +35,7 @@ namespace WatchFileList_TestOnly
 
             CurrentFileListTest(directory); return; 
 
-            WatchFileList w = new WatchFileList(directory, null, 15000);
+            FileList w = new FileList(directory, null, 15000);
             w.Start((list) =>
             {
                 foreach (var e in list)

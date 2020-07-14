@@ -3,21 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher", "..\DirectoryWatcher\DirectoryWatcher.csproj", "{0BB230A0-E6D9-4C85-BAC6-864A6F4389F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher", "..\DirectoryWatcher\DirectoryWatcher\DirectoryWatcher.csproj", "{0BB230A0-E6D9-4C85-BAC6-864A6F4389F0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher.Test", "..\DirectoryWatcher.Test\DirectoryWatcher.Test.csproj", "{D0F45582-5615-4ADB-8847-6049628D18B0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher.Test", "..\DirectoryWatcher\DirectoryWatcher.Test\DirectoryWatcher.Test.csproj", "{D0F45582-5615-4ADB-8847-6049628D18B0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystemWatcher.Console", "..\FileSystemWatcher_TestOnly\FileSystemWatcher.Console.csproj", "{9916CF7A-B631-4E2B-A131-897FA970C8A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystemWatcher.Console", "..\FileList\FileSystemWatcher_TestOnly\FileSystemWatcher.Console.csproj", "{9916CF7A-B631-4E2B-A131-897FA970C8A9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatchedFileList", "..\WatchedFileList\WatchedFileList.csproj", "{1A4D2EFA-DD92-4423-86F3-F54F87D9566B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileLists", "..\FileList\FileList\FileLists.csproj", "{1A4D2EFA-DD92-4423-86F3-F54F87D9566B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatchedFileList.Test", "..\WatchedFileList.Test\WatchedFileList.Test.csproj", "{ECB4C9A1-D3D9-4825-8A07-0FFC33AA9C9C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileLists.Test", "..\FileList\FileList.Test\FileLists.Test.csproj", "{ECB4C9A1-D3D9-4825-8A07-0FFC33AA9C9C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatchFileList.Console", "..\WatchFileList_TestOnly\WatchFileList.Console.csproj", "{28EEC84F-4C6D-4423-B978-122E8E731FB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileList.Console", "..\FileList\FileList_TestOnly\FileList.Console.csproj", "{28EEC84F-4C6D-4423-B978-122E8E731FB2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ConsoleTestApps", "ConsoleTestApps", "{9AC1FD91-034B-49F1-947B-CF52C5F826CC}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DemonService", "DemonService", "{ABC4148E-CD11-4FBF-AC80-C7919A5BE4FB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FileLoggingLibraries", "FileLoggingLibraries", "{ABC4148E-CD11-4FBF-AC80-C7919A5BE4FB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LogService", "LogService", "{E07F46A2-C8A9-4A87-9016-7475A595508F}"
 EndProject
@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasylogService.Test", "Easy
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LogSimulator", "LogSimulator", "{F169B6BA-B6B2-4F93-92E9-4386EC60628F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogSimulator.Console", "LogSimulator.Console\LogSimulator.Console.csproj", "{BE808EED-C802-4F7E-B12B-6D05E011E42F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogSimulator.Console", "LogSimulator.Console\LogSimulator.Console.csproj", "{BE808EED-C802-4F7E-B12B-6D05E011E42F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

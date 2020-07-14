@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WatchedFileList.Test
+namespace FileListClasses.Test
 {
     using DirectoryWatching;
     using Moq;

@@ -6,16 +6,16 @@ using System.Diagnostics;
 using System.Xml.Serialization;
 using Xunit;
 
-namespace WatchedFileList.Test
+namespace FileListClasses.Test
 {
     using FileListType = ReadOnlyCollection<FileEntry>;
 
-    public class WatchedFileListUnitTests
+    public class FileListUnitTests
     {
         [Fact]
-        public void WatchFileList_CreateObject()
+        public void FileList_CreateObject()
         {
-            _ = new WatchFileList(directoryToWatch);
+            _ = new FileList(directoryToWatch);
         }
 
         //const string directoryToWatch = @"C:\test\deleteme\xwatchertest";
@@ -24,25 +24,25 @@ namespace WatchedFileList.Test
 
 
         [Fact]
-        public void WatchFileList_StartWatching()
+        public void FileList_StartWatching()
         {
             var callback = new Action<FileListType>((FileListType list) => { });
-            WatchFileList w = new WatchFileList(directoryToWatch);
+            FileList w = new FileList(directoryToWatch);
             w.Start(directoryToWatch, _ => callback(_));
         }
 
         [Fact]
-        public void WatchFileList_StartWatching_ThenDispose()
+        public void FileList_StartWatching_ThenDispose()
         {
             var callback = new Action<FileListType>((FileListType list) => {});
-            WatchFileList w = new WatchFileList(directoryToWatch);
+            FileList w = new FileList(directoryToWatch);
             w.Start(directoryToWatch, _ => callback(_));
             w.Dispose();
         }
 
 
         [Fact]
-        public void WatchFileList_StartWatching_ChangeFilesCheckState()
+        public void FileList_StartWatching_ChangeFilesCheckState()
         {
             FilterAndCallbackArgument local = null;
             var a = new Action<string, FilterAndCallbackArgument>((string filter, FilterAndCallbackArgument arg) =>
@@ -65,7 +65,7 @@ namespace WatchedFileList.Test
             Mock<IFileSystemWatcher> m = new Mock<IFileSystemWatcher>();
             var f = new FilterAndCallbackArgument("*.txt");
             m.Setup(x => x.Open(It.IsAny<String>(), It.IsAny<FilterAndCallbackArgument>())).Callback<string , FilterAndCallbackArgument>((string x, FilterAndCallbackArgument arg) => a(x, arg)).Returns(true);
-            WatchFileList w = new WatchFileList(directoryToWatch, m.Object, 0 /** NO throttling !!! */);
+            FileList w = new FileList(directoryToWatch, m.Object, 0 /** NO throttling !!! */);
             w.Start(directoryToWatch, _ => lc(_));
 
             CheckHelper(local, "f1.txt", ref lastEntry, IFileSystemWatcherChangeType.Created);
