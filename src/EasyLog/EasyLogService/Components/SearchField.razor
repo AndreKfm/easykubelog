@@ -4,20 +4,24 @@
 <p>By Event: @_searchText</p>
 <p>Completed = @_completed</p>
 
-@inject IMediator  _mediator;
-@using EasyLogService.Commands;
 
 
 @code {
 
     string _searchText = String.Empty;
     private string _text = String.Empty;
-    private bool _completed; 
+    private bool _completed;
 
 
-    private async Task NewInput()
+    private void NewInput()
     {
         _searchText = _text;
-        await _mediator.Send(new SearchRequest(_searchText));
+        OnSearchQueryChange(_searchText);
+        StateHasChanged();
+
+        //MainList.Add("hello");
+
     }
+
+    public Func<string, bool> OnSearchQueryChange;
 }

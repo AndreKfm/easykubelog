@@ -1,12 +1,65 @@
-﻿@page "/mainlayout" 
+﻿@page "/mainlayout"
 @inherits LayoutComponentBase
 
 
 <div class="main">
-    <div class="top-row px-4 auth">
-        <EasyLogService.Components.SearchField />
+    <div>
+        <EasyLogService.Components.SearchField @ref="SearchField" />
+    </div>
+    <div name="MainList" style="background:yellow;height:10px">
+        <EasyLogService.Components.List @ref="_mainList" />
     </div>
     @*<div class="content px-4">
-        @Body
-    </div>*@
+            @Body
+        </div>*@
 </div>
+
+@inject IMediator  _mediator;
+@using EasyLogService.Commands;
+
+
+@code
+{
+    EasyLogService.Components.SearchField searchField;
+    EasyLogService.Components.SearchField SearchField
+    {
+        get
+        {
+            return searchField;
+        }
+
+        set
+        {
+            searchField = value;
+            InitSearchField();
+        }
+    }
+    EasyLogService.Components.List _mainList;
+
+    void InitSearchField()
+    {
+        searchField.OnSearchQueryChange = (query) =>
+        {
+            Send(query).Wait(); 
+            StateHasChanged();
+
+
+
+            return true;
+
+        };
+    }
+
+    async Task<bool> Send(string query)
+    {
+        var result = await _mediator.Send(new SearchRequest(query));
+        _mainList.Add(query);
+        return result;
+    }
+
+    public MainLayout()
+    {
+
+    }
+
+}

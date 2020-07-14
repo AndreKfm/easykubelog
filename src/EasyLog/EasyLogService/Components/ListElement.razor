@@ -1,0 +1,26 @@
+﻿<div class="listelement">@Content</div>
+
+@code {
+    private string _elementContent = "hello my element";
+
+    [Parameter]
+    public string Content
+    {
+        get { return _elementContent; }
+        set
+        {
+            _elementContent = value;
+
+        }
+    }
+
+    public ListElement(string content)
+    {
+        Content = content;
+    }
+
+    public ListElement()
+    {
+        Content = "empty";
+    }
+}
