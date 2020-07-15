@@ -36,20 +36,22 @@
     }
     EasyLogService.Components.List _mainList;
 
+    void Completed(string query)
+    {
+        _mainList.Add(query);
+    }
+
     void InitSearchField()
     {
         searchField.OnSearchQueryChange = (query) =>
         {
-            Send(query);
-            return true;
-
+            Send(query, (query) => Completed(query));
         };
     }
 
-    bool Send(string query)
+    bool Send(string query, Action<string> completed)
     {
-        var t = Task.Run(async () => await _searchCommand.Search(new SearchRequest(query)));
-        _mainList.Add(query);
+        var t = Task.Run(async () => await _searchCommand.Search(new SearchRequest(query), completed));
         return true;
     }
 

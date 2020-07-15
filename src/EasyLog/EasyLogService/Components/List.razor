@@ -9,14 +9,14 @@
 </div>
 
 @code {
-        private int _count = 10;
-        public List<ListElement> _list = new List<ListElement>(100);
+    private int _count = 10;
+    public List<ListElement> _list = new List<ListElement>(100);
 
     public void Add(string elementContent)
     {
 
         _list.Add(new ListElement(elementContent));
 
-        StateHasChanged();
+        base.InvokeAsync(StateHasChanged);
     }
 }
