@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FileListClasses;
-using MediatR;
+using EasyLogService.Commands;
 
 namespace EasyLogService
 {
@@ -76,12 +76,12 @@ namespace EasyLogService
             services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
             services.AddSingleton<ICentralLogService, CentralLogService>();
             services.AddSingleton<ICentralLogServiceWatcher, CentralLogServiceWatcher>();
+            services.AddTransient<ISearchCommand, SearchCommand>();
+            
 
             services.AddRazorPages();
 
             services.AddServerSideBlazor();
-
-            services.AddMediatR(typeof(Startup));
 
         }
 

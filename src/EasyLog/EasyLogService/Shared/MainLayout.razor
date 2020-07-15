@@ -14,7 +14,7 @@
         </div>*@
 </div>
 
-@inject IMediator  _mediator;
+@inject ISearchCommand  _searchCommand;
 @using EasyLogService.Commands;
 
 
@@ -40,26 +40,17 @@
     {
         searchField.OnSearchQueryChange = (query) =>
         {
-            Send(query).Wait(); 
-            StateHasChanged();
-
-
-
+            Send(query);
             return true;
 
         };
     }
 
-    async Task<bool> Send(string query)
+    bool Send(string query)
     {
-        var result = await _mediator.Send(new SearchRequest(query));
+        var t = Task.Run(async () => await _searchCommand.Search(new SearchRequest(query)));
         _mainList.Add(query);
-        return result;
-    }
-
-    public MainLayout()
-    {
-
+        return true;
     }
 
 }

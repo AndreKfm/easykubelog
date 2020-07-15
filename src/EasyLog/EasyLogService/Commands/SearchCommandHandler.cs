@@ -1,31 +1,30 @@
-﻿using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace EasyLogService.Commands
 {
 
-    public class SearchRequest : IRequest<bool>
+
+    public interface ISearchCommand
+    {
+        Task Search(SearchRequest request);
+    }
+
+    internal class SearchCommand : ISearchCommand
+    {
+        public async Task Search(SearchRequest request)
+        {
+            await Task.Delay(1000);
+            Console.WriteLine("aha");
+        }
+    }
+
+    public class SearchRequest 
     {
         readonly public string Query;
         public SearchRequest(string query)
         {
             Query = query;
-        }
-
-    }
-
-
-    public class SearchCommandHandler : IRequestHandler<SearchRequest, bool>
-    {
-
-        public Task<bool> Handle(SearchRequest request, CancellationToken cancellationToken)
-        {
-            Console.WriteLine($"#### {request.Query}");
-            return Task.FromResult(true);
         }
 
     }
