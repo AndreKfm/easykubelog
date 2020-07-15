@@ -46,7 +46,9 @@
         foreach (var queryResult in logEntries)
         {
             var e = new EasyLogService.Components.ListElement();
-            e.Content = queryResult.log;
+            e.ContentLogOutput = queryResult.log;
+            e.ContentDateTime = queryResult.time;
+            e.ContentLogType = queryResult.stream;
             list.Add(e);
         }
         _mainList.Set(list, Refresh.ImmediatelyRefresh);

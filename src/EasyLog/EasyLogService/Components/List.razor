@@ -2,8 +2,10 @@
 
     @foreach (var e in _list)
     {
-
-        <EasyLogService.Components.ListElement Content=@e.Content/>
+        <EasyLogService.Components.ListElement 
+              ContentDateTime=@e.ContentDateTime 
+              ContentLogOutput=@e.ContentLogOutput
+              ContentLogType=@e.ContentLogType/>
     }
 
 </div>
@@ -23,7 +25,7 @@
     public void Add(string elementContent, Refresh refresh)
     {
 
-        _list.Add(new ListElement(elementContent));
+        _list.Add(new ListElement());
         if (refresh == Refresh.ImmediatelyRefresh)
             base.InvokeAsync(StateHasChanged);
 

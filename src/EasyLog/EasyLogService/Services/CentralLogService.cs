@@ -25,14 +25,14 @@ namespace EasyLogService.Services
         public readonly string Lines;    // Log lines to add 
     }
 
-    internal class KubernetesJsonDateTimeConverter : JsonConverter<DateTime>
+    internal class KubernetesJsonDateTimeOffsetConverter : JsonConverter<DateTimeOffset>
     {
-        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            return DateTime.Parse(reader.GetString());
+            return DateTimeOffset.Parse(reader.GetString());
         }
 
-        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
         }
@@ -44,13 +44,13 @@ namespace EasyLogService.Services
         private static JsonSerializerOptions InitOptions()
         {
             JsonSerializerOptions options = new JsonSerializerOptions();
-            options.Converters.Add(new KubernetesJsonDateTimeConverter());
+            options.Converters.Add(new KubernetesJsonDateTimeOffsetConverter());
             return options;
         }
 
         private static JsonSerializerOptions Options = InitOptions();
 
-        private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { time = default(DateTime), log = String.Empty, stream = String.Empty };
+        private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { time = default(DateTimeOffset), log = String.Empty, stream = String.Empty };
 
         static public KubernetesLogEntry Parse(string line)
         {
@@ -67,7 +67,7 @@ namespace EasyLogService.Services
 
         public string log { get; set; } // Log lines to add
         public string stream { get; set; } // Type of log
-        public DateTime time { get; set; }  // Date time when log entry was written on client side
+        public DateTimeOffset time { get; set; }  // Date time when log entry was written on client side
     }
 
 
@@ -102,7 +102,10 @@ namespace EasyLogService.Services
             _maxLines = maxLines;
         }
 
-        TreeDictionary<DateTime, KubernetesLogEntry> _logCache = new TreeDictionary<DateTime, KubernetesLogEntry>();
+        Dictionary<string, int> _fileIndexList = new Dictionary<string, int>();
+        int _currentFileIndex = 0;
+
+        TreeDictionary<(DateTimeOffset time, int fileIndex), KubernetesLogEntry> _logCache = new TreeDictionary<(DateTimeOffset time, int fileIndex), KubernetesLogEntry>();
         public void AddEntry(LogEntry entry)
         {
             var lines = entry.Lines.Split('\n');
@@ -115,9 +118,19 @@ namespace EasyLogService.Services
                     {
                         lock (_logCache)
                         {
+                            if (!_fileIndexList.TryGetValue(entry.FileName, out int fileIndex))
+                            {
+                                fileIndex = ++_currentFileIndex;
+                                _fileIndexList.Add(entry.FileName, fileIndex);
+                            }
                             if (_logCache.Count > _maxLines)
                                 _logCache.Remove(_logCache.First().Key);
-                            _logCache.Add(newEntry.time, newEntry);
+                            try
+                            {
+                                _logCache.Add((newEntry.time, fileIndex), newEntry);
+                            }
+                            catch(Exception)
+                            { }
                         }
                     }
                 }

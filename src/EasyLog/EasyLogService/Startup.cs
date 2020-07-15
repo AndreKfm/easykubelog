@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FileListClasses;
 using EasyLogService.Commands;
+using System.IO;
+using System.Linq;
 
 namespace EasyLogService
 {
@@ -60,6 +62,35 @@ namespace EasyLogService
         }
     }
 
+    public class LogSimulatorReadAllContent 
+    {
+        public LogSimulatorReadAllContent()
+        {
+
+        }
+
+        private bool readDone = false;
+        public void InitialRead(string directory, ICentralLogServiceCache cache)
+        {
+            if (readDone)
+                return;
+
+            var files = Directory.GetFiles(directory);
+
+            Console.WriteLine($"Read simulation files from [{directory}]");
+            Parallel.ForEach(files, (file) =>
+            {
+                var lines = File.ReadAllLines(file);
+                foreach(var line in lines.Take(10000))
+                {
+                    cache.AddEntry(new LogEntry(file, line));
+                }
+            });
+
+            readDone = true;
+        }
+    }
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -78,16 +109,26 @@ namespace EasyLogService
             services.AddSingleton<ICentralLogService, CentralLogService>();
             services.AddSingleton<ICentralLogServiceWatcher, CentralLogServiceWatcher>();
             services.AddTransient<ISearchCommand, SearchCommand>();
-            
+
+            services.AddSingleton<LogSimulatorReadAllContent>();
+
+
 
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
         }
 
-        public void ConfigureOwnServices(ICentralLogServiceWatcher centralWatcher)
+        public void ConfigureOwnServices(ICentralLogServiceWatcher centralWatcher, LogSimulatorReadAllContent logSimulator, ICentralLogServiceCache cache)
         {
             centralWatcher.Start();
+
+            string directory = Configuration["SimulatorDirectory"];
+            if (String.IsNullOrEmpty(directory))
+            {
+                directory = @"c:\test\logs";
+            }
+            logSimulator.InitialRead(directory, cache);
         }
 
 

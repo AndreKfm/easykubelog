@@ -1,26 +1,23 @@
-﻿<div class="listelement">@Content</div>
+﻿<div style="width: 100%; overflow: hidden;">
+    <div class="listelement" style="width: 15%; float: left;">@ContentDateTime</div>
+    <div class="listelement" style="width: 75%; float: left;">@ContentLogOutput</div>
+    <div class="listelement" style="width: 10%; float: left;">@ContentLogType</div>
+</div>
 
 @code {
     private string _elementContent = "hello my element";
 
     [Parameter]
-    public string Content
-    {
-        get { return _elementContent; }
-        set
-        {
-            _elementContent = value;
+    public DateTimeOffset ContentDateTime { get; set; }
 
-        }
-    }
+    [Parameter]
+    public string ContentLogOutput { get; set; }
 
-    public ListElement(string content)
-    {
-        Content = content;
-    }
+    [Parameter]
+    public string ContentLogType { get; set; }
 
     public ListElement()
     {
-        Content = "empty";
     }
+
 }
