@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -24,20 +25,41 @@ namespace EasyLogService.Services
         public readonly string Lines;    // Log lines to add 
     }
 
+    internal class KubernetesJsonDateTimeConverter : JsonConverter<DateTime>
+    {
+        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            return DateTime.Parse(reader.GetString());
+        }
+
+        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     public class KubernetesLogEntry
     {
 
-        static readonly KubernetesLogEntry Default = new KubernetesLogEntry { time = default(DateTime), log = String.Empty, stream = String.Empty };
+        private static JsonSerializerOptions InitOptions()
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new KubernetesJsonDateTimeConverter());
+            return options;
+        }
+
+        private static JsonSerializerOptions Options = InitOptions();
+
+        private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { time = default(DateTime), log = String.Empty, stream = String.Empty };
 
         static public KubernetesLogEntry Parse(string line)
         {
             try
             {
                 if (line.Length > 0)
-                    return JsonSerializer.Deserialize<KubernetesLogEntry>(line);
+                    return JsonSerializer.Deserialize<KubernetesLogEntry>(line, Options);
             }
-            catch (Exception) { }
+            catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Parse: {e.Message}" ); }
             return Default;
         }
 
@@ -48,6 +70,13 @@ namespace EasyLogService.Services
         public DateTime time { get; set; }  // Date time when log entry was written on client side
     }
 
+
+    public interface ICentralLogServiceQuery : IDisposable
+    {
+        public KubernetesLogEntry[] Query(string simpleQuery);
+    }
+
+
     public interface ICentralLogService : IDisposable
     {
         Task<bool> AddLogEntry(LogEntry newEntry);
@@ -57,9 +86,15 @@ namespace EasyLogService.Services
 
 
 
+    public interface ICentralLogServiceCache : ICentralLogServiceQuery
+    {
+        public void AddEntry(LogEntry entry);
+    }
 
 
-    public class CentralLogServiceCache
+
+
+    public class CentralLogServiceCache : ICentralLogServiceCache
     {
         readonly int _maxLines;
         public CentralLogServiceCache(int maxLines)
@@ -78,28 +113,48 @@ namespace EasyLogService.Services
                     var newEntry = KubernetesLogEntry.Parse(line);
                     if (!newEntry.IsDefault)
                     {
-                        if (_logCache.Count > _maxLines)
-                            _logCache.Remove(_logCache.First().Key);
-                        _logCache.Add(newEntry.time, newEntry);
+                        lock (_logCache)
+                        {
+                            if (_logCache.Count > _maxLines)
+                                _logCache.Remove(_logCache.First().Key);
+                            _logCache.Add(newEntry.time, newEntry);
+                        }
                     }
                 }
             }
         }
 
+
+        public KubernetesLogEntry[] Query(string simpleQuery)
+        {
+            lock (_logCache)
+            {
+                var result = _logCache.AsParallel().Where(x => x.Value.log.Contains(simpleQuery)).Select(x => x.Value);
+                return result.ToArray();
+            }
+        }
+
+        public void Dispose()
+        {
+            _logCache.Clear();
+        }
     }
 
     /// <summary>
     /// This class holds the logs passed to EasyLogService
     /// </summary>
-    public class CentralLogService : ICentralLogService
+    public class CentralLogService : ICentralLogService, ICentralLogServiceQuery
     {
+
+        ICentralLogServiceCache _cache;
         /// <summary>
         /// Creates a central object used to aggregate all incomming log entries
         /// </summary>
         /// <param name="maxEntriesInChannelQueue">Specifies how man entries can be added asynchronously to the channgel</param>
-        public CentralLogService(int maxEntriesInChannelQueue = 1024)
+        public CentralLogService(ICentralLogServiceCache cache = null, int maxEntriesInChannelQueue = 1024)
         {
             _logEntryChannel = Channel.CreateBounded<LogEntry>(maxEntriesInChannelQueue);
+            _cache = cache ?? new CentralLogServiceCache(maxEntriesInChannelQueue);
         }
 
 
@@ -130,6 +185,7 @@ namespace EasyLogService.Services
                     break;
 
                 var newEntry = await _logEntryChannel.Reader.ReadAsync();
+                _cache.AddEntry(newEntry);
 
             }
         }
@@ -143,6 +199,12 @@ namespace EasyLogService.Services
         {
             _logEntryChannel.Writer.Complete();
             _logEntryChannel = null;
+        }
+
+
+        KubernetesLogEntry[] ICentralLogServiceQuery.Query(string simpleQuery)
+        {
+            return _cache.Query(simpleQuery);
         }
 
         Channel<LogEntry> _logEntryChannel;

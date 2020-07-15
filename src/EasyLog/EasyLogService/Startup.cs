@@ -74,13 +74,13 @@ namespace EasyLogService
         {
             services.AddControllers();
             services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
+            services.AddSingleton<ICentralLogServiceCache>(x => new CentralLogServiceCache(Int32.Parse(Configuration["MaxLogLines"])));
             services.AddSingleton<ICentralLogService, CentralLogService>();
             services.AddSingleton<ICentralLogServiceWatcher, CentralLogServiceWatcher>();
             services.AddTransient<ISearchCommand, SearchCommand>();
             
 
             services.AddRazorPages();
-
             services.AddServerSideBlazor();
 
         }

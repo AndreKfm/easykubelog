@@ -9,6 +9,7 @@
     <div name="MainList" style="background:yellow;height:10px">
         <EasyLogService.Components.List @ref="_mainList" />
     </div>
+    <div>Entries: @numEntries</div>
     @*<div class="content px-4">
             @Body
         </div>*@
@@ -16,10 +17,12 @@
 
 @inject ISearchCommand  _searchCommand;
 @using EasyLogService.Commands;
+@using EasyLogService.Services;
 
 
 @code
 {
+    int numEntries = 0;
     EasyLogService.Components.SearchField searchField;
     EasyLogService.Components.SearchField SearchField
     {
@@ -36,9 +39,18 @@
     }
     EasyLogService.Components.List _mainList;
 
-    void Completed(string query)
+    void Completed(KubernetesLogEntry[] logEntries)
     {
-        _mainList.Add(query);
+        List<EasyLogService.Components.ListElement> list = new List<EasyLogService.Components.ListElement>();
+
+        foreach (var queryResult in logEntries)
+        {
+            var e = new EasyLogService.Components.ListElement();
+            e.Content = queryResult.log;
+            list.Add(e);
+        }
+        _mainList.Set(list, Refresh.ImmediatelyRefresh);
+
     }
 
     void InitSearchField()
@@ -49,9 +61,9 @@
         };
     }
 
-    bool Send(string query, Action<string> completed)
+    bool Send(string query, Action<KubernetesLogEntry[]> completed)
     {
-        var t = Task.Run(async () => await _searchCommand.Search(new SearchRequest(query), completed));
+        var t = Task.Run(() => _searchCommand.Search(new SearchRequest(query), completed));
         return true;
     }
 

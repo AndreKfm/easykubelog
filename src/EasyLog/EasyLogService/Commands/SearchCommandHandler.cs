@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EasyLogService.Services;
+using System;
 using System.Threading.Tasks;
 
 namespace EasyLogService.Commands
@@ -7,18 +8,25 @@ namespace EasyLogService.Commands
 
     public interface ISearchCommand
     {
-        Task Search(SearchRequest request, Action<string> completed);
+        void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed);
     }
 
     
 
     internal class SearchCommand : ISearchCommand
     {
-        public async Task Search(SearchRequest request, Action<string> completed)
+        ICentralLogServiceQuery _cacheQuery;
+        public SearchCommand(ICentralLogServiceCache cache)
         {
-            await Task.Delay(1000);
-            completed(request.Query);
-            Console.WriteLine("aha");
+            _cacheQuery = cache;
+        }
+        public void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed)
+        {
+
+            var result = _cacheQuery.Query(request.Query);
+
+            completed(result);
+            Console.WriteLine($"Queried:{request.Query} - result length: {result.Length}");
         }
     }
 
