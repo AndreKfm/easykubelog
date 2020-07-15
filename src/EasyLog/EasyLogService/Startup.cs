@@ -81,7 +81,7 @@ namespace EasyLogService
             Parallel.ForEach(files, (file) =>
             {
                 var lines = File.ReadAllLines(file);
-                foreach(var line in lines.Take(10000))
+                foreach(var line in lines.Take(1000))
                 {
                     cache.AddEntry(new LogEntry(file, line));
                 }
