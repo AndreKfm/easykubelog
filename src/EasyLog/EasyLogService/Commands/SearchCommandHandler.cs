@@ -1,32 +1,34 @@
-﻿using EasyLogService.Services;
+﻿using EasyLogService.Services.CentralLogService;
 using System;
-using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace EasyLogService.Commands
 {
 
 
+    // Interface used to send search command
     public interface ISearchCommand
     {
         void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed);
     }
 
     
-
-    internal class SearchCommand : ISearchCommand
+    // Handler for search handler
+    internal class SearchCommandHandler : ISearchCommand
     {
-        ICentralLogServiceQuery _cacheQuery;
-        public SearchCommand(ICentralLogServiceCache cache)
+        readonly ICentralLogServiceQuery _cacheQuery;
+        public SearchCommandHandler(ICentralLogServiceCache cache)
         {
             _cacheQuery = cache;
         }
         public void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed)
         {
 
+            Stopwatch w = Stopwatch.StartNew();
             var result = _cacheQuery.Query(request.Query, request.MaxResults);
 
             completed(result);
-            Console.WriteLine($"Queried:{request.Query} - result length: {result.Length}");
+            Console.WriteLine($"Queried:{request.Query} - result length: {result.Length} needed: {w.ElapsedMilliseconds} ms");
         }
     }
 

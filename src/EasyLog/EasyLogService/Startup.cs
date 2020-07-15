@@ -12,6 +12,8 @@ using FileListClasses;
 using EasyLogService.Commands;
 using System.IO;
 using System.Linq;
+using EasyLogService.Tool.Simulator;
+using EasyLogService.Services.CentralLogService;
 
 namespace EasyLogService
 {
@@ -25,9 +27,9 @@ namespace EasyLogService
 
     public class CentralLogServiceWatcher : ICentralLogServiceWatcher
     {
-        IAutoCurrentFileList _watchCurrentFileList;
-        ICentralLogService _centralLogService;
-        string _directory;
+        readonly IAutoCurrentFileList _watchCurrentFileList;
+        readonly ICentralLogService _centralLogService;
+        readonly string _directory;
 
         public CentralLogServiceWatcher(IConfiguration config, IAutoCurrentFileList watchCurrentFileList, ICentralLogService centralLogService)
         {
@@ -62,34 +64,7 @@ namespace EasyLogService
         }
     }
 
-    public class LogSimulatorReadAllContent 
-    {
-        public LogSimulatorReadAllContent()
-        {
 
-        }
-
-        private bool readDone = false;
-        public void InitialRead(string directory, ICentralLogServiceCache cache)
-        {
-            if (readDone)
-                return;
-
-            var files = Directory.GetFiles(directory);
-
-            Console.WriteLine($"Read simulation files from [{directory}]");
-            Parallel.ForEach(files, (file) =>
-            {
-                var lines = File.ReadAllLines(file);
-                foreach(var line in lines.Take(1000))
-                {
-                    cache.AddEntry(new LogEntry(file, line));
-                }
-            });
-
-            readDone = true;
-        }
-    }
 
     public class Startup
     {
@@ -108,7 +83,7 @@ namespace EasyLogService
             services.AddSingleton<ICentralLogServiceCache>(x => new CentralLogServiceCache(Int32.Parse(Configuration["MaxLogLines"])));
             services.AddSingleton<ICentralLogService, CentralLogService>();
             services.AddSingleton<ICentralLogServiceWatcher, CentralLogServiceWatcher>();
-            services.AddTransient<ISearchCommand, SearchCommand>();
+            services.AddTransient<ISearchCommand, SearchCommandHandler>();
 
             services.AddSingleton<LogSimulatorReadAllContent>();
 
@@ -123,12 +98,13 @@ namespace EasyLogService
         {
             centralWatcher.Start();
 
-            string directory = Configuration["SimulatorDirectory"];
-            if (String.IsNullOrEmpty(directory))
+            bool logSimulatorActive = Configuration.GetValue<bool>("EnableLogSimulatorReadFromEachFile");
+            if (logSimulatorActive)
             {
-                directory = @"c:\test\logs";
+                string directory = Configuration["LogSimulatorDirectory"];
+                int maxLines = Configuration.GetValue<int>("MaxLogSimulatorLinesToReadFromEachFile");
+                logSimulator.InitialRead(directory, cache, maxLines);
             }
-            logSimulator.InitialRead(directory, cache);
         }
 
 
@@ -165,7 +141,7 @@ namespace EasyLogService
     {
         public static void RetrieveServicesAndCallMethod(object callObject, string methodName, IServiceProvider serviceProvider)
         {
-            var method = callObject.GetType().GetMethod("ConfigureOwnServices");
+            var method = callObject.GetType().GetMethod(methodName);
             var paramArray = method.GetParameters();
             List<object> services = new List<object>();
             foreach (var p in paramArray)

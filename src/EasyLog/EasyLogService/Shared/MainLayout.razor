@@ -2,28 +2,42 @@
 @inherits LayoutComponentBase
 
 
-    <div class="main">
-        <div>
-            <EasyLogService.Components.SearchField @ref="SearchField" />
-        </div>
-        <div>Entries: @numEntries</div>
-        <div name="MainList" style="background:yellow;height:10px">
-            <EasyLogService.Components.List @ref="_mainList" />
-        </div>
-        @*<div class="content px-4">
+<div class="main">
+    <div>
+        <EasyLogService.Components.SearchField @ref="SearchField" />
+    </div>
+    <div>Entries: @numEntries</div>
+    <div name="MainList" style="background:yellow;height:10px">
+        <EasyLogService.Components.List @ref="_mainList" />
+    </div>
+    @*<div class="content px-4">
             @Body
         </div>*@
-    </div>
+</div>
 
-@inject ISearchCommand  _searchCommand;
 @using EasyLogService.Commands;
-@using EasyLogService.Services;
+@using EasyLogService.Services.CentralLogService;
+@using Microsoft.Extensions.Configuration;
+@inject ISearchCommand  _searchCommand;
+@inject IConfiguration  _configuration;
 
 
 @code
 {
     int numEntries = 0;
+
+
+
+
+    int _maxResultLines = 0; // Specifies how many results in log lines will be returned by each query
+
     EasyLogService.Components.SearchField searchField;
+
+    protected override void OnInitialized()
+    {
+        _maxResultLines = _configuration.GetValue<int>("MaxLogQueryResultLines");
+    }
+
     EasyLogService.Components.SearchField SearchField
     {
         get
@@ -46,9 +60,8 @@
         foreach (var queryResult in logEntries)
         {
             var e = new EasyLogService.Components.ListElement();
-            e.ContentLogOutput = queryResult.log;
-            e.ContentDateTime = queryResult.time;
-            e.ContentLogType = queryResult.stream;
+
+            e.Set(queryResult.Time, queryResult.Log, queryResult.Stream);
             list.Add(e);
         }
         _mainList.Set(list, Refresh.ImmediatelyRefresh);
@@ -67,8 +80,7 @@
 
     bool Send(string query, Action<KubernetesLogEntry[]> completed)
     {
-        int maxResults = 100;
-        var t = Task.Run(() => _searchCommand.Search(new SearchRequest(query, maxResults), completed));
+        var t = Task.Run(() => _searchCommand.Search(new SearchRequest(query, _maxResultLines), completed));
         return true;
     }
 

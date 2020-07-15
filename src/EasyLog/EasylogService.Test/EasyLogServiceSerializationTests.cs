@@ -1,4 +1,5 @@
 using EasyLogService.Services;
+using EasyLogService.Services.CentralLogService;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -30,14 +31,14 @@ namespace EasylogService.Test
                 }
             }
 
-            Assert.Equal("id: 196801, 01:11:31.051 AM  - ref: ca918362-2afb-4686-9410-a2a10f44764f\n", list[0].log);
-            Assert.Equal("stdout", list[0].stream);
-            Assert.Equal(DateTime.Parse("2020-07-06T01:11:31.051244326Z"), list[0].time.ToLocalTime());
+            Assert.Equal("id: 196801, 01:11:31.051 AM  - ref: ca918362-2afb-4686-9410-a2a10f44764f\n", list[0].Log);
+            Assert.Equal("stdout", list[0].Stream);
+            Assert.Equal(DateTime.Parse("2020-07-06T01:11:31.051244326Z"), list[0].Time.ToLocalTime());
 
-            Assert.Equal("message #2\n", list[3].log);
-            Assert.Equal("stdout", list[3].stream);
+            Assert.Equal("message #2\n", list[3].Log);
+            Assert.Equal("stdout", list[3].Stream);
             var r1 = DateTime.Parse("2020-07-06T01:11:31.16974884Z"); // Json deserializer is one tick different to DateTime parser!!!
-            var r2 = list[3].time.ToLocalTime();
+            var r2 = list[3].Time.ToLocalTime();
 
 
             Assert.Equal(r1, r2);
