@@ -73,7 +73,7 @@ namespace EasyLogService.Services
 
     public interface ICentralLogServiceQuery : IDisposable
     {
-        public KubernetesLogEntry[] Query(string simpleQuery);
+        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults);
     }
 
 
@@ -125,11 +125,16 @@ namespace EasyLogService.Services
         }
 
 
-        public KubernetesLogEntry[] Query(string simpleQuery)
+        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults)
         {
             lock (_logCache)
             {
-                var result = _logCache.AsParallel().Where(x => x.Value.log.Contains(simpleQuery)).Select(x => x.Value);
+                var result = _logCache.AsParallel().
+                    Where(x => x.Value.log.Contains(simpleQuery)).
+                    Take(maxResults).
+                    Select(x => x.Value).
+                    OrderBy(x => x.time);
+                //var result = _logCache.Where(x => x.Value.log.Contains(simpleQuery)).Select(x => x.Value);
                 return result.ToArray();
             }
         }
@@ -202,9 +207,9 @@ namespace EasyLogService.Services
         }
 
 
-        KubernetesLogEntry[] ICentralLogServiceQuery.Query(string simpleQuery)
+        KubernetesLogEntry[] ICentralLogServiceQuery.Query(string simpleQuery, int maxResults)
         {
-            return _cache.Query(simpleQuery);
+            return _cache.Query(simpleQuery, maxResults);
         }
 
         Channel<LogEntry> _logEntryChannel;

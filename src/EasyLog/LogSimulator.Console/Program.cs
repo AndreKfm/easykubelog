@@ -18,7 +18,7 @@ namespace LogSimulator
             }
 
 
-            int defaultDelay = 1000; // 1000 Milliseconds
+            int defaultDelay = 0; // 1000 Milliseconds
             if (args.Length > 2)
             {
                 if (Int32.TryParse(args[2], out int delay))

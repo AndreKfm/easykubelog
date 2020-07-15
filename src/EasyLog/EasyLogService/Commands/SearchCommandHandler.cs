@@ -23,7 +23,7 @@ namespace EasyLogService.Commands
         public void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed)
         {
 
-            var result = _cacheQuery.Query(request.Query);
+            var result = _cacheQuery.Query(request.Query, request.MaxResults);
 
             completed(result);
             Console.WriteLine($"Queried:{request.Query} - result length: {result.Length}");
@@ -33,9 +33,11 @@ namespace EasyLogService.Commands
     public class SearchRequest 
     {
         readonly public string Query;
-        public SearchRequest(string query)
+        readonly public int MaxResults;
+        public SearchRequest(string query, int maxResults)
         {
             Query = query;
+            MaxResults = maxResults;
         }
 
     }

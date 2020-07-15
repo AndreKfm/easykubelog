@@ -2,18 +2,18 @@
 @inherits LayoutComponentBase
 
 
-<div class="main">
-    <div>
-        <EasyLogService.Components.SearchField @ref="SearchField" />
-    </div>
-    <div name="MainList" style="background:yellow;height:10px">
-        <EasyLogService.Components.List @ref="_mainList" />
-    </div>
-    <div>Entries: @numEntries</div>
-    @*<div class="content px-4">
+    <div class="main">
+        <div>
+            <EasyLogService.Components.SearchField @ref="SearchField" />
+        </div>
+        <div>Entries: @numEntries</div>
+        <div name="MainList" style="background:yellow;height:10px">
+            <EasyLogService.Components.List @ref="_mainList" />
+        </div>
+        @*<div class="content px-4">
             @Body
         </div>*@
-</div>
+    </div>
 
 @inject ISearchCommand  _searchCommand;
 @using EasyLogService.Commands;
@@ -50,6 +50,8 @@
             list.Add(e);
         }
         _mainList.Set(list, Refresh.ImmediatelyRefresh);
+        numEntries = list.Count;
+        base.InvokeAsync(StateHasChanged);
 
     }
 
@@ -63,7 +65,8 @@
 
     bool Send(string query, Action<KubernetesLogEntry[]> completed)
     {
-        var t = Task.Run(() => _searchCommand.Search(new SearchRequest(query), completed));
+        int maxResults = 100;
+        var t = Task.Run(() => _searchCommand.Search(new SearchRequest(query, maxResults), completed));
         return true;
     }
 
