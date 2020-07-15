@@ -13,5 +13,9 @@
     <ProjectReference Include="..\..\FileList\FileList\FileLists.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\css\bootstrap\" />
+  </ItemGroup>
+
 
 </Project>
