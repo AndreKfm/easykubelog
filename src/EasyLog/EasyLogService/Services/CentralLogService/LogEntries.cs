@@ -67,7 +67,9 @@ namespace EasyLogService.Services.CentralLogService
         public string Stream { get; set; } // Type of log
 
         [JsonPropertyName("time")]
-        public DateTimeOffset Time { get; set; }  // Date time when log entry was written on client side
+        public DateTimeOffset Time { get; set; }  // Date time when log entry was written on client side - use string to preserve ticks
+
+
     }
 
 }
