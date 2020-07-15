@@ -1,11 +1,10 @@
-﻿<div class="list">
+﻿<div class="list" style="overflow-y:auto; height:80vh">
 
     @foreach (var e in _list)
     {
-        <EasyLogService.Components.ListElement 
-              ContentDateTime=@e.ContentDateTime 
-              ContentLogOutput=@e.ContentLogOutput
-              ContentLogType=@e.ContentLogType/>
+        <EasyLogService.Components.ListElement ContentDateTime=@e.ContentDateTime
+                                               ContentLogOutput=@e.ContentLogOutput
+                                               ContentLogType=@e.ContentLogType />
     }
 
 </div>

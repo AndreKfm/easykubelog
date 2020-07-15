@@ -1,22 +1,23 @@
 ﻿@page "/searchfield"
-<input @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInput" />
-<p>You entered: @_text</p>
-<p>By Event: @_searchText</p>
-<p>Completed = @_completed</p>
+
+
+    <div class="input-group defpadding" >
+        <div class="input-group-prepend">
+            <span class="input-group-text">Search</span>
+        </div>
+        <input type="text" aria-label="Search text"  @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control"/>
+    </div>
 
 
 
 @code {
 
-    string _searchText = String.Empty;
     private string _text = String.Empty;
-    private bool _completed;
 
 
     private void NewInput()
     {
-        _searchText = _text;
-        OnSearchQueryChange(_searchText);
+        OnSearchQueryChange(_text);
         StateHasChanged();
 
         //MainList.Add("hello");
