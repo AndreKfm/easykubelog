@@ -3,13 +3,14 @@
 
 
 <div class="main" >
-    <div class="mt-3 ml-3 mr-3 mb-4 border rounded shadow bg-primary position-static" name="mainHeader" style=""><h1 style="text-align: center">Easy Log</h1></div>
+    <div class="mt-3 ml-3 mr-3 mb-4 border rounded shadow bg-primary" name="mainHeader" style=""><h1 style="text-align: center">Easy Log</h1></div>
     <div class="" style="">
-        <div class="m-3" style="height:30px">
+        <div class="m-3">
             <EasyLogService.Components.SearchField @ref="SearchField" />
         </div>
         <div class="m-3 defpadding  ">Entries: @numEntries</div>
-        <div class="m-3 border bg-light" name="MainList">
+        
+        <div class="m-3 border bg-light" name="MainList" style="position:absolute; height:auto; top:180px; bottom:0; overflow:auto; box-sizing:border-box">
             <EasyLogService.Components.List @ref="_mainList" />
         </div>
     </div>
