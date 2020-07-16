@@ -8,7 +8,6 @@
     }
 
 </div>
-
 @code {
     private int _count = 10;
     public List<ListElement> _list = new List<ListElement>(100);
@@ -18,6 +17,7 @@
         _list = newList;
         if (refresh == Refresh.ImmediatelyRefresh)
             base.InvokeAsync(StateHasChanged);
+
     }
 
 

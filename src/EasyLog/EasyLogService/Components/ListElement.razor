@@ -1,11 +1,11 @@
-﻿<div class="defpadding" style="width: 100%; overflow: hidden">
-    <div class="listelement defpadding" style="width: 15%; display: table-cell; float: left;">@ContentDateTime</div>
-    <div class="listelement defpadding" style="width: 75%; display: table-cell; float: left;">@ContentLogOutput</div>
-    <div class="listelement defpadding" style="width: 10%; display: table-cell; float: left;">@ContentLogType</div>
+﻿<div class="defpadding" style="width: auto; overflow: hidden">
+    <div class="listelement ml-2 defpadding" style="width: auto; float: left; color:blue ">@ContentDateTime</div>
+    <div class="listelement ml-3 defpadding" style="width: 75%; float: left;">@ContentLogOutput</div>
+    <div name="contentlogtype" class="listelement ml-2 defpadding mr-2" style="width:auto; float: left; color:@ContentLogTypeColor">@ContentLogType</div>
 </div>
 
+
 @code {
-    private string _elementContent = "hello my element";
 
     [Parameter]
     public DateTimeOffset ContentDateTime { get; set; }
@@ -15,6 +15,19 @@
 
     [Parameter]
     public string ContentLogType { get; set; }
+
+    public string ContentLogTypeColor
+    {
+        get
+        {
+            switch (ContentLogType)
+            {
+                case "stderr" : return "red";
+                case "EASYLOG": return "darkred";
+                default: return "red";
+            }
+        }
+    }
 
     public ListElement()
     {
