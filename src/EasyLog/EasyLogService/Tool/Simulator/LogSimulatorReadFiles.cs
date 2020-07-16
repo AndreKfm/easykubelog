@@ -4,11 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EasyLogService.Tool.Simulator
 {
-    public class LogSimulatorReadAllContent
+    public class LogSimulatorReadAllContent : IDisposable
     {
         public LogSimulatorReadAllContent()
         {
@@ -16,24 +17,52 @@ namespace EasyLogService.Tool.Simulator
         }
 
         private bool readDone = false;
+        Task current = Task.CompletedTask;
+        CancellationTokenSource tokenSource = new CancellationTokenSource();
+
         public void InitialRead(string directory, ICentralLogServiceCache cache, int maxLinesToRead = 1000)
         {
             if (readDone)
                 return;
 
-            var files = Directory.GetFiles(directory);
-
-            Console.WriteLine($"Read simulation files from [{directory}]");
-            Parallel.ForEach(files, (file) =>
+            current.ContinueWith((task) =>
             {
-                var lines = File.ReadAllLines(file);
-                foreach (var line in lines.Take(maxLinesToRead))
-                {
-                    cache.AddEntry(new LogEntry(file, line));
-                }
-            });
+                var token = tokenSource.Token;
+                if (token.IsCancellationRequested)
+                    return;
 
-            readDone = true;
+                var files = Directory.GetFiles(directory);
+
+                Console.WriteLine($"Read simulation files from [{directory}]");
+                Parallel.ForEach(files, (file) =>
+                {
+                    if (token.IsCancellationRequested)
+                        return;
+                    var lines = File.ReadAllLines(file);
+                    if (maxLinesToRead != -1)
+                    {
+                        foreach (var line in lines.Take(maxLinesToRead))
+                        {
+                            if (token.IsCancellationRequested)
+                                return;
+                            cache.AddEntry(new LogEntry(file, line));
+                        }
+                    }
+                    else foreach (var line in lines)
+                        {
+                            if (token.IsCancellationRequested)
+                                return;
+                            cache.AddEntry(new LogEntry(file, line));
+                        }
+                });
+
+                readDone = true;
+            });
+        }
+
+        public void Dispose()
+        {
+            tokenSource.Cancel();
         }
     }
 }

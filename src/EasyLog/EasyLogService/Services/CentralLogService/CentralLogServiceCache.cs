@@ -86,6 +86,21 @@ namespace EasyLogService.Services.CentralLogService
             }
         }
 
+        public KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults)
+        {
+            lock (_logCache)
+            {
+                var result = _logCache.AsParallel().
+                    Where(x => x.Value.Log.Contains(simpleQuery)).
+                    Take(maxResults).
+                    Select(x => x.Value).
+                    OrderBy(x => x.Time);
+                //var result = _logCache.Where(x => x.Value.log.Contains(simpleQuery)).Select(x => x.Value);
+                return result.ToArray();
+            }
+        }
+
+
 
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults)
         {
