@@ -26,7 +26,17 @@ namespace EasyLogService.Services.CentralLogService
     }
 
 
-    // This converter is needed since JSON deserializer cannot parse log datetime entries with ticks added to it
+    public enum CacheQueryMode
+    {
+        CaseSensitive, CaseInsensitive
+    }
+
+    public interface ICache<Key, Value> : IDisposable
+    {
+        void Add(Key key, Value value);
+        KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode);
+    }
+
 
 
 }

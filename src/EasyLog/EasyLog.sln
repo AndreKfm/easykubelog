@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LogSimulator", "LogSimulato
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogSimulator.Console", "LogSimulator.Console\LogSimulator.Console.csproj", "{BE808EED-C802-4F7E-B12B-6D05E011E42F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EndlessFileStream.Console", "..\FileLibraries\FileArray\FileArray.Console\EndlessFileStream.Console.csproj", "{6A179647-7D34-4EC4-B819-58F8D7CE4B1D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,10 @@ Global
 		{BE808EED-C802-4F7E-B12B-6D05E011E42F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE808EED-C802-4F7E-B12B-6D05E011E42F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE808EED-C802-4F7E-B12B-6D05E011E42F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A179647-7D34-4EC4-B819-58F8D7CE4B1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A179647-7D34-4EC4-B819-58F8D7CE4B1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A179647-7D34-4EC4-B819-58F8D7CE4B1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A179647-7D34-4EC4-B819-58F8D7CE4B1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,6 +92,7 @@ Global
 		{93063EC9-AA3C-421D-B0F6-E88D1390134D} = {E07F46A2-C8A9-4A87-9016-7475A595508F}
 		{78C50860-B1CC-4848-9260-C8AD28C04128} = {E07F46A2-C8A9-4A87-9016-7475A595508F}
 		{BE808EED-C802-4F7E-B12B-6D05E011E42F} = {F169B6BA-B6B2-4F93-92E9-4386EC60628F}
+		{6A179647-7D34-4EC4-B819-58F8D7CE4B1D} = {9AC1FD91-034B-49F1-947B-CF52C5F826CC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9D1BF3C4-FFEE-43FF-8016-7458E4F2617E}

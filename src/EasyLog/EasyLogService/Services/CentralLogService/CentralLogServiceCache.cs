@@ -1,27 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using C5;
 using Microsoft.Extensions.Logging;
 
 namespace EasyLogService.Services.CentralLogService
 {
+
+
+
     public class CentralLogServiceCache : ICentralLogServiceCache
     {
-        readonly int _maxLines;
+        readonly Dictionary<string, int> _fileIndexList = new Dictionary<string, int>();
+        int _currentFileIndex = 0;
+        readonly ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> _logCache;
         readonly ILogger<CentralLogServiceCache> _logger;
-        public CentralLogServiceCache(int maxLines, ILogger<CentralLogServiceCache> logger)
+
+        public CentralLogServiceCache(int maxLines, ILogger<CentralLogServiceCache> logger, ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> cache = null)
         {
-            _maxLines = maxLines;
+            //_logCache = cache ?? new MemoryCacheTreeDictionary(maxLines);
+            _logCache = cache ?? new FileCache(@"c:\test\central.log", maxLines);
             _logger = logger;
         }
 
-        readonly Dictionary<string, int> _fileIndexList = new Dictionary<string, int>();
-        int _currentFileIndex = 0;
 
-        readonly TreeDictionary<(DateTimeOffset time, int fileIndex), KubernetesLogEntry> _logCache = new TreeDictionary<(DateTimeOffset time, int fileIndex), KubernetesLogEntry>();
+        //readonly TreeDictionary<(DateTimeOffset time, int fileIndex), KubernetesLogEntry> _logCache = new TreeDictionary<(DateTimeOffset time, int fileIndex), KubernetesLogEntry>();
         public void AddEntry(LogEntry entry)
         {
             var lines = entry.Lines.Split('\n');
@@ -39,8 +40,6 @@ namespace EasyLogService.Services.CentralLogService
                                 fileIndex = ++_currentFileIndex;
                                 _fileIndexList.Add(entry.FileName, fileIndex);
                             }
-                            if (_logCache.Count > _maxLines)
-                                _logCache.Remove(_logCache.First().Key);
                             try
                             {
                                 _logCache.Add((newEntry.Time, fileIndex), newEntry);
@@ -86,39 +85,17 @@ namespace EasyLogService.Services.CentralLogService
             }
         }
 
-        public KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults)
-        {
-            lock (_logCache)
-            {
-                var result = _logCache.AsParallel().
-                    Where(x => x.Value.Log.Contains(simpleQuery)).
-                    Take(maxResults).
-                    Select(x => x.Value).
-                    OrderBy(x => x.Time);
-                //var result = _logCache.Where(x => x.Value.log.Contains(simpleQuery)).Select(x => x.Value);
-                return result.ToArray();
-            }
-        }
 
 
 
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults)
         {
-            lock (_logCache)
-            {
-                var result = _logCache.AsParallel().
-                    Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Value.Log, simpleQuery, CompareOptions.IgnoreCase) >= 0).
-                    Take(maxResults).
-                    Select(x => x.Value).
-                    OrderBy(x => x.Time);
-                //var result = _logCache.Where(x => x.Value.log.Contains(simpleQuery)).Select(x => x.Value);
-                return result.ToArray();
-            }
+            return _logCache.Query(simpleQuery, maxResults, CacheQueryMode.CaseInsensitive);
         }
 
         public void Dispose()
         {
-            _logCache.Clear();
+            _logCache.Dispose();
         }
     }
 }

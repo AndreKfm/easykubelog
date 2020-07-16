@@ -21,7 +21,7 @@ namespace EasyLogService.Services.CentralLogService
     {
         public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            return DateTimeOffset.Parse(reader.GetString());
+           return DateTimeOffset.Parse(reader.GetString());
         }
 
         // This method is not needed but has to be implemented 
