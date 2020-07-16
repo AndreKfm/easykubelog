@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using C5;
@@ -91,7 +92,7 @@ namespace EasyLogService.Services.CentralLogService
             lock (_logCache)
             {
                 var result = _logCache.AsParallel().
-                    Where(x => x.Value.Log.Contains(simpleQuery)).
+                    Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Value.Log, simpleQuery, CompareOptions.IgnoreCase) >= 0).
                     Take(maxResults).
                     Select(x => x.Value).
                     OrderBy(x => x.Time);
