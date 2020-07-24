@@ -45,7 +45,7 @@ namespace EasyLogService.Services.CentralLogService
 
         private static readonly JsonSerializerOptions Options = InitOptions();
 
-        private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { Time = default, Log = String.Empty, Stream = String.Empty };
+        private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { Time = default, Log = String.Empty, Stream = String.Empty, Container = String.Empty };
 
         static public KubernetesLogEntry Parse(string line)
         {
@@ -58,7 +58,10 @@ namespace EasyLogService.Services.CentralLogService
             return Default;
         }
 
-        public bool IsDefault => Stream == String.Empty && Log == String.Empty;
+        public bool IsDefault => Stream == String.Empty && Log == String.Empty && Container == String.Empty;
+
+        [JsonPropertyName("cont")]
+        public string Container { get; set; } // Container name
 
         [JsonPropertyName("log")]
         public string Log { get; set; } // Log lines to add

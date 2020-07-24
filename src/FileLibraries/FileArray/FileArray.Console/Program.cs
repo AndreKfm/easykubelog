@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -6,15 +7,74 @@ using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace FileArrayConsole
 {
 
     using FileListType = ImmutableSortedDictionary<long, EndlessStreamFileListEntry>;
+
+    internal class KubernetesJsonDateTimeOffsetConverter : JsonConverter<DateTimeOffset>
+    {
+        public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            return DateTimeOffset.Parse(reader.GetString());
+        }
+
+        // This method is not needed but has to be implemented 
+        public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public class KubernetesLogEntry
+    {
+
+        private static JsonSerializerOptions InitOptions()
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new KubernetesJsonDateTimeOffsetConverter());
+            //options.PropertyNameCaseInsensitive = true;
+            return options;
+        }
+
+        private static readonly JsonSerializerOptions Options = InitOptions();
+
+        private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { Time = default, Log = String.Empty, Stream = String.Empty, Container = String.Empty };
+
+        static public KubernetesLogEntry Parse(string line)
+        {
+            try
+            {
+                if (line.Length > 0)
+                    return JsonSerializer.Deserialize<KubernetesLogEntry>(line, Options);
+            }
+            catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Parse: {e.Message}"); }
+            return Default;
+        }
+
+        public bool IsDefault => Stream == String.Empty && Log == String.Empty && Container == String.Empty;
+
+        [JsonPropertyName("cont")]
+        public string Container { get; set; } // Container name
+
+        [JsonPropertyName("log")]
+        public string Log { get; set; } // Log lines to add
+
+        [JsonPropertyName("stream")]
+        public string Stream { get; set; } // Type of log
+
+        [JsonPropertyName("time")]
+        public DateTimeOffset Time { get; set; }  // Date time when log entry was written on client side - use string to preserve ticks
+
+
+    }
 
     public class EndlessStreamFileListEntry
     {
@@ -153,6 +213,50 @@ namespace FileArrayConsole
                         File.Delete(file);
                     }
                     catch (Exception) { }
+                }
+            }
+        }
+
+    }
+
+    public class FileHelper
+    {
+
+        static public IEnumerable<string> ReadFromFileStream(string fileName, int maxLines, Func<string, FileStream> OpenFile)
+        {
+            using (FileStream fileStream = OpenFile(fileName))
+            using (StreamReader reader = new StreamReader(fileStream))
+            {
+                reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                for (; ; )
+                {
+
+                    string line = null;
+
+                    try
+                    {
+                        line = reader.ReadLine();
+                    }
+                    catch (Exception)
+                    {
+                    }
+
+
+                    if (line != null)
+                        yield return line;
+                    else break;
+                }
+            }
+        }
+
+        static public IEnumerable<string> ReadFromFileStream(string[] listToRead, int maxLines, Func<string, FileStream> OpenFile)
+        {
+
+            foreach (var file in listToRead)
+            {
+                foreach (var line in ReadFromFileStream(file, maxLines, OpenFile))
+                {
+                    yield return line; 
                 }
             }
         }
@@ -333,36 +437,14 @@ namespace FileArrayConsole
         }
 
         public IEnumerable<string> ReadFromFileStream(int maxLines)
+
         {
             var listToRead = _fileList.GetFileList();
-
-            foreach (var file in listToRead)
-            {
-                using (FileStream fileStream = Open(file.Value.FileName))
-                using (StreamReader reader = new StreamReader(fileStream))
-                {
-                    reader.BaseStream.Seek(0, SeekOrigin.Begin);
-                    for (; ; )
-                    {
-
-                        string line = null;
-
-                        try
-                        {
-                            line = reader.ReadLine();
-                        }
-                        catch (Exception)
-                        {
-                        }
+            var fileList = listToRead.Select(x => x.Value.FileName).ToArray();
+            return FileHelper.ReadFromFileStream(fileList, maxLines, this.Open);
+        }      
 
 
-                        if (line != null)
-                            yield return line;
-                        else break;
-                    }
-                }
-            }
-        }
 
 
 
@@ -440,6 +522,90 @@ namespace FileArrayConsole
     }
 
 
+    /// <summary>
+    /// Helper class to build a central log file - can be used either for testing or on startup to generate a log file 
+    /// from already existing logs
+    /// </summary>
+    public class EndlessFileStreamBuilder
+    {
+        public EndlessFileStreamBuilder()
+        {
+            
+        }
+
+
+
+        public IEnumerable<KubernetesLogEntry> EnumerateSortedByDateTime(IEnumerable<IEnumerable<string>> fileListEnumerationWithFileEntries)
+        {
+            List<IEnumerator<string>> iteratorList = new List<IEnumerator<string>>();
+
+            foreach (var fileEnum in fileListEnumerationWithFileEntries)
+            {
+                var iterator = fileEnum.GetEnumerator();
+                iterator.MoveNext();
+                iteratorList.Add(iterator);
+            }
+
+
+
+            for (; ; )
+            {
+                SortedDictionary<DateTimeOffset, (IEnumerator<string> iterator, KubernetesLogEntry entry)> sortList = new SortedDictionary<DateTimeOffset, (IEnumerator<string> iterator, KubernetesLogEntry entry)>();
+                foreach (var iterator in iteratorList)
+                {
+                    if (iterator.Current != null)
+                    {
+                        var k = KubernetesLogEntry.Parse(iterator.Current);
+                        sortList.Add(k.Time, (iterator, k));
+                    }
+                }
+
+                if (sortList.Count == 0)
+                    break;
+
+
+                var value = sortList.First().Value;
+                if (value.iterator.MoveNext() == false)
+                {
+                    iteratorList.Remove(value.iterator);
+                }
+
+                yield return value.entry;
+            }
+        }
+
+
+        public void GenerateOutputFile(string baseDirectory, string outputFile)
+        {
+            List<IEnumerable<string>> streams = OpenFiles(baseDirectory);
+
+            var listEnumerator = streams.AsEnumerable();
+
+
+            foreach (var s in EnumerateSortedByDateTime(listEnumerator))
+            {
+                Console.WriteLine(s.Log.ToString());
+            }
+
+
+        }
+
+
+        List<IEnumerable<string>> OpenFiles(string baseDirectory)
+        {
+            var files = Directory.GetFiles(baseDirectory);
+            List<IEnumerable<string>> streams = new List<IEnumerable<string>>();
+            foreach (var file in files)
+            {
+                streams.Add(FileHelper.ReadFromFileStream(file, -1, (string file) => { return File.OpenRead(file); }));
+            }
+
+            return streams;
+        }
+
+
+    }
+
 
     class Program
     {
@@ -493,6 +659,13 @@ namespace FileArrayConsole
         }
         static void Main(string[] args)
         {
+            EndlessFileStreamBuilder b = new EndlessFileStreamBuilder();
+            b.GenerateOutputFile(@"C:\test\xlogtest", @"c:\test\central_test.log");
+            //b.GenerateOutputFile(@"c:\test\logs", @"c:\test\central_test.log");
+        
+
+            return;
+
             //TestWritingAndPerformance();
             ReadWhileWrite();
         }
