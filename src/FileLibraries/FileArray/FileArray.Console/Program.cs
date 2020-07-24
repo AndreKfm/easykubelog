@@ -59,7 +59,17 @@ namespace FileArrayConsole
             return Default;
         }
 
-        public bool IsDefault => Stream == String.Empty && Log == String.Empty && Container == String.Empty;
+        public void Write(StreamWriter writer)
+        {
+            try
+            {
+                string line = JsonSerializer.Serialize<KubernetesLogEntry>(this);
+                writer.WriteLine(line);
+            }
+            catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Write: {e.Message}"); }
+        }
+
+        public bool IsDefault() { return  Stream == String.Empty && Log == String.Empty && Container == String.Empty; }
 
         [JsonPropertyName("cont")]
         public string Container { get; set; } // Container name
@@ -221,8 +231,13 @@ namespace FileArrayConsole
 
     public class FileHelper
     {
+        static public Func<string, FileStream> DefaultOpenFileRead = (string file) => File.OpenRead(file);
+        static public Func<string, FileStream> DefaultOpenFileWrite = (string file) => File.OpenWrite(file);
+        static public Func<string, FileStream> DefaultOpenFileCreate = (string file) => File.Create(file);
 
-        static public IEnumerable<string> ReadFromFileStream(string fileName, int maxLines, Func<string, FileStream> OpenFile)
+        static public IEnumerable<string> ReadFromFileStream(string fileName,
+                                                             int maxLines,
+                                                             Func<string, FileStream> OpenFile)
         {
             using (FileStream fileStream = OpenFile(fileName))
             using (StreamReader reader = new StreamReader(fileStream))
@@ -532,7 +547,15 @@ namespace FileArrayConsole
         {
             
         }
+        private class CompareAndAllowDoubleEntries : IComparer<long>
+        {
+            public int Compare(long left, long right)
+            {
+                return (right > left) ? -1 : 1; // no zeroes 
+            }
+        }
 
+        private IComparer<long> _defaultComparer = new CompareAndAllowDoubleEntries();
 
 
         public IEnumerable<KubernetesLogEntry> EnumerateSortedByDateTime(IEnumerable<IEnumerable<string>> fileListEnumerationWithFileEntries)
@@ -546,17 +569,22 @@ namespace FileArrayConsole
                 iteratorList.Add(iterator);
             }
 
-
+            
 
             for (; ; )
             {
-                SortedDictionary<DateTimeOffset, (IEnumerator<string> iterator, KubernetesLogEntry entry)> sortList = new SortedDictionary<DateTimeOffset, (IEnumerator<string> iterator, KubernetesLogEntry entry)>();
+                SortedDictionary<long, (IEnumerator<string> iterator, KubernetesLogEntry entry)> sortList = 
+                    new SortedDictionary<long, (IEnumerator<string> iterator, KubernetesLogEntry entry)>(_defaultComparer);
                 foreach (var iterator in iteratorList)
                 {
-                    if (iterator.Current != null)
+                    if (String.IsNullOrEmpty(iterator.Current) == false)
                     {
                         var k = KubernetesLogEntry.Parse(iterator.Current);
-                        sortList.Add(k.Time, (iterator, k));
+                        if (!k.IsDefault()) // Just to play it safe - remove empty lines
+                        {
+                            long ticks = k.Time.Ticks;
+                            sortList.TryAdd(ticks, (iterator, k));
+                        }
                     }
                 }
 
@@ -581,10 +609,15 @@ namespace FileArrayConsole
 
             var listEnumerator = streams.AsEnumerable();
 
-
-            foreach (var s in EnumerateSortedByDateTime(listEnumerator))
+            using (var fileStream = FileHelper.DefaultOpenFileCreate(outputFile))
+            using (var writer = new StreamWriter(fileStream))
             {
-                Console.WriteLine(s.Log.ToString());
+
+                foreach (var s in EnumerateSortedByDateTime(listEnumerator))
+                {
+                    //if (s.IsDefault == false)
+                        s.Write(writer);
+                }
             }
 
 
@@ -660,8 +693,8 @@ namespace FileArrayConsole
         static void Main(string[] args)
         {
             EndlessFileStreamBuilder b = new EndlessFileStreamBuilder();
-            b.GenerateOutputFile(@"C:\test\xlogtest", @"c:\test\central_test.log");
-            //b.GenerateOutputFile(@"c:\test\logs", @"c:\test\central_test.log");
+            //b.GenerateOutputFile(@"C:\test\xlogtest", @"c:\test\central_test.log");
+            b.GenerateOutputFile(@"c:\test\logs", @"c:\test\central_test.log");
         
 
             return;

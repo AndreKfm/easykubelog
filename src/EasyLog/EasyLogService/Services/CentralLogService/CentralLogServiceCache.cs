@@ -17,7 +17,8 @@ namespace EasyLogService.Services.CentralLogService
         public CentralLogServiceCache(int maxLines, ILogger<CentralLogServiceCache> logger, ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> cache = null)
         {
             //_logCache = cache ?? new MemoryCacheTreeDictionary(maxLines);
-            _logCache = cache ?? new FileCache(@"c:\test\central.log", maxLines);
+            _logCache = cache ?? new FileCache(@"c:\test\central_test.log", maxLines);
+            //_logCache = cache ?? new FileCache(@"c:\test\central.log", maxLines);
             _logger = logger;
         }
 
