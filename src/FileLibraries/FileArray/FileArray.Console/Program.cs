@@ -1,18 +1,15 @@
 ﻿using System;
-using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Runtime.Serialization;
-using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FileArrayConsole
@@ -69,7 +66,18 @@ namespace FileArrayConsole
             catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Write: {e.Message}"); }
         }
 
-        public bool IsDefault() { return  Stream == String.Empty && Log == String.Empty && Container == String.Empty; }
+        public void Write(Action<string> writer)
+        {
+            try
+            {
+                string line = JsonSerializer.Serialize<KubernetesLogEntry>(this);
+                writer(line);
+            }
+            catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Write.Action: {e.Message}"); }
+        }
+
+
+        public bool IsDefault() { return Stream == String.Empty && Log == String.Empty && Container == String.Empty; }
 
         [JsonPropertyName("cont")]
         public string Container { get; set; } // Container name
@@ -96,12 +104,13 @@ namespace FileArrayConsole
     {
         string GetLatestEntryFileName();
         FileListType GetFileList();
-        FileListType AddNewFileDeleteOldestIfNeeded(); 
+        FileListType AddNewFileDeleteOldestIfNeeded();
     }
 
     public interface IEndlessFileStreamNames
     {
         public string IndexListFileName { get; }
+        public string IndexHashFileName { get; }
         public string FileTemplate { get; }
         public string GenerateNewFileName { get; }
 
@@ -116,6 +125,9 @@ namespace FileArrayConsole
             _baseDirectory = baseDirectory;
         }
         public string IndexListFileName => $"{_baseDirectory}/index.txt";
+        public string IndexHashFileName => $"{_baseDirectory}/index_hash.txt";
+
+        
 
         public string FileTemplate => $"{_baseDirectory}/endless-*.log"; // Used to delete directory
         public string GenerateNewFileName => $"{_baseDirectory}/endless-{Guid.NewGuid()}.log";
@@ -145,31 +157,47 @@ namespace FileArrayConsole
         {
             List<string> stringList = new List<string>();
 
-            stringList.Add(string.Empty); // Dummy entry to be replaced
             var list = fileList;
-            foreach (var entry in list.Skip(1))
+            foreach (var entry in list)
             {
                 entry.Value.FileName = Path.GetFullPath(entry.Value.FileName);
                 string line = JsonSerializer.Serialize<EndlessStreamFileListEntry>(entry.Value);
                 stringList.Add(line);
             }
 
-            stringList[0] = CalcHashCodeString(stringList);
+            var hash = CalcHashCodeString(stringList);
+            File.WriteAllText(_fileNames.IndexHashFileName, hash);
 
             File.WriteAllLines(_fileNames.IndexListFileName, stringList);
             PurgeRedundantFiles(fileList);
         }
 
+        private static string GetShaHash(string stringTobeHashed)
+        {
+            if (String.IsNullOrEmpty(stringTobeHashed))
+            {
+                stringTobeHashed = "#"; // always return a hash
+            }
+
+            using (var shaManaged = new System.Security.Cryptography.SHA256Managed())
+            {
+                byte[] textData = System.Text.Encoding.UTF8.GetBytes(stringTobeHashed);
+                byte[] hash = shaManaged.ComputeHash(textData);
+                return BitConverter.ToString(hash);
+            }
+        }
+
+
+        /// <summary>
+        /// Really simple and enough to check integrety of index file
+        /// </summary>
+        /// <param name="stringList"></param>
+        /// <returns></returns>
         static string CalcHashCodeString(List<string> stringList)
         {
-            if (stringList.Count <= 1)
-                return String.Empty;
             string hashCodeList = String.Empty;
-            for (int i = 1; i < stringList.Count; ++i)
-            {
-                hashCodeList += stringList[i].GetHashCode().ToString();
-            }            
-            return hashCodeList;
+            string toBeHashed = String.Join(',', stringList.ToArray());
+            return GetShaHash(hashCodeList);
         }
 
 
@@ -182,14 +210,15 @@ namespace FileArrayConsole
             var lines = File.ReadAllLines(_fileNames.IndexListFileName);
             var calculatedString = CalcHashCodeString(lines.ToList());
 
-            if (lines.Length <= 1 || calculatedString != lines[0])
+            var origHash = File.Exists(_fileNames.IndexHashFileName) ? File.ReadAllText(_fileNames.IndexHashFileName) : String.Empty;
+            if (calculatedString != origHash) 
             {
                 // Hash does not match - delete index and all files
                 File.Delete(_fileNames.IndexListFileName);
                 return null;
             }
 
-            FileListType.Builder builder = System.Collections.Immutable.ImmutableSortedDictionary.CreateBuilder<long, EndlessStreamFileListEntry>(); 
+            FileListType.Builder builder = System.Collections.Immutable.ImmutableSortedDictionary.CreateBuilder<long, EndlessStreamFileListEntry>();
 
             foreach (var line in lines)
             {
@@ -201,9 +230,9 @@ namespace FileArrayConsole
             PurgeRedundantFiles(fileList);
             return fileList;
         }
-        
 
-        public void PurgeRedundantFiles(FileListType list) 
+
+        public void PurgeRedundantFiles(FileListType list)
         {
             var fileTemplate = _fileNames.FileTemplate;
             var path = Path.GetDirectoryName(fileTemplate);
@@ -271,7 +300,7 @@ namespace FileArrayConsole
             {
                 foreach (var line in ReadFromFileStream(file, maxLines, OpenFile))
                 {
-                    yield return line; 
+                    yield return line;
                 }
             }
         }
@@ -335,14 +364,14 @@ namespace FileArrayConsole
                     {
                         File.Delete(fileToDelete);
                     }
-                    catch(Exception)
+                    catch (Exception)
                     {
                         // might happen if the file is currently read and cannot be deleted
                     }
                     list = list.Remove(toDelete.FileIndex);
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.Error.WriteLine($"Exception in EndlessFileStreamFileList.AddNewFileDeleteOldestIfNeeded deleting oldest file: {fileToDelete} - exception: {e.Message}");
             }
@@ -361,7 +390,7 @@ namespace FileArrayConsole
         public string GetLatestEntryFileName()
         {
             var last = _fileList.Values.Last();
-            return last.FileName; 
+            return last.FileName;
         }
 
         FileListType _fileList = FileListType.Empty;
@@ -371,6 +400,8 @@ namespace FileArrayConsole
     {
         public Task WriteToFileStream(string line);
         public IEnumerable<string> ReadFromFileStream(int maxLines);
+
+        public void Flush();
 
     }
 
@@ -407,7 +438,7 @@ namespace FileArrayConsole
             {
                 stream?.Dispose();
             }
-            catch(Exception)
+            catch (Exception)
             {
             }
             stream = default(T);
@@ -423,8 +454,9 @@ namespace FileArrayConsole
             var nameOfLatestFile = _fileList.GetLatestEntryFileName();
             Close();
             _fileStream = Open(nameOfLatestFile);
+            _fileStream.Seek(0, SeekOrigin.End); // Append to end of file
             _writer = new StreamWriter(_fileStream);
-            
+
         }
 
         void Close()
@@ -434,6 +466,11 @@ namespace FileArrayConsole
             _fileStream = null;
         }
 
+
+        public void Flush()
+        {
+            Writer().Flush();
+        }
 
         public async Task WriteToFileStream(string line)
         {
@@ -445,7 +482,7 @@ namespace FileArrayConsole
             if ((currentSize + stringSize) > _maxLogFileSizeInBytesEachFile)
             {
                 Close(); // Don't use file anymore after a new one has been created - otherwise files would stay open and couldn't be deleted 
-                _fileList.AddNewFileDeleteOldestIfNeeded();                
+                _fileList.AddNewFileDeleteOldestIfNeeded();
             }
 
             Writer().WriteLine(line /** Default Encoding.UTF8 */);
@@ -457,7 +494,7 @@ namespace FileArrayConsole
             var listToRead = _fileList.GetFileList();
             var fileList = listToRead.Select(x => x.Value.FileName).ToArray();
             return FileHelper.ReadFromFileStream(fileList, maxLines, this.Open);
-        }      
+        }
 
 
 
@@ -465,7 +502,7 @@ namespace FileArrayConsole
 
         StreamWriter Writer()
         {
-            if (_writer == null) 
+            if (_writer == null)
                 InitCurrentFile();
             return _writer;
         }
@@ -500,40 +537,58 @@ namespace FileArrayConsole
     public interface IEndlessFileStreamWriter
     {
         public void WriteToFileStream(string line);
+        public void Flush();
     }
 
 
     public class EndlessFileStreamWriter : IEndlessFileStreamWriter
     {
-        IEndlessFileStreamIO _fileIO; 
+        IEndlessFileStreamIO _fileIO;
 
         public EndlessFileStreamWriter(IEndlessFileStreamIO fileIO)
         {
             _fileIO = fileIO;
         }
 
+
         public void WriteToFileStream(string line)
         {
             var currentSize = _fileIO.WriteToFileStream(line);
         }
+
+        public void Flush()
+        {
+            _fileIO.Flush();
+        }
     }
 
 
-    public class EndlessFileStream
+    public class EndlessFileStream : IDisposable
     {
         IEndlessFileStreamWriter _writer;
         IEndlessFileStreamReader _reader;
-        IEndlessFileStreamIO _io; 
+        IEndlessFileStreamIO _io;
 
-        public EndlessFileStream(string baseDirectory, long maxLogFileSizeInMByte = 1024, IEndlessFileStreamWriter writer = null, IEndlessFileStreamReader reader = null)
+        public EndlessFileStream(string baseDirectory, long maxLogFileSizeInMByte = 1024,
+                                 IEndlessFileStreamWriter writer = null,
+                                 IEndlessFileStreamReader reader = null,
+                                 EndlessFileStreamIO io = null)
         {
-            _io = new EndlessFileStreamIO(baseDirectory, maxLogFileSizeInMByte);
+            _io = io ?? new EndlessFileStreamIO(baseDirectory, maxLogFileSizeInMByte);
             _writer = writer ?? new EndlessFileStreamWriter(_io);
             _reader = reader ?? new EndlessFileStreamReader(_io);
         }
 
         public IEndlessFileStreamWriter Writer { get { return _writer; } }
         public IEndlessFileStreamReader Reader { get { return _reader; } }
+
+        public void Dispose()
+        {
+            _io?.Dispose();
+            _io = null;
+            _reader = null;
+            _writer = null;
+        }
     }
 
 
@@ -545,7 +600,7 @@ namespace FileArrayConsole
     {
         public EndlessFileStreamBuilder()
         {
-            
+
         }
         private class CompareAndAllowDoubleEntries : IComparer<long>
         {
@@ -569,13 +624,12 @@ namespace FileArrayConsole
                 iteratorList.Add(iterator);
             }
 
-            
 
+
+            ConcurrentQueue<(long ticks, IEnumerator<string> iterator, KubernetesLogEntry k)> queue = new ConcurrentQueue<(long ticks, IEnumerator<string> iterator, KubernetesLogEntry k)>();
             for (; ; )
             {
-                SortedDictionary<long, (IEnumerator<string> iterator, KubernetesLogEntry entry)> sortList = 
-                    new SortedDictionary<long, (IEnumerator<string> iterator, KubernetesLogEntry entry)>(_defaultComparer);
-                foreach (var iterator in iteratorList)
+                var result= Parallel.ForEach(iteratorList, async (iterator) =>
                 {
                     if (String.IsNullOrEmpty(iterator.Current) == false)
                     {
@@ -583,22 +637,38 @@ namespace FileArrayConsole
                         if (!k.IsDefault()) // Just to play it safe - remove empty lines
                         {
                             long ticks = k.Time.Ticks;
-                            sortList.TryAdd(ticks, (iterator, k));
+
+                            queue.Enqueue((ticks, iterator, k));
+                            //sortList.TryAdd(ticks, (iterator, k));
                         }
+                    }
+                });
+
+
+
+                long currentTick = long.MaxValue;
+                IEnumerator<string> iterator = null;
+                KubernetesLogEntry k = null;
+                while (queue.TryDequeue(out var i))
+                {
+                    if (i.ticks < currentTick)
+                    {
+                        currentTick = i.ticks;
+                        iterator = i.iterator;
+                        k = i.k;
                     }
                 }
 
-                if (sortList.Count == 0)
+                if (k == null || iterator == null)
                     break;
 
-
-                var value = sortList.First().Value;
-                if (value.iterator.MoveNext() == false)
+                
+                if (iterator.MoveNext() == false)
                 {
-                    iteratorList.Remove(value.iterator);
+                    iteratorList.Remove(iterator);
                 }
 
-                yield return value.entry;
+                yield return k;
             }
         }
 
@@ -616,12 +686,27 @@ namespace FileArrayConsole
                 foreach (var s in EnumerateSortedByDateTime(listEnumerator))
                 {
                     //if (s.IsDefault == false)
-                        s.Write(writer);
+                    s.Write(writer);
                 }
             }
-
-
         }
+
+        public void GenerateEndlessFileStream(string sourceDirectory, string endlessFileStreamDirectory)
+        {
+            List<IEnumerable<string>> streams = OpenFiles(sourceDirectory);
+
+            var listEnumerator = streams.AsEnumerable();
+
+            using (EndlessFileStream file = new EndlessFileStream(endlessFileStreamDirectory, 1024))
+            {
+
+                foreach (var s in EnumerateSortedByDateTime(listEnumerator))
+                {
+                    s.Write((string line) => { file.Writer.WriteToFileStream(line); file.Writer.Flush(); });
+                }
+            }
+        }
+
 
 
         List<IEnumerable<string>> OpenFiles(string baseDirectory)
@@ -658,7 +743,7 @@ namespace FileArrayConsole
                         Console.WriteLine($"READ: {a}");
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Console.Error.WriteLine($"Exception while reading endless stream: {e.Message}");
                 }
@@ -666,7 +751,7 @@ namespace FileArrayConsole
                 Task.Delay(1000).Wait();
             }
 
-           
+
         }
 
 
@@ -694,9 +779,10 @@ namespace FileArrayConsole
         {
             EndlessFileStreamBuilder b = new EndlessFileStreamBuilder();
             //b.GenerateOutputFile(@"C:\test\xlogtest", @"c:\test\central_test.log");
-            b.GenerateOutputFile(@"c:\test\logs", @"c:\test\central_test.log");
-        
+            //b.GenerateOutputFile(@"c:\test\logs", @"c:\test\central_test.log");
+            b.GenerateEndlessFileStream(@"c:\test\logs", @"C:\test\endless");
 
+            EndlessFileStream e = new EndlessFileStream(@"C:\test\endless", 1024);
             return;
 
             //TestWritingAndPerformance();
