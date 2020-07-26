@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using EasyLogService.Services.CentralLogService;
+using LogEntries;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 

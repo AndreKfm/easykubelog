@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\LogEntries\LogEntries.csproj" />
     <ProjectReference Include="..\EasyLogService\EasyLogService.csproj" />
   </ItemGroup>
 

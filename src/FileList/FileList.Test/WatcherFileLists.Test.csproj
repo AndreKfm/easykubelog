@@ -5,7 +5,7 @@
 
     <IsPackable>false</IsPackable>
 
-    <RootNamespace>FileListClasses.Test</RootNamespace>
+    <RootNamespace>WatcherFileListClasses.Test</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FileList\FileLists.csproj" />
+    <ProjectReference Include="..\FileList\WatcherFileLists.csproj" />
   </ItemGroup>
 
 </Project>

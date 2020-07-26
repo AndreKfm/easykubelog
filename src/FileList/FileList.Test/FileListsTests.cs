@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Xml.Serialization;
 using Xunit;
 
-namespace FileListClasses.Test
+namespace WatcherFileListClasses.Test
 {
     using FileListType = ReadOnlyCollection<FileEntry>;
 
@@ -15,7 +15,7 @@ namespace FileListClasses.Test
         [Fact]
         public void FileList_CreateObject()
         {
-            _ = new FileList(directoryToWatch);
+            _ = new WatcherFileList(directoryToWatch);
         }
 
         //const string directoryToWatch = @"C:\test\deleteme\xwatchertest";
@@ -27,7 +27,7 @@ namespace FileListClasses.Test
         public void FileList_StartWatching()
         {
             var callback = new Action<FileListType>((FileListType list) => { });
-            FileList w = new FileList(directoryToWatch);
+            WatcherFileList w = new WatcherFileList(directoryToWatch);
             w.Start(directoryToWatch, _ => callback(_));
         }
 
@@ -35,7 +35,7 @@ namespace FileListClasses.Test
         public void FileList_StartWatching_ThenDispose()
         {
             var callback = new Action<FileListType>((FileListType list) => {});
-            FileList w = new FileList(directoryToWatch);
+            WatcherFileList w = new WatcherFileList(directoryToWatch);
             w.Start(directoryToWatch, _ => callback(_));
             w.Dispose();
         }
@@ -65,7 +65,7 @@ namespace FileListClasses.Test
             Mock<IFileSystemWatcher> m = new Mock<IFileSystemWatcher>();
             var f = new FilterAndCallbackArgument("*.txt");
             m.Setup(x => x.Open(It.IsAny<String>(), It.IsAny<FilterAndCallbackArgument>())).Callback<string , FilterAndCallbackArgument>((string x, FilterAndCallbackArgument arg) => a(x, arg)).Returns(true);
-            FileList w = new FileList(directoryToWatch, m.Object, 0 /** NO throttling !!! */);
+            WatcherFileList w = new WatcherFileList(directoryToWatch, m.Object, 0 /** NO throttling !!! */);
             w.Start(directoryToWatch, _ => lc(_));
 
             CheckHelper(local, "f1.txt", ref lastEntry, IFileSystemWatcherChangeType.Created);

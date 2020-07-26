@@ -10,7 +10,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\FileList\FileList\FileLists.csproj" />
+    <ProjectReference Include="..\..\EndlessFileStream\EndlessFileStream.csproj" />
+    <ProjectReference Include="..\..\FileList\FileList\WatcherFileLists.csproj" />
+    <ProjectReference Include="..\..\LogEntries\LogEntries.csproj" />
   </ItemGroup>
 
   <ItemGroup>

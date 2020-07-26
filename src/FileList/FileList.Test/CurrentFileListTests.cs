@@ -4,7 +4,7 @@ using System.Text;
 
 
 
-namespace FileListClasses.Test
+namespace WatcherFileListClasses.Test
 {
     using Moq;
     using System.IO;
@@ -15,7 +15,7 @@ namespace FileListClasses.Test
         public void AddFile()
         {
             Mock<IFile> m = new Mock<IFile>();
-            CurrentFileList c = new CurrentFileList();
+            WatcherCurrentFileList c = new WatcherCurrentFileList();
             c.AddFile(new CurrentFileEntry("test1.txt", m.Object));
             var l = c.GetList();
             Assert.True(l.Count == 1);
@@ -26,7 +26,7 @@ namespace FileListClasses.Test
         public void RemoveFile()
         {
             Mock<IFile> m = new Mock<IFile>();
-            CurrentFileList c = new CurrentFileList();
+            WatcherCurrentFileList c = new WatcherCurrentFileList();
             Assert.False(c.RemoveFile("test1.txt"));
             Assert.True(c.AddFile(new CurrentFileEntry("test1.txt", m.Object)));
             var l = c.GetList();

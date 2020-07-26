@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FileListClasses
+namespace WatcherFileListClasses
 {
     using FileListType = ReadOnlyCollection<FileEntry>;
 
@@ -82,9 +82,9 @@ namespace FileListClasses
 
 
 
-    public class FileList : IDisposable
+    public class WatcherFileList : IDisposable
     {
-        public FileList(string directoryToWatch, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
+        public WatcherFileList(string directoryToWatch, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
         {
             _watcherInterface = watcherInterface;
             _directoryToWatch = directoryToWatch;

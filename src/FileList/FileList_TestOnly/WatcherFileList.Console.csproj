@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FileList\FileLists.csproj" />
+    <ProjectReference Include="..\FileList\WatcherFileLists.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 using EasyLogService.Services;
 using EasyLogService.Services.CentralLogService;
+using LogEntries;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace EasylogService.Test
                 if (line.Length > 0)
                 {
                     var parsed = KubernetesLogEntry.Parse(line);
-                    Assert.True(parsed.IsDefault == false);
+                    Assert.True(parsed.IsDefault() == false);
                     list.Add(parsed);
                 }
             }

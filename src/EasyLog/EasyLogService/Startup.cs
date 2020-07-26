@@ -8,13 +8,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using FileListClasses;
+using WatcherFileListClasses;
 using EasyLogService.Commands;
 using System.IO;
 using System.Linq;
 using EasyLogService.Tool.Simulator;
 using EasyLogService.Services.CentralLogService;
 using Microsoft.Extensions.Logging;
+using LogEntries;
 
 namespace EasyLogService
 {

@@ -1,8 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace EasyLogService.Services.CentralLogService
+namespace LogEntries
 {
     public class LogEntry
     {
@@ -29,6 +30,7 @@ namespace EasyLogService.Services.CentralLogService
         {
             throw new NotImplementedException();
         }
+
     }
 
     // Log entry in Kubernetes format - reads itself with Json deserializer from a log entry (commonly a single line) 
@@ -41,6 +43,25 @@ namespace EasyLogService.Services.CentralLogService
             options.Converters.Add(new KubernetesJsonDateTimeOffsetConverter());
             //options.PropertyNameCaseInsensitive = true;
             return options;
+        }
+
+        public void Write(Action<string> writer)
+        {
+            try
+            {
+                string line = JsonSerializer.Serialize<KubernetesLogEntry>(this);
+                writer(line);
+            }
+            catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Write.Action: {e.Message}"); }
+        }
+        public void Write(StreamWriter writer)
+        {
+            try
+            {
+                string line = JsonSerializer.Serialize<KubernetesLogEntry>(this);
+                writer.WriteLine(line);
+            }
+            catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Write: {e.Message}"); }
         }
 
         private static readonly JsonSerializerOptions Options = InitOptions();
@@ -58,7 +79,7 @@ namespace EasyLogService.Services.CentralLogService
             return Default;
         }
 
-        public bool IsDefault => Stream == String.Empty && Log == String.Empty && Container == String.Empty;
+        public bool IsDefault() { return Stream == String.Empty && Log == String.Empty && Container == String.Empty; }
 
         [JsonPropertyName("cont")]
         public string Container { get; set; } // Container name

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using C5;
+using LogEntries;
 
 namespace EasyLogService.Services.CentralLogService
 {

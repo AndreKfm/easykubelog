@@ -1,5 +1,6 @@
 ﻿using EasyLogService.Services;
 using EasyLogService.Services.CentralLogService;
+using LogEntries;
 using System;
 using System.Collections.Generic;
 using System.IO;

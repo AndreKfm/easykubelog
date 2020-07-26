@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LogEntries;
 using Microsoft.Extensions.Logging;
 
 namespace EasyLogService.Services.CentralLogService
@@ -17,7 +18,9 @@ namespace EasyLogService.Services.CentralLogService
         public CentralLogServiceCache(int maxLines, ILogger<CentralLogServiceCache> logger, ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> cache = null)
         {
             //_logCache = cache ?? new MemoryCacheTreeDictionary(maxLines);
-            _logCache = cache ?? new FileCache(@"c:\test\central_test.log", maxLines);
+            //_logCache = cache ?? new FileCache(@"c:\test\central_test.log", maxLines);
+            var endlessStream = new EndlessFileStreamClasses.EndlessFileStream(@"C:\test\endless");
+            _logCache = cache ?? new EndlessFileStreamCache(endlessStream, maxLines);
             //_logCache = cache ?? new FileCache(@"c:\test\central.log", maxLines);
             _logger = logger;
         }
@@ -32,7 +35,7 @@ namespace EasyLogService.Services.CentralLogService
                 if (line.Length > 0)
                 {
                     var newEntry = KubernetesLogEntry.Parse(line);
-                    if (!newEntry.IsDefault)
+                    if (!newEntry.IsDefault())
                     {
                         lock (_logCache)
                         {

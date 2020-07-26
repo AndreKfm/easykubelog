@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Reflection.Metadata.Ecma335;
 
-namespace FileListClasses
+namespace WatcherFileListClasses
 {
 
     public interface IGetFile
@@ -39,7 +39,7 @@ namespace FileListClasses
     }
 
 
-    public class CurrentFileList : ICurrentFileList
+    public class WatcherCurrentFileList : ICurrentFileList
     {
 
         public bool AddFile(CurrentFileEntry currentFileEntry)

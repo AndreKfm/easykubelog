@@ -1,4 +1,5 @@
 ﻿using EasyLogService.Services.CentralLogService;
+using LogEntries;
 using System;
 using System.Diagnostics;
 

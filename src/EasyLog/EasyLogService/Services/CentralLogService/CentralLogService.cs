@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using LogEntries;
+using Microsoft.Extensions.Logging;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;

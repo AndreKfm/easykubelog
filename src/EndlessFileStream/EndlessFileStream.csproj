@@ -2,11 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>FileListClasses</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\DirectoryWatcher\DirectoryWatcher\DirectoryWatcher.csproj" />
+    <ProjectReference Include="..\LogEntries\LogEntries.csproj" />
   </ItemGroup>
 
 </Project>
