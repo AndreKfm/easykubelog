@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LogEntries\LogEntries\LogEntries.csproj" />
+    <ProjectReference Include="..\..\LogEntries\LogEntries\LogEntries.csproj" />
   </ItemGroup>
 
 </Project>

@@ -14,8 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\LoggingLibraries\EndlessFileStream\EndlessFileStream.csproj" />
-    <ProjectReference Include="..\..\LoggingLibraries\LogEntries\LogEntries\LogEntries.csproj" />
+    <ProjectReference Include="..\..\LoggingLibraries\EndlessFileStream\EndlessFileStream\EndlessFileStream.csproj" />
     <ProjectReference Include="..\..\LoggingLibraries\WatcherFileList\WatcherFileList\WatcherFileLists.csproj" />
   </ItemGroup>
 

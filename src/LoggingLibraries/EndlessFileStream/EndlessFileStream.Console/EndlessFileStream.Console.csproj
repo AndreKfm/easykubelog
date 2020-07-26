@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\EndlessFileStream\EndlessFileStream.csproj" />
+    <ProjectReference Include="..\EndlessFileStream\EndlessFileStream.csproj" />
   </ItemGroup>
 
 </Project>
