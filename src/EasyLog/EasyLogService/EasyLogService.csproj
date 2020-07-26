@@ -10,13 +10,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\EndlessFileStream\EndlessFileStream.csproj" />
-    <ProjectReference Include="..\..\WatcherFileList\WatcherFileList\WatcherFileLists.csproj" />
-    <ProjectReference Include="..\..\LogEntries\LogEntries\LogEntries.csproj" />
+    <Folder Include="wwwroot\css\bootstrap\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\css\bootstrap\" />
+    <ProjectReference Include="..\..\LoggingLibraries\EndlessFileStream\EndlessFileStream.csproj" />
+    <ProjectReference Include="..\..\LoggingLibraries\LogEntries\LogEntries\LogEntries.csproj" />
+    <ProjectReference Include="..\..\LoggingLibraries\WatcherFileList\WatcherFileList\WatcherFileLists.csproj" />
   </ItemGroup>
 
 
