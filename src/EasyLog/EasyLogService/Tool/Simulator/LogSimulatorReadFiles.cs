@@ -18,8 +18,8 @@ namespace EasyLogService.Tool.Simulator
         }
 
         private bool readDone = false;
-        Task current = Task.CompletedTask;
-        CancellationTokenSource tokenSource = new CancellationTokenSource();
+        private readonly Task current = Task.CompletedTask;
+        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
 
         public void InitialRead(string directory, ICentralLogServiceCache cache, int maxLinesToRead = 1000)
         {

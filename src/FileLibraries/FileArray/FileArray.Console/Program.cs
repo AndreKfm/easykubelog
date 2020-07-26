@@ -70,7 +70,7 @@ namespace FileArrayConsole
         }
         static void Main(string[] args)
         {
-            EndlessFileStreamBuilder b = new EndlessFileStreamBuilder();
+            //EndlessFileStreamBuilder b = new EndlessFileStreamBuilder();
             //b.GenerateOutputFile(@"C:\test\xlogtest", @"c:\test\central_test.log");
             //b.GenerateOutputFile(@"c:\test\logs", @"c:\test\central_test.log");
             //b.GenerateEndlessFileStream(@"c:\test\logs", @"C:\test\endless");

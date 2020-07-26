@@ -14,27 +14,23 @@ namespace EasyLogService.Services.CentralLogService
 
     public class FileCache : ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry>
     {
-        int _maxLines;
 
-        string _fileName;
+        readonly string _fileName;
         FileStream _file;
         StreamReader _stream;
-        long _lines = 0;
 
-        Object _lockObject = new object();
 
-        public FileCache(string fileName, int maxLines)
+        public FileCache(string fileName)
         {
             _fileName = fileName;
-            _maxLines = maxLines;
             _file = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             _stream = new StreamReader(_file);
 
             // We need to do that dumb counting for the first time to get the number of lines :-/ 
-            while (_stream.ReadLine() != null)
-            {
-                ++_lines;
-            }
+            //while (_stream.ReadLine() != null)
+            //{
+            //    ++_lines;
+            //}
         }
 
 
@@ -73,29 +69,25 @@ namespace EasyLogService.Services.CentralLogService
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults)
         {
 
-            using (FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
-            using (StreamReader localStream = new StreamReader(file))
-            {
-                var result = EnumerateStreamLines(localStream).
-                Where(x => x.Log.Contains(simpleQuery)).
-                Take(maxResults).
-                OrderBy(x => x.Time);
-                return result.ToArray();
-            }
+            using FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            using StreamReader localStream = new StreamReader(file);
+            var result = EnumerateStreamLines(localStream).
+            Where(x => x.Log.Contains(simpleQuery)).
+            Take(maxResults).
+            OrderBy(x => x.Time);
+            return result.ToArray();
         }
 
 
         private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults)
         {
-            using (FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
-            using (StreamReader localStream = new StreamReader(file))
-            {
-                var result = EnumerateStreamLines(localStream).
-                    Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Log, simpleQuery, CompareOptions.IgnoreCase) >= 0).
-                    Take(maxResults).
-                    OrderBy(x => x.Time);
-                return result.ToArray();
-            }
+            using FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            using StreamReader localStream = new StreamReader(file);
+            var result = EnumerateStreamLines(localStream).
+                Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Log, simpleQuery, CompareOptions.IgnoreCase) >= 0).
+                Take(maxResults).
+                OrderBy(x => x.Time);
+            return result.ToArray();
         }
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode)
         {
@@ -110,7 +102,7 @@ namespace EasyLogService.Services.CentralLogService
         EndlessFileStream _stream;
 
 
-        public EndlessFileStreamCache(EndlessFileStream stream, int maxLines)
+        public EndlessFileStreamCache(EndlessFileStream stream)
         {
             _stream = stream;
 
@@ -123,20 +115,20 @@ namespace EasyLogService.Services.CentralLogService
             _stream?.Dispose(); _stream = null;
         }
 
-        IEnumerable<KubernetesLogEntry> EnumerateStreamLines(StreamReader localStream)
-        {
-            //lock (_lockObject)
-            {
-                localStream.BaseStream.Seek(0, SeekOrigin.Begin);
-                for (; ; )
-                {
-                    var line = localStream.ReadLine();
-                    if (line != null)
-                        yield return KubernetesLogEntry.Parse(line);
-                    else break;
-                }
-            }
-        }
+        //IEnumerable<KubernetesLogEntry> EnumerateStreamLines(StreamReader localStream)
+        //{
+        //    //lock (_lockObject)
+        //    {
+        //        localStream.BaseStream.Seek(0, SeekOrigin.Begin);
+        //        for (; ; )
+        //        {
+        //            var line = localStream.ReadLine();
+        //            if (line != null)
+        //                yield return KubernetesLogEntry.Parse(line);
+        //            else break;
+        //        }
+        //    }
+        //}
 
 
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults)

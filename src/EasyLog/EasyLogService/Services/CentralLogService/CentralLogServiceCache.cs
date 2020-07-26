@@ -20,7 +20,7 @@ namespace EasyLogService.Services.CentralLogService
             //_logCache = cache ?? new MemoryCacheTreeDictionary(maxLines);
             //_logCache = cache ?? new FileCache(@"c:\test\central_test.log", maxLines);
             var endlessStream = new EndlessFileStreamClasses.EndlessFileStream(@"C:\test\endless");
-            _logCache = cache ?? new EndlessFileStreamCache(endlessStream, maxLines);
+            _logCache = cache ?? new EndlessFileStreamCache(endlessStream);
             //_logCache = cache ?? new FileCache(@"c:\test\central.log", maxLines);
             _logger = logger;
         }

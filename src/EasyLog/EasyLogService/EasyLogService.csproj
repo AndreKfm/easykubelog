@@ -11,8 +11,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\EndlessFileStream\EndlessFileStream.csproj" />
-    <ProjectReference Include="..\..\FileList\FileList\WatcherFileLists.csproj" />
-    <ProjectReference Include="..\..\LogEntries\LogEntries.csproj" />
+    <ProjectReference Include="..\..\WatcherFileList\WatcherFileList\WatcherFileLists.csproj" />
+    <ProjectReference Include="..\..\LogEntries\LogEntries\LogEntries.csproj" />
   </ItemGroup>
 
   <ItemGroup>

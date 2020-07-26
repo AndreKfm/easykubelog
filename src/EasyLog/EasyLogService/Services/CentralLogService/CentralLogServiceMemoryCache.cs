@@ -10,7 +10,7 @@ namespace EasyLogService.Services.CentralLogService
 
     public class MemoryCacheTreeDictionary : ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry>
     {
-        int _maxLines;
+        private readonly int _maxLines;
         public MemoryCacheTreeDictionary(int maxLines)
         {
             _maxLines = maxLines;

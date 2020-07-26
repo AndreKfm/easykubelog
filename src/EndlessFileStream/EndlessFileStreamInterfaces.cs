@@ -109,7 +109,7 @@ namespace EndlessFileStreamClasses
 
     public class EndlessFileStreamNames : IEndlessFileStreamNames
     {
-        string _baseDirectory;
+        readonly string _baseDirectory;
         public EndlessFileStreamNames(string baseDirectory)
         {
             _baseDirectory = baseDirectory;
