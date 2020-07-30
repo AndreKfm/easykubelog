@@ -44,5 +44,31 @@ namespace LogEntries.Test
             Assert.Equal(r1, r2);
 
         }
+
+        [Fact]
+        public void DeserializeContainerName()
+        {
+            string name = "kube-apiserver-myserver-2_kube-system_kube-apiserver-1827c8c0196e15c01ed339eac252aa483212dfd1b25ce44d2fca974a954c196b";
+            var value = KubernetesContainerNameTools.DeserializeContainerName(name);
+
+            Assert.Equal("kube-apiserver-myserver-2", value.deployment);
+            Assert.Equal("kube-system", value.nm);
+            Assert.Equal("kube-apiserver", value.containerName);
+            Assert.Equal("1827c8c0196e15c01ed339eac252aa483212dfd1b25ce44d2fca974a954c196b", value.contId);
+        }
+
+        [Fact]
+        public void DeserializeContainerNameFromKubernetesLog()
+        {
+            string name = "kube-apiserver-myserver-2_kube-system_kube-apiserver-1827c8c0196e15c01ed339eac252aa483212dfd1b25ce44d2fca974a954c196b.log";
+            string log = @"{ ""log"":"""",""stream"":"""",""time"":""0001-01-01T00:00:00+00:00""}"; // Dummy not needed directly
+            var k = KubernetesLogEntry.Parse(log, name);
+            var value = KubernetesContainerNameTools.DeserializeContainerName(k.Container);
+
+            Assert.Equal("kube-apiserver-myserver-2", value.deployment);
+            Assert.Equal("kube-system", value.nm);
+            Assert.Equal("kube-apiserver", value.containerName);
+            Assert.Equal("1827c8c0196e15c01ed339eac252aa483212dfd1b25ce44d2fca974a954c196b", value.contId);
+        }
     }
 }

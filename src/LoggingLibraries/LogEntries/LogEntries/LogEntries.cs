@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -31,6 +32,20 @@ namespace LogEntries
             throw new NotImplementedException();
         }
 
+    }
+
+    // kube-apiserver-myserver-2_kube-system_kube-apiserver-1827c8c0196e15c01ed339eac252aa483212dfd1b25ce44d2fca974a954c196b.log
+    // grafana-c6bfd5949-6g6h2_monitoring_grafana-8fdbfdebc4370290aaed8dc47782571bef9c8ac294e012a14af5546fb7df4f62.log
+    public class KubernetesContainerNameTools
+    {
+        public static (string deployment, string containerName, string nm, string contId) DeserializeContainerName(string containerName)
+        {
+            var array = containerName.Split('_');
+            int idPosition = array[2].LastIndexOf('-');
+            var containerShortName = array[2].Substring(0, idPosition);
+            var containerId = array[2].Substring(idPosition + 1);
+            return (array[0], containerShortName, array[1], containerId);
+        }
     }
 
     // Log entry in Kubernetes format - reads itself with Json deserializer from a log entry (commonly a single line) 
@@ -68,12 +83,25 @@ namespace LogEntries
 
         private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { Time = default, Log = String.Empty, Stream = String.Empty, Container = String.Empty };
 
-        static public KubernetesLogEntry Parse(string line)
+        static public KubernetesLogEntry Parse(string line, string containerName = null)
         {
             try
             {
                 if (line.Length > 0)
-                    return JsonSerializer.Deserialize<KubernetesLogEntry>(line, Options);
+                {
+                    var k = JsonSerializer.Deserialize<KubernetesLogEntry>(line, Options);
+                    if (containerName != null)
+                    {
+                        int index = containerName.LastIndexOf('.');
+                        if (index > 0)
+                        {
+                            // Remove the filename extension if exists
+                            k.Container = containerName.Substring(0, index);
+                        }
+                        else k.Container = containerName;
+                    }
+                    return k;
+                }
             }
             catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Parse: {e.Message}"); }
             return Default;

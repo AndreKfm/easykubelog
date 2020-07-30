@@ -70,10 +70,10 @@ namespace FileArrayConsole
         }
         static void Main(string[] args)
         {
-            //EndlessFileStreamBuilder b = new EndlessFileStreamBuilder();
+
             //b.GenerateOutputFile(@"C:\test\xlogtest", @"c:\test\central_test.log");
             //b.GenerateOutputFile(@"c:\test\logs", @"c:\test\central_test.log");
-            //b.GenerateEndlessFileStream(@"c:\test\logs", @"C:\test\endless");
+            EndlessFileStreamBuilder b = new EndlessFileStreamBuilder(); b.GenerateEndlessFileStream(@"c:\test\logs", @"C:\test\endless");
 
             EndlessFileStream e = new EndlessFileStream(@"C:\test\endless", 1024);
             var stream = e.Reader.ReadEntries(int.MaxValue);
@@ -82,7 +82,7 @@ namespace FileArrayConsole
             foreach (var line in stream)
             {
                 //Console.WriteLine(line);
-                if (line.Contains("exception", StringComparison.OrdinalIgnoreCase))
+                if (line.content.Contains("exception", StringComparison.OrdinalIgnoreCase))
                 {
                     ++count;
                     Console.WriteLine($"[{count}] found");

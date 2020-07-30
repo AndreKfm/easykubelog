@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -130,7 +131,7 @@ namespace EndlessFileStreamClasses
         static public Func<string, FileStream> DefaultOpenFileWrite = (string file) => File.OpenWrite(file);
         static public Func<string, FileStream> DefaultOpenFileCreate = (string file) => File.Create(file);
 
-        static public IEnumerable<string> ReadFromFileStream(string fileName,
+        static public IEnumerable<(string filename, string content)> ReadFromFileStream(string fileName,
                                                              Func<string, FileStream> OpenFile, long maxLines = long.MaxValue)
         {
             using FileStream fileStream = OpenFile(fileName);
@@ -151,12 +152,12 @@ namespace EndlessFileStreamClasses
 
 
                 if (line != null && --maxLines > 0)
-                    yield return line;
+                    yield return (fileName, line);
                 else break;
             }
         }
 
-        static public IEnumerable<string> ReadFromFileStream(string[] listToRead, long maxLines, Func<string, FileStream> OpenFile)
+        static public IEnumerable<(string filename, string content)> ReadFromFileStream(string[] listToRead, long maxLines, Func<string, FileStream> OpenFile)
         {
 
             foreach (var file in listToRead)
@@ -261,7 +262,7 @@ namespace EndlessFileStreamClasses
     public interface IEndlessFileStreamIO : IDisposable
     {
         public Task WriteToFileStream(string line);
-        public IEnumerable<string> ReadFromFileStream(int maxLines);
+        public IEnumerable<(string filename, string content)> ReadFromFileStream(int maxLines);
 
         public void Flush();
 
@@ -349,7 +350,7 @@ namespace EndlessFileStreamClasses
             Writer().WriteLine(line /** Default Encoding.UTF8 */);
         }
 
-        public IEnumerable<string> ReadFromFileStream(int maxLines)
+        public IEnumerable<(string filename, string content)> ReadFromFileStream(int maxLines)
 
         {
             var listToRead = _fileList.GetFileList();
@@ -376,7 +377,7 @@ namespace EndlessFileStreamClasses
 
     public interface IEndlessFileStreamReader
     {
-        public IEnumerable<string> ReadEntries(int maxLines = 100);
+        public IEnumerable<(string filename, string content)> ReadEntries(int maxLines = 100);
     }
 
     public class EndlessFileStreamReader : IEndlessFileStreamReader
@@ -389,7 +390,7 @@ namespace EndlessFileStreamClasses
         }
 
 
-        public IEnumerable<string> ReadEntries(int maxLines = 100)
+        public IEnumerable<(string filename, string content)> ReadEntries(int maxLines = 100)
         {
             return _fileIO.ReadFromFileStream(maxLines).Take(maxLines);
         }
@@ -414,7 +415,7 @@ namespace EndlessFileStreamClasses
 
         public void WriteToFileStream(string line)
         {
-            throw new NotImplementedException();
+            _fileIO.WriteToFileStream(line);
         }
 
         public void Flush()
@@ -464,9 +465,9 @@ namespace EndlessFileStreamClasses
 
         }
 
-        public IEnumerable<KubernetesLogEntry> EnumerateSortedByDateTime(IEnumerable<IEnumerable<string>> fileListEnumerationWithFileEntries)
+        public IEnumerable<KubernetesLogEntry> EnumerateSortedByDateTime(IEnumerable<IEnumerable<(string filename, string content)>> fileListEnumerationWithFileEntries)
         {
-            List<IEnumerator<string>> iteratorList = new List<IEnumerator<string>>();
+            List<IEnumerator<(string filename, string content)>> iteratorList = new List<IEnumerator<(string filename, string content)>>();
 
             foreach (var fileEnum in fileListEnumerationWithFileEntries)
             {
@@ -477,14 +478,17 @@ namespace EndlessFileStreamClasses
 
 
 
-            ConcurrentQueue<(long ticks, IEnumerator<string> iterator, KubernetesLogEntry k)> queue = new ConcurrentQueue<(long ticks, IEnumerator<string> iterator, KubernetesLogEntry k)>();
+            ConcurrentQueue<(long ticks, IEnumerator<(string filename, string content)> iterator, KubernetesLogEntry k)> queue = 
+                new ConcurrentQueue<(long ticks, IEnumerator<(string filename, string content)> iterator, KubernetesLogEntry k)>();
             for (; ; )
             {
                 var result = Parallel.ForEach(iteratorList, (iterator) =>
                 {
-                    if (String.IsNullOrEmpty(iterator.Current) == false)
+                    if (String.IsNullOrEmpty(iterator.Current.content) == false)
                     {
-                        var k = KubernetesLogEntry.Parse(iterator.Current);
+                        var k = KubernetesLogEntry.Parse(iterator.Current.content);
+                        k.Container = iterator.Current.filename;
+                        
                         if (!k.IsDefault()) // Just to play it safe - remove empty lines
                         {
                             long ticks = k.Time.Ticks;
@@ -498,7 +502,7 @@ namespace EndlessFileStreamClasses
 
 
                 long currentTick = long.MaxValue;
-                IEnumerator<string> iterator = null;
+                IEnumerator<(string filename, string content)> iterator = null;
                 KubernetesLogEntry k = null;
                 while (queue.TryDequeue(out var i))
                 {
@@ -526,7 +530,7 @@ namespace EndlessFileStreamClasses
 
         public void GenerateOutputFile(string baseDirectory, string outputFile)
         {
-            List<IEnumerable<string>> streams = OpenFiles(baseDirectory);
+            List<IEnumerable<(string filename, string content)>> streams = OpenFiles(baseDirectory);
 
             var listEnumerator = streams.AsEnumerable();
 
@@ -541,7 +545,7 @@ namespace EndlessFileStreamClasses
 
         public void GenerateEndlessFileStream(string sourceDirectory, string endlessFileStreamDirectory)
         {
-            List<IEnumerable<string>> streams = OpenFiles(sourceDirectory);
+            List<IEnumerable<(string filename, string content)>> streams = OpenFiles(sourceDirectory);
 
             var listEnumerator = streams.AsEnumerable();
 
@@ -554,10 +558,10 @@ namespace EndlessFileStreamClasses
 
 
 
-        List<IEnumerable<string>> OpenFiles(string baseDirectory)
+        List<IEnumerable<(string filename, string content)>> OpenFiles(string baseDirectory)
         {
             var files = Directory.GetFiles(baseDirectory);
-            List<IEnumerable<string>> streams = new List<IEnumerable<string>>();
+            List<IEnumerable<(string filename, string content)>> streams = new List<IEnumerable<(string filename, string content)>>();
             foreach (var file in files)
             {
                 streams.Add(FileHelper.ReadFromFileStream(file, (string file) => { return File.OpenRead(file); }));

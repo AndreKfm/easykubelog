@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 
 namespace EasyLogService.Services.CentralLogService
@@ -134,8 +135,8 @@ namespace EasyLogService.Services.CentralLogService
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults)
         {
             var result = _stream.Reader.ReadEntries(maxResults).
-            Where(x => x.Contains(simpleQuery)).
-            Take(maxResults).Select(x => KubernetesLogEntry.Parse(x));
+            Where(x => x.content.Contains(simpleQuery)).
+            Take(maxResults).Select(x => KubernetesLogEntry.Parse(x.content, x.filename));
             return result.ToArray();
         }
 
@@ -143,8 +144,8 @@ namespace EasyLogService.Services.CentralLogService
         private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults)
         {
             var result = _stream.Reader.ReadEntries(maxResults).
-            Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x, simpleQuery, CompareOptions.IgnoreCase) >= 0).
-            Take(maxResults).Select(x => KubernetesLogEntry.Parse(x));
+            Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.content, simpleQuery, CompareOptions.IgnoreCase) >= 0).
+            Take(maxResults).Select(x => KubernetesLogEntry.Parse(x.content, x.filename));
             return result.ToArray();
         }
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode)
