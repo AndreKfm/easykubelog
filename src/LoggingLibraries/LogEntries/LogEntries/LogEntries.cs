@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text.Json;
@@ -90,7 +91,7 @@ namespace LogEntries
                 if (line.Length > 0)
                 {
                     var k = JsonSerializer.Deserialize<KubernetesLogEntry>(line, Options);
-                    if (containerName != null)
+                    if ((containerName != null) && (k.Container == default))
                     {
                         int index = containerName.LastIndexOf('.');
                         if (index > 0)

@@ -73,7 +73,7 @@ namespace FileArrayConsole
 
             //b.GenerateOutputFile(@"C:\test\xlogtest", @"c:\test\central_test.log");
             //b.GenerateOutputFile(@"c:\test\logs", @"c:\test\central_test.log");
-            EndlessFileStreamBuilder b = new EndlessFileStreamBuilder(); b.GenerateEndlessFileStream(@"c:\test\logs", @"C:\test\endless");
+            //EndlessFileStreamBuilder b = new EndlessFileStreamBuilder(); b.GenerateEndlessFileStream(@"c:\test\logs", @"C:\test\endless");
 
             EndlessFileStream e = new EndlessFileStream(@"C:\test\endless", 1024);
             var stream = e.Reader.ReadEntries(int.MaxValue);

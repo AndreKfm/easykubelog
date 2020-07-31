@@ -2,19 +2,21 @@
 @inherits LayoutComponentBase
 
 
-<div class="main" >
+<div class="main">
     <div class="mt-3 ml-3 mr-3 mb-4 border rounded shadow bg-primary" name="mainHeader" style=""><h1 style="text-align: center">Easy Log</h1></div>
     <div class="" style="">
         <div class="m-3">
             <EasyLogService.Components.SearchField @ref="SearchField" />
         </div>
         <div class="m-3 defpadding  ">Entries: @numEntries</div>
-        
+
         <div class="m-3 border bg-light" name="MainList" style="position:absolute; width:auto; right:0; left:0; height:auto; top:180px; bottom:0; overflow:auto; box-sizing:border-box">
             <EasyLogService.Components.List @ref="_mainList" />
         </div>
     </div>
 </div>
+
+
 
 @using EasyLogService.Commands;
 @using LogEntries;
@@ -32,14 +34,14 @@
 
     int _maxResultLines = 0; // Specifies how many results in log lines will be returned by each query
 
-    EasyLogService.Components.SearchField searchField;
+    Components.SearchField searchField;
 
     protected override void OnInitialized()
     {
         _maxResultLines = _configuration.GetValue<int>("MaxLogQueryResultLines");
     }
 
-    EasyLogService.Components.SearchField SearchField
+    Components.SearchField SearchField
     {
         get
         {
@@ -62,7 +64,7 @@
         {
             var e = new EasyLogService.Components.ListElement();
 
-            e.Set(queryResult.Time, queryResult.Log, queryResult.Stream);
+            e.Set(queryResult.Time, queryResult.Log, queryResult.Stream, queryResult.Container);
             list.Add(e);
         }
         _mainList.Set(list, Refresh.ImmediatelyRefresh);

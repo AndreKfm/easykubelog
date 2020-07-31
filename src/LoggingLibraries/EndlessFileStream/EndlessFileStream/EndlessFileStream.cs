@@ -152,7 +152,7 @@ namespace EndlessFileStreamClasses
 
 
                 if (line != null && --maxLines > 0)
-                    yield return (fileName, line);
+                    yield return (Path.GetFileNameWithoutExtension(fileName), line);
                 else break;
             }
         }
@@ -434,7 +434,7 @@ namespace EndlessFileStreamClasses
         public EndlessFileStream(string baseDirectory, long maxLogFileSizeInMByte = 1024,
                                  IEndlessFileStreamWriter writer = null,
                                  IEndlessFileStreamReader reader = null,
-                                 EndlessFileStreamIO io = null)
+                                 IEndlessFileStreamIO io = null)
         {
             _io = io ?? new EndlessFileStreamIO(baseDirectory, maxLogFileSizeInMByte);
             _writer = writer ?? new EndlessFileStreamWriter(_io);
