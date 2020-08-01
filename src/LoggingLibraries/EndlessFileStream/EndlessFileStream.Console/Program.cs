@@ -78,6 +78,7 @@ namespace FileArrayConsole
             EndlessFileStream e = new EndlessFileStream(@"C:\test\endless", 1024);
             var stream = e.Reader.ReadEntries(int.MaxValue);
 
+            Stopwatch w = Stopwatch.StartNew();
             int count = 0;
             foreach (var line in stream)
             {
@@ -88,6 +89,8 @@ namespace FileArrayConsole
                     Console.WriteLine($"[{count}] found");
                 }
             }
+
+            Console.WriteLine($"Needed {w.ElapsedMilliseconds} ms");
             return;
 
             //TestWritingAndPerformance();
