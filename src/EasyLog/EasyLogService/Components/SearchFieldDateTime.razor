@@ -1,0 +1,37 @@
+﻿<div class="input-group-prepend search-margin" style="align-items:center;">
+    <input type="checkbox" aria-label="Date from" @bind-value="_enabledDate" class="form-check" style="transform: scale(2.9);" />
+    <span class="input-group-text" style="padding-left: 1.0rem;">@Name</span>
+    <input type="datetime-local" aria-label="Search date from" style="@(_style)" @bind-value="DateFrom" disabled="@(!EnabledDate)" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control" />
+</div>
+
+@code {
+
+
+    public SearchFieldDateTime()
+    {
+    }
+
+    [Parameter]
+    public string Name { get; set; }
+
+
+    [Parameter]
+    public DateTimeOffset DateFrom { get; set; } = DateTime.Now;
+    private bool _enabledDate = false;
+
+    public bool EnabledDate
+    {
+        get { return _enabledDate; }
+        set { _enabledDate = value; }
+    }
+
+    string _style => _enabledDate == true ? "" : "visibility: hidden";
+
+    private void NewInput()
+    {
+        //MainList.Add("hello");
+
+    }
+
+    public Action<string> OnSearchQueryChange;
+}

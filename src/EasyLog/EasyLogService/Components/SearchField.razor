@@ -1,11 +1,28 @@
 ﻿@*@page "/searchfield"*@
 
+    <style>
+        .search-margin {
+           margin-right: 2.0rem;
+        }
 
-    <div class="input-group defpadding" >
-        <div class="input-group-prepend">
+    </style>
+;
+
+    <div class="input-group defpadding">
+        <div class="input-group-prepend search-margin">
             <span class="input-group-text">Search</span>
+            <input type="text" aria-label="Search text" @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control" />
         </div>
-        <input type="text" aria-label="Search text"  @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control"/>
+
+        <EasyLogService.Components.SearchFieldDateTime Name="From" />
+        <EasyLogService.Components.SearchFieldDateTime Name="To" />
+
+        @*<div class="input-group-prepend search-margin" style="align-items:center;" >
+            <input type="checkbox" aria-label="Enable date from" @bind-value="_enabledDateFrom" class="form-check" style="transform: scale(2.9);"/>
+            <span class="input-group-text" style="padding-left: 1.0rem;">From</span>
+            <input type="datetime-local" aria-label="Search date from" style="@(_style)" @bind-value="DateFrom" disabled="@(!EnabledDateFrom)" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control" />
+        </div>*@
+
     </div>
 
 
@@ -13,7 +30,18 @@
 @code {
 
     private string _text = String.Empty;
+    [Parameter]
+    public DateTimeOffset DateFrom { get; set; } = DateTime.Now;
+    private DateTimeOffset _dateTo;
 
+    private bool _enabledDateFrom = false;
+    public bool EnabledDateFrom
+    {
+        get { return _enabledDateFrom; }
+        set { _enabledDateFrom = value;  }
+    }
+
+    string _style => _enabledDateFrom == true ? "" : "visibility: hidden";
 
     private void NewInput()
     {

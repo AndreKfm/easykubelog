@@ -134,12 +134,12 @@ namespace EasyLogService.Services.CentralLogService
 
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults)
         {
-            var result = _stream.Reader.ReadEntries(maxResults).
+            var result = _stream.Reader.ReadEntries(int.MaxValue).
             Where(x => x.content.Contains(simpleQuery)).
             Take(maxResults).Select(x => KubernetesLogEntry.Parse(x.content, x.filename));
             return result.ToArray();
         }
-
+        
 
         private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults)
         {

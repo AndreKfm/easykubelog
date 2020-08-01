@@ -6,6 +6,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -89,6 +90,21 @@ namespace FileArrayConsole
                     Console.WriteLine($"[{count}] found");
                 }
             }
+
+            Console.WriteLine($"Needed {w.ElapsedMilliseconds} ms");
+
+            count = 0; w = Stopwatch.StartNew();
+            Parallel.ForEach(stream, (line) =>
+            {
+                {
+                    //Console.WriteLine(line);
+                    if (line.content.Contains("exception", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ++count;
+                        Console.WriteLine($"[{count}] found");
+                    }
+                }
+            });
 
             Console.WriteLine($"Needed {w.ElapsedMilliseconds} ms");
             return;
