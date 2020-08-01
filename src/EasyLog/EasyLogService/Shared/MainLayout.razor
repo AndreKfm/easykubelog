@@ -22,7 +22,6 @@
 @using LogEntries;
 @using Microsoft.Extensions.Configuration;
 @inject ISearchCommand  _searchCommand;
-@inject IConfiguration  _configuration;
 
 
 @code
@@ -32,13 +31,11 @@
 
 
 
-    int _maxResultLines = 0; // Specifies how many results in log lines will be returned by each query
 
     Components.SearchField searchField;
 
     protected override void OnInitialized()
     {
-        _maxResultLines = _configuration.GetValue<int>("MaxLogQueryResultLines");
     }
 
     Components.SearchField SearchField
@@ -75,15 +72,15 @@
 
     void InitSearchField()
     {
-        searchField.OnSearchQueryChange = (query) =>
+        searchField.OnSearchQueryChange = (query, max, from, to) =>
         {
-            Send(query, (query) => Completed(query));
+            Send(query, max, from, to, (query) => Completed(query));
         };
     }
 
-    bool Send(string query, Action<KubernetesLogEntry[]> completed)
+    bool Send(string query, int max, DateTimeOffset from, DateTimeOffset to, Action<KubernetesLogEntry[]> completed)
     {
-        var t = Task.Run(() => _searchCommand.Search(new SearchRequest(query, _maxResultLines), completed));
+        var t = Task.Run(() => _searchCommand.Search(new SearchRequest(query, max, from, to), completed));
         return true;
     }
 

@@ -92,9 +92,9 @@ namespace EasyLogService.Services.CentralLogService
 
 
 
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults)
+        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            return _logCache.Query(simpleQuery, maxResults, CacheQueryMode.CaseInsensitive);
+            return _logCache.Query(simpleQuery, maxResults, CacheQueryMode.CaseInsensitive, from, to);
         }
 
         public void Dispose()

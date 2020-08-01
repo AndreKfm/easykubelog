@@ -1,22 +1,30 @@
 ﻿<div class="input-group-prepend search-margin" style="align-items:center;">
     <input type="checkbox" aria-label="Date from" @bind-value="_enabledDate" class="form-check" style="transform: scale(2.9);" />
     <span class="input-group-text" style="padding-left: 1.0rem;">@Name</span>
-    <input type="datetime-local" aria-label="Search date from" style="@(_style)" @bind-value="DateFrom" disabled="@(!EnabledDate)" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control" />
+    <input type="date" aria-label="Search date" style="@(_style)" @bind-value="_internalDate" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control" />
+    <input type="time" aria-label="Search time" style="@(_style)" @bind-value="_internalTime" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control" />
 </div>
 
 @code {
 
 
-    public SearchFieldDateTime()
+        public SearchFieldDateTime()
+        {
+        }
+
+        [Parameter]
+        public string Name { get; set; }
+
+    public DateTimeOffset _internalDate { get; set; } = DateTimeOffset.Now;
+    public DateTimeOffset _internalTime { get; set; } = DateTimeOffset.Now;
+
+
+    DateTimeOffset Combine(DateTimeOffset date, DateTimeOffset time)
     {
+        return new DateTimeOffset(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, default/* time.Offset // Don't use date time offset right now */ );
     }
 
-    [Parameter]
-    public string Name { get; set; }
-
-
-    [Parameter]
-    public DateTimeOffset DateFrom { get; set; } = DateTime.Now;
+    public DateTimeOffset Date =>  _enabledDate == true ? Combine(_internalDate, _internalTime) : default; // Default == disabled
     private bool _enabledDate = false;
 
     public bool EnabledDate
@@ -27,11 +35,8 @@
 
     string _style => _enabledDate == true ? "" : "visibility: hidden";
 
-    private void NewInput()
-    {
-        //MainList.Add("hello");
 
-    }
+    public Action NewInput;
 
-    public Action<string> OnSearchQueryChange;
+    public Action<DateTime> OnSearchQueryChange;
 }

@@ -8,7 +8,7 @@ namespace EasyLogService.Services.CentralLogService
 {
     public interface ICentralLogServiceQuery : IDisposable
     {
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults);
+        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to);
     }
 
 
@@ -35,7 +35,7 @@ namespace EasyLogService.Services.CentralLogService
     public interface ICache<Key, Value> : IDisposable
     {
         void Add(Key key, Value value);
-        KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode);
+        KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to);
     }
 
 

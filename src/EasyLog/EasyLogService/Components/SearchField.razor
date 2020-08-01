@@ -1,56 +1,121 @@
 ﻿@*@page "/searchfield"*@
 
-    <style>
-        .search-margin {
-           margin-right: 2.0rem;
-        }
+<style>
+    .search-margin {
+        margin-right: 2.0rem;
+    }
+</style>
 
-    </style>
-;
 
-    <div class="input-group defpadding">
-        <div class="input-group-prepend search-margin">
-            <span class="input-group-text">Search</span>
-            <input type="text" aria-label="Search text" @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control" />
-        </div>
+<div class="input-group defpadding">
+    <div class="input-group-prepend search-margin">
+        <span class="input-group-text">Search</span>
+        <input type="text" aria-label="Search text" @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" class="form-control" />
+    </div>
 
-        <EasyLogService.Components.SearchFieldDateTime Name="From" />
-        <EasyLogService.Components.SearchFieldDateTime Name="To" />
+    <div class="input-group-prepend search-margin">
+        <span class="input-group-text">Max</span>
+        <input type="number" aria-label="Search text" @bind-value="MaxElements" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" class="form-control"
+               style="max-width:7rem"/>
+    </div>
 
-        @*<div class="input-group-prepend search-margin" style="align-items:center;" >
+    <SearchFieldDateTime @ref="FromDateTime" Name="From" />
+    <SearchFieldDateTime @ref="ToDateTime" Name="To" />
+
+    @*<div class="input-group-prepend search-margin" style="align-items:center;" >
             <input type="checkbox" aria-label="Enable date from" @bind-value="_enabledDateFrom" class="form-check" style="transform: scale(2.9);"/>
             <span class="input-group-text" style="padding-left: 1.0rem;">From</span>
             <input type="datetime-local" aria-label="Search date from" style="@(_style)" @bind-value="DateFrom" disabled="@(!EnabledDateFrom)" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control" />
         </div>*@
 
-    </div>
+</div>
 
+@using Microsoft.Extensions.Configuration;
 
+@inject IConfiguration  _configuration;
 
 @code {
 
-    private string _text = String.Empty;
-    [Parameter]
-    public DateTimeOffset DateFrom { get; set; } = DateTime.Now;
-    private DateTimeOffset _dateTo;
+    const int MaxElementsHighest = 2000;
 
-    private bool _enabledDateFrom = false;
-    public bool EnabledDateFrom
+    SearchFieldDateTime fromDateTime;
+    SearchFieldDateTime toDateTime;
+
+    SearchFieldDateTime FromDateTime { get { return fromDateTime; } set { fromDateTime = value; fromDateTime.NewInput = () => NewInput(); } }
+    SearchFieldDateTime ToDateTime { get { return toDateTime; } set { toDateTime = value; toDateTime.NewInput = () => NewInput(); } }
+
+    private string _text = String.Empty;
+    private int _maxElements = 100;
+
+    public int MaxElements
     {
-        get { return _enabledDateFrom; }
-        set { _enabledDateFrom = value;  }
+        get { return _maxElements;  }
+        set { _maxElements = value < MaxElementsHighest ? value : MaxElementsHighest; }
     }
 
-    string _style => _enabledDateFrom == true ? "" : "visibility: hidden";
+
+    public SearchField()
+    {
+    }
+
+    protected override void OnInitialized()
+    {
+        _maxElements = _configuration.GetValue<int>("MaxLogQueryResultLines");
+    }
+
+
+    string _lastQuery = String.Empty;
 
     private void NewInput()
     {
-        OnSearchQueryChange(_text);
+        lock (_lastQuery)
+        {
+            string currentQuery = _text + _maxElements.ToString() + fromDateTime.Date.ToString() + toDateTime.Date.ToString();
+            if (currentQuery == _lastQuery)
+                return;
+            _lastQuery = currentQuery;
+        }
+        OnSearchQueryChange(_text, _maxElements, fromDateTime.Date, toDateTime.Date);
         StateHasChanged();
+    }
 
-        //MainList.Add("hello");
+
+    const int DefaultDelay = 1000;
+    Task delayTask = Task.CompletedTask;
+    System.Threading.CancellationTokenSource _tokenSource;
+
+
+    void AbortInCaseOfRunning()
+    {
+        _tokenSource?.Cancel();
+        delayTask?.Wait();
+        _tokenSource?.Dispose();
+        _tokenSource = null;
+        delayTask = null;
+    }
+
+    // Method will be called on each keystroke but it won't call immediately 
+    // NewInput but wait for additional keystrokes to come in
+    private void NewInputDelayedAndThrottled()
+    {
+        return;
+        AbortInCaseOfRunning();
+        _tokenSource = new System.Threading.CancellationTokenSource();
+        delayTask =
+        Task.Run(async () =>
+        {
+            try
+            {
+                var token = _tokenSource.Token;
+                await Task.Delay(DefaultDelay, token);
+                await base.InvokeAsync(NewInput);
+            }
+            catch(Exception)
+            { }
+        }, _tokenSource.Token);
 
     }
 
-    public Action<string> OnSearchQueryChange;
+
+    public Action<string, int, DateTimeOffset, DateTimeOffset> OnSearchQueryChange;
 }

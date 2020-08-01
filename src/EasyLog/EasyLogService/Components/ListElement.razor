@@ -17,7 +17,7 @@
 
 
     [Parameter]
-    public DateTimeOffset ContentDateTime { get; set; }
+    public DateTime ContentDateTime { get; set; }
 
     [Parameter]
     public string ContentLogOutput { get; set; }
@@ -43,7 +43,7 @@
 
     public void Set(DateTimeOffset time, string output, string logtype, string container)
     {
-        ContentDateTime = time;
+        ContentDateTime = new DateTime(time.Ticks);
         ContentLogOutput = output;
         ContentLogType = logtype;
 

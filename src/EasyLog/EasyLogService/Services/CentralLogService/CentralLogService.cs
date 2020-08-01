@@ -1,5 +1,6 @@
 ﻿using LogEntries;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -92,9 +93,9 @@ namespace EasyLogService.Services.CentralLogService
         }
 
 
-        KubernetesLogEntry[] ICentralLogServiceQuery.Query(string simpleQuery, int maxResults)
+        KubernetesLogEntry[] ICentralLogServiceQuery.Query(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            return _cache.Query(simpleQuery, maxResults);
+            return _cache.Query(simpleQuery, maxResults, from, to);
         }
 
     }
