@@ -9,17 +9,9 @@
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "IIS Express": {
-      "commandName": "IISExpress",
-      "launchBrowser": true,
-      "launchUrl": "weatherforecast",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
     "EasyLogService": {
       "commandName": "Project",
-      "commandLineArgs": "WatchDirectory=C:\\test\\logs",
+      "commandLineArgs": "WatchDirectory=C:\\test\\logs EasyLogCentralLogDir=C:\\test\\endless",
       "launchBrowser": true,
       "launchUrl": "/",
       "environmentVariables": {

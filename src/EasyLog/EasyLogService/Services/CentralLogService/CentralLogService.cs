@@ -1,4 +1,5 @@
 ﻿using LogEntries;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -42,10 +43,10 @@ namespace EasyLogService.Services.CentralLogService
         /// Creates a central object used to aggregate all incomming log entries
         /// </summary>
         /// <param name="maxEntriesInChannelQueue">Specifies how man entries can be added asynchronously to the channgel</param>
-        public CentralLogService(ILogger<CentralLogServiceCache> logger, ICentralLogServiceCache cache = null, int maxEntriesInChannelQueue = 1024)
+        public CentralLogService(ILogger<CentralLogServiceCache> logger, IConfiguration config, ICentralLogServiceCache cache = null, int maxEntriesInChannelQueue = 1024)
         {
             _logEntryChannel = Channel.CreateBounded<LogEntry>(maxEntriesInChannelQueue);
-            _cache = cache ?? new CentralLogServiceCache(maxEntriesInChannelQueue, logger);
+            _cache = cache ?? new CentralLogServiceCache(maxEntriesInChannelQueue, config, logger);
         }
 
 

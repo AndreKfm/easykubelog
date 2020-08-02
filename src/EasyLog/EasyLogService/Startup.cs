@@ -26,7 +26,10 @@ namespace EasyLogService
         public void Stop();
     }
 
-
+    /// <summary>
+    /// Configurations: 
+    ///    WatchDirectory
+    /// </summary>
     public class CentralLogServiceWatcher : ICentralLogServiceWatcher
     {
         readonly IAutoCurrentFileList _watchCurrentFileList;
@@ -86,7 +89,7 @@ namespace EasyLogService
             services.AddSingleton<ICentralLogServiceCache>(x =>
             {
                 var logger = x.GetService<ILogger<CentralLogServiceCache>>();
-                return new CentralLogServiceCache(Int32.Parse(Configuration["MaxLogLines"]), logger);
+                return new CentralLogServiceCache(Int32.Parse(Configuration["MaxLogLines"]), Configuration, logger);
             });
 
             services.AddSingleton<ICentralLogService, CentralLogService>();
