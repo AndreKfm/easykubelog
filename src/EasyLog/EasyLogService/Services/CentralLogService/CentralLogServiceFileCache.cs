@@ -171,7 +171,7 @@ namespace EasyLogService.Services.CentralLogService
 
         public void Add((DateTimeOffset, int fileIndex) key, KubernetesLogEntry value)
         {
-            throw new NotImplementedException();
+            value.Write(_stream.Writer.WriteToFileStream);
         }
     }
 

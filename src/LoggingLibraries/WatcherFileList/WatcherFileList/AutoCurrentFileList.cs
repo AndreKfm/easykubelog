@@ -171,13 +171,13 @@ namespace WatcherFileListClasses
                         case FileTaskEnum.Add:
                             {
                                 AddFile(op);
-                                Console.WriteLine($"### ADD {op.FileName}");
+                                //Console.WriteLine($"### ADD {op.FileName}");
                                 break;
                             }
                         case FileTaskEnum.Remove:
                             {
                                 fileList.RemoveFile(op.FileName);
-                                Console.WriteLine($"### REMOVE {op.FileName}");
+                                //Console.WriteLine($"### REMOVE {op.FileName}");
                                 break;
                             }
                         case FileTaskEnum.Update:
@@ -194,10 +194,11 @@ namespace WatcherFileListClasses
                                 }
 
                                 string content = file.ReadLineFromCurrentPositionToEnd();
-                                Console.WriteLine($"### UpDATE {op.FileName}  {content}");
+                                
+                                //Console.WriteLine($"### UpDATE {op.FileName}  {content}");
                                 if (!_channelNewOutput.Writer.TryWrite(new NewOutput(content, op.FileName, op.LastError)))
                                 {
-                                    Error($"AutoCurrentFileList.ReadChannel error - write to callback for new outputs failed: {op.FileName}:prev error:{op.LastError}:{content}");
+                                    Error($"AutoCurrentFileList.ReadChannel - error: write to callback for new outputs failed: {op.FileName}:prev error:{op.LastError}:{content}");
                                 }
 
                                 break;

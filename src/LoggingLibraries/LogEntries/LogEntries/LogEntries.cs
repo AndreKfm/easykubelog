@@ -42,6 +42,10 @@ namespace LogEntries
         public static (string deployment, string containerName, string nm, string contId) DeserializeContainerName(string containerName)
         {
             var array = containerName.Split('_');
+            if (array.Length < 3)
+            {
+                return ("#", "#", "#", "#");
+            }
             int idPosition = array[2].LastIndexOf('-');
             var containerShortName = array[2].Substring(0, idPosition);
             var containerId = array[2].Substring(idPosition + 1);
@@ -84,23 +88,15 @@ namespace LogEntries
 
         private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { Time = default, Log = String.Empty, Stream = String.Empty, Container = String.Empty };
 
-        static public KubernetesLogEntry Parse(string line, string containerName = null)
+        static public KubernetesLogEntry Parse(string line, string optionalContainerName = null)
         {
             try
             {
                 if (line.Length > 0)
                 {
                     var k = JsonSerializer.Deserialize<KubernetesLogEntry>(line, Options);
-                    if ((containerName != null) && (k.Container == default))
-                    {
-                        int index = containerName.LastIndexOf('.');
-                        if (index > 0)
-                        {
-                            // Remove the filename extension if exists
-                            k.Container = containerName.Substring(0, index);
-                        }
-                        else k.Container = containerName;
-                    }
+                    if (String.IsNullOrEmpty(k.Container)) 
+                        k.SetContainerName(optionalContainerName); // Only use external container name if not yet assigned
                     return k;
                 }
             }
@@ -108,10 +104,33 @@ namespace LogEntries
             return Default;
         }
 
+        private static string StripContainerName(string containerName)
+        {
+            if ((containerName != null))
+            {
+                int index = containerName.LastIndexOf('.');
+                if (index > 0)
+                {
+                    // Remove the filename extension if exists
+                    containerName = containerName.Substring(0, index);
+                }
+            }
+            return containerName;
+
+        }
+        
+
+        public void SetContainerName(string container)
+        {
+            _containerName = StripContainerName(container);
+        }
+
         public bool IsDefault() { return Stream == String.Empty && Log == String.Empty && Container == String.Empty; }
 
+        private string _containerName = default;
+
         [JsonPropertyName("cont")]
-        public string Container { get; set; } // Container name
+        public string Container { get { return _containerName; } set { SetContainerName(value); } } // Container name
 
         [JsonPropertyName("log")]
         public string Log { get; set; } // Log lines to add

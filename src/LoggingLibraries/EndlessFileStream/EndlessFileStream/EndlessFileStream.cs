@@ -6,6 +6,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -348,8 +349,9 @@ namespace EndlessFileStreamClasses
             }
 
             Writer().WriteLine(line /** Default Encoding.UTF8 */);
+            await Writer().FlushAsync();
         }
-
+            
         public IEnumerable<(string filename, string content)> ReadFromFileStream(int maxLines)
 
         {
@@ -487,7 +489,7 @@ namespace EndlessFileStreamClasses
                     if (String.IsNullOrEmpty(iterator.Current.content) == false)
                     {
                         var k = KubernetesLogEntry.Parse(iterator.Current.content);
-                        k.Container = iterator.Current.filename;
+                        k.SetContainerName(iterator.Current.filename);
                         
                         if (!k.IsDefault()) // Just to play it safe - remove empty lines
                         {

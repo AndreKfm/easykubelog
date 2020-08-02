@@ -9,14 +9,21 @@
 
 <div class="input-group defpadding">
     <div class="input-group-prepend search-margin">
-        <span class="input-group-text">Search</span>
+        @*<span class="input-group-text">Search</span>*@
+        <button @onclick="ButtonSearch">Search</button>
+        <div class="d-flex justify-content-center align-items-center m-2" style="@(_style)" >
+            <div class="spinner-grow spinner-grow-sm"  role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
         <input type="text" aria-label="Search text" @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" class="form-control" />
     </div>
+
 
     <div class="input-group-prepend search-margin">
         <span class="input-group-text">Max</span>
         <input type="number" aria-label="Search text" @bind-value="MaxElements" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" class="form-control"
-               style="max-width:7rem"/>
+               style="max-width:7rem" />
     </div>
 
     <SearchFieldDateTime @ref="FromDateTime" Name="From" />
@@ -47,10 +54,20 @@
     private string _text = String.Empty;
     private int _maxElements = 100;
 
+    private bool _searching = false;
+    string _style => _searching == true ? "" : "visibility: hidden";
+
     public int MaxElements
     {
-        get { return _maxElements;  }
+        get { return _maxElements; }
         set { _maxElements = value < MaxElementsHighest ? value : MaxElementsHighest; }
+    }
+
+
+    public void DisplaySpinningSearch(bool state)
+    {
+        _searching = state;
+        base.InvokeAsync(StateHasChanged);
     }
 
 
@@ -65,6 +82,12 @@
 
 
     string _lastQuery = String.Empty;
+
+    private void ButtonSearch()
+    {
+        _lastQuery = String.Empty;
+        NewInput();
+    }
 
     private void NewInput()
     {
@@ -94,11 +117,10 @@
         delayTask = null;
     }
 
-    // Method will be called on each keystroke but it won't call immediately 
+    // Method will be called on each keystroke but it won't call immediately
     // NewInput but wait for additional keystrokes to come in
     private void NewInputDelayedAndThrottled()
     {
-        return;
         AbortInCaseOfRunning();
         _tokenSource = new System.Threading.CancellationTokenSource();
         delayTask =
@@ -110,7 +132,7 @@
                 await Task.Delay(DefaultDelay, token);
                 await base.InvokeAsync(NewInput);
             }
-            catch(Exception)
+            catch (Exception)
             { }
         }, _tokenSource.Token);
 

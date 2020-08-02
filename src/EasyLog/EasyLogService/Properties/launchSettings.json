@@ -19,7 +19,7 @@
     },
     "EasyLogService": {
       "commandName": "Project",
-      "commandLineArgs": "WatchDirectory=C:\\test\\deleteme\\logtest",
+      "commandLineArgs": "WatchDirectory=C:\\test\\logs",
       "launchBrowser": true,
       "launchUrl": "/",
       "environmentVariables": {

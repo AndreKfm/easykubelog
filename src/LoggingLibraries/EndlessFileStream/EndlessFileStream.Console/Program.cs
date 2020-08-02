@@ -78,13 +78,13 @@ namespace FileArrayConsole
 
             EndlessFileStream e = new EndlessFileStream(@"C:\test\endless", 1024);
             var stream = e.Reader.ReadEntries(int.MaxValue);
-
+            string search = "gonzo";
             Stopwatch w = Stopwatch.StartNew();
             int count = 0;
             foreach (var line in stream)
             {
                 //Console.WriteLine(line);
-                if (line.content.Contains("exception", StringComparison.OrdinalIgnoreCase))
+                if (line.content.Contains(search, StringComparison.OrdinalIgnoreCase))
                 {
                     ++count;
                     Console.WriteLine($"[{count}] found");
@@ -98,7 +98,7 @@ namespace FileArrayConsole
             {
                 {
                     //Console.WriteLine(line);
-                    if (line.content.Contains("exception", StringComparison.OrdinalIgnoreCase))
+                    if (line.content.Contains(search, StringComparison.OrdinalIgnoreCase))
                     {
                         ++count;
                         Console.WriteLine($"[{count}] found");

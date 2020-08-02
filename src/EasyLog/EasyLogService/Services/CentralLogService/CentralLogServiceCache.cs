@@ -37,6 +37,7 @@ namespace EasyLogService.Services.CentralLogService
                     var newEntry = KubernetesLogEntry.Parse(line);
                     if (!newEntry.IsDefault())
                     {
+                        newEntry.SetContainerName(entry.FileName);
                         lock (_logCache)
                         {
                             if (!_fileIndexList.TryGetValue(entry.FileName, out int fileIndex))
