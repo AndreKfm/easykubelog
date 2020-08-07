@@ -1,4 +1,4 @@
-﻿using DirectoryWatching;
+﻿using DirectoryWatcher;
 using System;
 using System.IO;
 using System.Threading;
@@ -97,7 +97,7 @@ namespace FileSystemWatcher_TestOnly
 
             });
 
-            DirectoryWatcher w = new DirectoryWatcher();
+            FileDirectoryWatcher w = new FileDirectoryWatcher();
             w.Open(directory, new FilterAndCallbackArgument(String.Empty, 
                 (object sender, WatcherCallbackArgs args) =>
                 {

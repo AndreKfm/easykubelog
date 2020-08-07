@@ -1,12 +1,10 @@
-﻿using DirectoryWatching;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DirectoryWatcher;
 
 namespace WatcherFileListClasses
 {
@@ -100,7 +98,7 @@ namespace WatcherFileListClasses
         public void Start(string fileFilter, Action<ReadOnlyCollection<FileEntry>> fileListChangeCallback)
         {
             DiscardOldWatcher();
-            _watcher = new DirectoryWatcher(_watcherInterface);
+            _watcher = new FileDirectoryWatcher(_watcherInterface);
             _watcher.Open(_directoryToWatch, new FilterAndCallbackArgument(fileFilter, Callback));
             _fileListChangeCallback = fileListChangeCallback;
             _throttleCalls = new ThrottleCalls(CallAfterChange, _updateRatioInMilliseconds);
@@ -164,7 +162,7 @@ namespace WatcherFileListClasses
         
         List<FileEntry> currentList;
 
-        DirectoryWatcher _watcher;
+        FileDirectoryWatcher _watcher;
         readonly IFileSystemWatcher _watcherInterface;
         readonly string _directoryToWatch;
         readonly int _updateRatioInMilliseconds;

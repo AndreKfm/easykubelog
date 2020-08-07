@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace DirectoryWatching
+namespace DirectoryWatcher
 {
 
 
-    public class DirectoryWatcher : IDisposable
+    public class FileDirectoryWatcher : IDisposable
     {
 
-        public DirectoryWatcher(IFileSystemWatcher watcher = null)
+        public FileDirectoryWatcher(IFileSystemWatcher watcher = null)
         {
             _watcher = watcher ?? new PhysicalFileSystemWatcherWrapper();
         }

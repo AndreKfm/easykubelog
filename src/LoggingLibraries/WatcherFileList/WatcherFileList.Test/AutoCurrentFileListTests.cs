@@ -2,7 +2,7 @@
 
 namespace WatcherFileListClasses.Test
 {
-    using DirectoryWatching;
+    using DirectoryWatcher;
     using Moq;
     using System.Threading;
     using Xunit;

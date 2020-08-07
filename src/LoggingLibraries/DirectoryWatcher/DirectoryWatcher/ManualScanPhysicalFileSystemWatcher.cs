@@ -1,7 +1,10 @@
-﻿using DirectoryWatching;
+﻿using DirectoryWatcher;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,15 +27,101 @@ namespace DirectoryWatcher
 
     }
 
+    public class ManualScanPhysicalFileSystemWatcherFileListSettings
+    {
+        public ManualScanPhysicalFileSystemWatcherFileListSettings()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Ensure under Windows that we have always the same casing to prevent double 
+                // entries which Windows cannot differentiate, but this list would
+                _normalizeFileName = (string s) => Path.GetFileName(s).ToLower();
+            }
+            else
+            {
+                _normalizeFileName = (string s) => Path.GetFileName(s);
+            }
+        }
+        private Func<string, string> _normalizeFileName;
 
+        public Func<string, string> NormalizeFileName
+        {
+            get { return _normalizeFileName; }
+            set { _normalizeFileName = value; }
+        }
+
+    }
+
+
+    /// <summary>
+    /// Holds a list of files without paths and their current read / write offset
+    /// (interpretation of offset must be done by other classes - only one offset will be held)
+    /// Path will be simple truncated - there is not verification of the path.
+    /// If a file from another directory with the same file name will be tried to be added, 
+    /// only one instance will be held 
+    /// </summary>
     public class ManualScanPhysicalFileSystemWatcherFileList
     {
         // Holds file names [without (root) path] and the latest known file position
-        ImmutableDictionary<string, long> files = ImmutableDictionary<string, long>.Empty;
+        Dictionary<string, long> files = new Dictionary<string, long>();
 
-        public ManualScanPhysicalFileSystemWatcherFileList()
+        Func<string, string> NormalizeFileName;
+
+        public ManualScanPhysicalFileSystemWatcherFileList(ManualScanPhysicalFileSystemWatcherFileListSettings settings = null)
         {
+            settings = settings ?? new ManualScanPhysicalFileSystemWatcherFileListSettings();
+            NormalizeFileName = settings.NormalizeFileName;
+        }
 
+        public bool AddFileTruncPath(string fileName)
+        {
+            try
+            {
+                fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
+                if (files.ContainsKey(fileName))
+                    return false;
+                files.Add(fileName, (long)0);
+                return true;
+            }
+            catch (Exception) { }
+            return false;
+        }
+
+        public bool RemoveFileIgnorePath(string fileName)
+        {
+            try
+            {
+                fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
+                if (files.ContainsKey(fileName))
+                {
+                    files.Remove(fileName);
+                    return true;
+                }
+            }
+            catch(Exception) {}
+
+            return false;
+        }
+
+        public bool SetOrAddFileOffset(string fileName, long newOffset)
+        {
+            if (newOffset < 0)
+                return false;
+            fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
+            try
+            {
+                fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
+                files[fileName] = newOffset;
+                return true;
+            }
+            catch (Exception) { }
+
+            return false;
+        }
+
+        public Dictionary<string, long> GetFileListCopy()
+        {
+            return new Dictionary<string, long>(files);
         }
     }
 

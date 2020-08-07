@@ -1,4 +1,4 @@
-﻿using DirectoryWatching;
+﻿using DirectoryWatcher;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

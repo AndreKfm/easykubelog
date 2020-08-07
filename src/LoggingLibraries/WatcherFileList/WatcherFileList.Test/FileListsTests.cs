@@ -1,4 +1,4 @@
-using DirectoryWatching;
+using DirectoryWatcher;
 using Moq;
 using System;
 using System.Collections.ObjectModel;

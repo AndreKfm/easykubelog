@@ -4,25 +4,25 @@ using System.IO;
 using System.Linq;
 using Xunit;
 
-namespace DirectoryWatching.Test
+namespace DirectoryWatcher.Tests
 {
-    public class DirectoryWatcherTests
+    public class FileDirectoryWatcherTests
     {
         
         [Fact]
-        public void CreateDirectoryWatcher()
+        public void CreateFileDirectoryWatcher()
         {
             Mock<IFileSystemWatcher> watcher = new Mock<IFileSystemWatcher>();
-            _ = new DirectoryWatcher();
-            _ = new DirectoryWatcher(null);
-            _ = new DirectoryWatcher(watcher.Object); ;
+            _ = new FileDirectoryWatcher();
+            _ = new FileDirectoryWatcher(null);
+            _ = new FileDirectoryWatcher(watcher.Object); ;
         }
 
         [Fact]
         public void Open_With_ValidPath()
         {
             Mock<IFileSystemWatcher> watcher = new Mock<IFileSystemWatcher>();
-            DirectoryWatcher w = new DirectoryWatcher(watcher.Object);
+            FileDirectoryWatcher w = new FileDirectoryWatcher(watcher.Object);
             w.Open("/test.txt");
         }
 
@@ -30,7 +30,7 @@ namespace DirectoryWatching.Test
         public void Open_With_ValidPathAndFilter()
         {
             Mock<IFileSystemWatcher> watcher = new Mock<IFileSystemWatcher>();
-            DirectoryWatcher w = new DirectoryWatcher(watcher.Object);
+            FileDirectoryWatcher w = new FileDirectoryWatcher(watcher.Object);
             w.Open("/test.txt", new FilterAndCallbackArgument("*.log"));
         }
 
@@ -38,7 +38,7 @@ namespace DirectoryWatching.Test
         public void Open_Dispose()
         {
             Mock<IFileSystemWatcher> watcher = new Mock<IFileSystemWatcher>();
-            DirectoryWatcher w = new DirectoryWatcher(watcher.Object);
+            FileDirectoryWatcher w = new FileDirectoryWatcher(watcher.Object);
             w.Open("/test.txt");
             w.Dispose();
         }
@@ -47,7 +47,7 @@ namespace DirectoryWatching.Test
         public void Second_Open_AfterDispose()
         {
             Mock<IFileSystemWatcher> watcher = new Mock<IFileSystemWatcher>();
-            DirectoryWatcher w = new DirectoryWatcher(watcher.Object);
+            FileDirectoryWatcher w = new FileDirectoryWatcher(watcher.Object);
             w.Open("/test1.txt");
             w.Dispose();
             Assert.Throws<System.NullReferenceException>(() => w.Open("/test2.txt"));            

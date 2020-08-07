@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher", "..\LoggingLibraries\DirectoryWatcher\DirectoryWatcher\DirectoryWatcher.csproj", "{0BB230A0-E6D9-4C85-BAC6-864A6F4389F0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher.Test", "..\LoggingLibraries\DirectoryWatcher\DirectoryWatcher.Test\DirectoryWatcher.Test.csproj", "{D0F45582-5615-4ADB-8847-6049628D18B0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher.Tests", "..\LoggingLibraries\DirectoryWatcher\DirectoryWatcher.Test\DirectoryWatcher.Tests.csproj", "{D0F45582-5615-4ADB-8847-6049628D18B0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatcherFileLists", "..\LoggingLibraries\WatcherFileList\WatcherFileList\WatcherFileLists.csproj", "{1A4D2EFA-DD92-4423-86F3-F54F87D9566B}"
 EndProject
