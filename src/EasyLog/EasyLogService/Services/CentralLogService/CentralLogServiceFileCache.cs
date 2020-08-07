@@ -24,7 +24,7 @@ namespace EasyLogService.Services.CentralLogService
         public FileCache(string fileName)
         {
             _fileName = fileName;
-            _file = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            _file = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
             _stream = new StreamReader(_file);
 
             // We need to do that dumb counting for the first time to get the number of lines :-/ 

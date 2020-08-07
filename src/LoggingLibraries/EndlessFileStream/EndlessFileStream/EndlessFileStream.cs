@@ -309,7 +309,7 @@ namespace EndlessFileStreamClasses
 
         FileStream Open(string fileName)
         {
-            return File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            return File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, (FileShare)(FileShare.ReadWrite | FileShare.Delete));
         }
 
         void InitCurrentFile()
