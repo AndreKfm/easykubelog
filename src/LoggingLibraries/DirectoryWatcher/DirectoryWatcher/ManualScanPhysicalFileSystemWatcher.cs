@@ -1,16 +1,20 @@
 ﻿using DirectoryWatcher;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+
 
 namespace DirectoryWatcher
 {
-
+    //using FileListEntry = (string fileName, DateTime lastWriteUtc, long fileLength);
+    using FileList = Dictionary<string, (DateTime lastWriteUtc, long fileLength)>;
 
     public class ManualScanPhysicalFileSystemWatcherSettings
     {
@@ -24,6 +28,15 @@ namespace DirectoryWatcher
             get { return _scanSpeedInSeconds; }
             set { _scanSpeedInSeconds = value; if (_scanSpeedInSeconds <= 0) _scanSpeedInSeconds = 1; }
         }
+
+        private string _baseDirectoryToScan;
+
+        public string ScanDirectory
+        {
+            get { return _baseDirectoryToScan; }
+            set { _baseDirectoryToScan = value; }
+        }
+
 
     }
 
@@ -63,7 +76,7 @@ namespace DirectoryWatcher
     public class ManualScanPhysicalFileSystemWatcherFileList
     {
         // Holds file names [without (root) path] and the latest known file position
-        Dictionary<string, long> files = new Dictionary<string, long>();
+        Dictionary<string, (DateTime lastWriteUtc, long fileLen)> files = new Dictionary<string, (DateTime lastWriteUtc, long fileLen)>();
 
         Func<string, string> NormalizeFileName;
 
@@ -73,14 +86,14 @@ namespace DirectoryWatcher
             NormalizeFileName = settings.NormalizeFileName;
         }
 
-        public bool AddFileTruncPath(string fileName)
+        public bool AddFileTruncPath(string fileName, DateTime initial = default, long fileLen = long.MinValue) 
         {
             try
             {
                 fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
                 if (files.ContainsKey(fileName))
                     return false;
-                files.Add(fileName, (long)0);
+                files.Add(fileName, (initial.ToUniversalTime(), fileLen));
                 return true;
             }
             catch (Exception) { }
@@ -103,15 +116,13 @@ namespace DirectoryWatcher
             return false;
         }
 
-        public bool SetOrAddFileOffset(string fileName, long newOffset)
+        public bool SetOrAddFileInfo(string fileName, (DateTime newOffset, long fileLength) fileInfo)
         {
-            if (newOffset < 0)
-                return false;
             fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
             try
             {
                 fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
-                files[fileName] = newOffset;
+                files[fileName] = fileInfo;
                 return true;
             }
             catch (Exception) { }
@@ -119,9 +130,59 @@ namespace DirectoryWatcher
             return false;
         }
 
-        public Dictionary<string, long> GetFileListCopy()
+        public Dictionary<string, (DateTime lastWriteUtc, long fileLength)> GetFileListCopy()
         {
-            return new Dictionary<string, long>(files);
+            return new Dictionary<string, (DateTime lastWriteUtc, long fileLength)>(files);
+        }
+    }
+
+
+    public class ManualScanDirectoryDifferences
+    {
+        public IEnumerable<KeyValuePair<string, (DateTime lastWriteUtc, long fileLength)>> GetNewFiles(FileList oldScanned, FileList newScanned)
+        {
+            return newScanned.Where(s => oldScanned.ContainsKey(s.Key) == false);
+        }
+
+        public IEnumerable<KeyValuePair<string, (DateTime lastWriteUtc, long fileLength)>> GetDeletedFiles(FileList oldScanned, FileList newScanned)
+        {
+            return oldScanned.Where(s => newScanned.ContainsKey(s.Key) == false);
+        }
+
+        public IEnumerable<KeyValuePair<string, (DateTime lastWriteUtc, long fileLength)>> GetChangedFiles(FileList oldScanned, FileList newScanned)
+        {
+            return newScanned.Where(s => oldScanned.ContainsKey(s.Key) && (oldScanned[s.Key] != s.Value));
+        }
+    }
+
+
+    public interface IManualScanDirectory
+    {
+        public List<(string fileName, DateTime lastWriteUtc, long fileLength)> Scan(string directory);
+    }
+
+    internal class ManualScanDirectory : IManualScanDirectory
+    {
+        public ManualScanDirectory()
+        {
+        }
+
+        public List<(string fileName, DateTime lastWriteUtc, long fileLength)> Scan(string directory)
+        {
+            string[] files = Directory.GetFiles(directory);
+            List<(string fileName, DateTime lastWriteUtc, long fileLength)> list = new List<(string fileName, DateTime lastWriteUtc, long fileLength)>();
+            foreach(var file in files)
+            {
+                var fileInfo = new FileInfo(file);
+                try
+                {
+                    var length = fileInfo.Length;
+                    var lastWriteUtc = fileInfo.LastWriteTimeUtc;
+                    list.Add((file, lastWriteUtc, length));
+                }
+                catch (Exception) { }
+            }
+            return list;
         }
     }
 
@@ -136,22 +197,49 @@ namespace DirectoryWatcher
     {
 
         ManualScanPhysicalFileSystemWatcherSettings settings;
+        IManualScanDirectory _scanDirectory;
+        Task _currentFileSystemWatcher = null;
 
-        public ManualScanPhysicalFileSystemWatcher(ManualScanPhysicalFileSystemWatcherSettings watcherSettings = null, int scanSpeedInSeconds = 11)
+        public ManualScanPhysicalFileSystemWatcher(IManualScanDirectory scanDirectory = null, 
+                                                   ManualScanPhysicalFileSystemWatcherSettings watcherSettings = null)
         {
             settings = watcherSettings ?? new ManualScanPhysicalFileSystemWatcherSettings();
+            _scanDirectory = scanDirectory ?? new ManualScanDirectory();
         }
 
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            Stop();
         }
 
-        Task _currentFileSystemWatcher;
+        CancellationTokenSource _tokenSource;
+        private async Task PeriodicallyScanDirectory(CancellationToken token)
+        {
+            int scanMs = settings.ScanSpeedInSeconds * 1000;
+            string scanDir = settings.ScanDirectory;
+            var current = _scanDirectory.Scan(scanDir);
+            while (token.IsCancellationRequested == false)
+            {
+                await Task.Delay(scanMs);
+                var fileList = _scanDirectory.Scan(scanDir);
+            }
+        }
+
+        private void Stop()
+        {
+            _tokenSource?.Cancel();
+            _currentFileSystemWatcher?.Wait();
+            _currentFileSystemWatcher = null;
+            _tokenSource = null;
+        }
 
         public bool Open(string directoryPathToScanFiles, FilterAndCallbackArgument callbackAndFilter = null)
         {
+            Stop();
+            _tokenSource = new CancellationTokenSource();
+            _currentFileSystemWatcher = Task.Factory.StartNew(async () => await PeriodicallyScanDirectory(_tokenSource.Token), TaskCreationOptions.LongRunning);
+
             return false;
         }
     }

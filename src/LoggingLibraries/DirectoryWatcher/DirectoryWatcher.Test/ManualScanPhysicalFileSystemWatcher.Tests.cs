@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
@@ -50,18 +51,19 @@ namespace DirectoryWatcher.Tests
         }
 
         [Fact]
-        void NewFileOffset()
+        void NewFileDateTime()
         {
+            DateTime time = DateTime.Now;
             ManualScanPhysicalFileSystemWatcherFileList manual = new ManualScanPhysicalFileSystemWatcherFileList();
-            Assert.True(manual.SetOrAddFileOffset("c:\\file.txt", 1));
+            Assert.True(manual.SetOrAddFileInfo("c:\\file.txt", (time, 0)));
             Assert.False(manual.AddFileTruncPath("c:\\file.txt"));
             Assert.True(manual.RemoveFileIgnorePath("c:\\file.txt"));
             Assert.True(manual.AddFileTruncPath("c:\\file.txt"));
-            Assert.False(manual.SetOrAddFileOffset("c:\\file.txt", -1));
-            Assert.False(manual.SetOrAddFileOffset("c:\\file.txt", -100));
-            Assert.True(manual.SetOrAddFileOffset("c:\\file.txt", 0));
-            Assert.True(manual.SetOrAddFileOffset("c:\\file.txt", long.MaxValue));
-            Assert.False(manual.SetOrAddFileOffset("c:\\file.txt", long.MinValue));
+            Assert.True(manual.SetOrAddFileInfo("c:\\file.txt", (time, 0)));
+            Assert.True(manual.SetOrAddFileInfo("c:\\file.txt", (time + TimeSpan.FromDays(2), 0)));
+            Assert.True(manual.SetOrAddFileInfo("c:\\file.txt", default));
+            Assert.True(manual.SetOrAddFileInfo("c:\\file.txt", (DateTime.MaxValue, 0)));
+            Assert.True(manual.SetOrAddFileInfo("c:\\file.txt", (DateTime.MinValue, 0)));
         }
 
         [Fact]
@@ -79,23 +81,24 @@ namespace DirectoryWatcher.Tests
         [Fact]
         void GetFileList()
         {
+            var time = DateTime.Now;
             ManualScanPhysicalFileSystemWatcherFileList manual = new ManualScanPhysicalFileSystemWatcherFileList();
-            ImmutableDictionary<string, long> list = manual.GetFileList();
+            Dictionary<string, (DateTime lastWriteUtc, long fileLength)> list = manual.GetFileListCopy();
             Assert.True(list.Count == 0);
-            Assert.True(manual.SetOrAddFileOffset("c:\\file.txt", 1));
+            Assert.True(manual.SetOrAddFileInfo("c:\\file.txt", (time, 0)));
             
-            list = manual.GetFileList();
+            list = manual.GetFileListCopy();
             Assert.True(list.Count == 1);
 
-            Assert.True(manual.SetOrAddFileOffset("c:\\file2.txt", 1)); list = manual.GetFileList();
+            Assert.True(manual.SetOrAddFileInfo("c:\\file2.txt", (time + TimeSpan.FromSeconds(1), 0))); list = manual.GetFileListCopy();
             Assert.False(list.Count == 1);
             Assert.False(list.Count == 3);
-            Assert.True(manual.RemoveFileIgnorePath("file.txt")); list = manual.GetFileList();
+            Assert.True(manual.RemoveFileIgnorePath("file.txt")); list = manual.GetFileListCopy();
             Assert.False(list.Count == 2);
-            Assert.False(manual.RemoveFileIgnorePath("file.txt")); list = manual.GetFileList();
+            Assert.False(manual.RemoveFileIgnorePath("file.txt")); list = manual.GetFileListCopy();
             Assert.False(list.Count == 2);
             Assert.True(list.Count == 1);
-            Assert.True(manual.RemoveFileIgnorePath("/gzud/shsuHSHS/file2.txt")); list = manual.GetFileList();
+            Assert.True(manual.RemoveFileIgnorePath("/gzud/shsuHSHS/file2.txt")); list = manual.GetFileListCopy();
             Assert.True(list.Count == 0);
 
         }
