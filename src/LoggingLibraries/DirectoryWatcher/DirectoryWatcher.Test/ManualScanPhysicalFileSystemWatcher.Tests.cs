@@ -1,9 +1,6 @@
-﻿using Microsoft.VisualBasic;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Runtime.InteropServices;
-using System.Text;
 using Xunit;
 
 namespace DirectoryWatcher.Tests
@@ -22,14 +19,14 @@ namespace DirectoryWatcher.Tests
         {
             ManualScanPhysicalFileSystemWatcherFileList manual = new ManualScanPhysicalFileSystemWatcherFileList();
 
-            Assert.True (manual.AddFileTruncPath("c:\\file.txt"));
+            Assert.True(manual.AddFileTruncPath("c:\\file.txt"));
             Assert.False(manual.AddFileTruncPath("c:\\file.txt"));
             Assert.False(manual.AddFileTruncPath("/file.txt"));
             Assert.False(manual.AddFileTruncPath("\\file.txt"));
             Assert.False(manual.AddFileTruncPath("file.txt"));
             Assert.False(manual.AddFileTruncPath("c:\\otherPath\\file.txt"));
             Assert.False(manual.AddFileTruncPath("c:\\andAnother\\otherPath\\file.txt"));
-            Assert.True (manual.AddFileTruncPath("c:\\andAnother\\otherPath\\file2.txt"));
+            Assert.True(manual.AddFileTruncPath("c:\\andAnother\\otherPath\\file2.txt"));
         }
 
         [Fact]
@@ -43,7 +40,7 @@ namespace DirectoryWatcher.Tests
             Assert.False(manual.AddFileTruncPath("c:\\andAnother\\otherPath\\file.txt"));
             Assert.True(manual.AddFileTruncPath("c:\\andAnother\\otherPath\\file2.txt"));
 
-            Assert.True (manual.RemoveFileIgnorePath("file.txt"));
+            Assert.True(manual.RemoveFileIgnorePath("file.txt"));
             Assert.False(manual.RemoveFileIgnorePath("file.txt"));
             Assert.True(manual.AddFileTruncPath("c:\\file.txt"));
             Assert.True(manual.RemoveFileIgnorePath("\\file.txt"));
@@ -86,7 +83,7 @@ namespace DirectoryWatcher.Tests
             Dictionary<string, (DateTime lastWriteUtc, long fileLength)> list = manual.GetFileListCopy();
             Assert.True(list.Count == 0);
             Assert.True(manual.SetOrAddFileInfo("c:\\file.txt", (time, 0)));
-            
+
             list = manual.GetFileListCopy();
             Assert.True(list.Count == 1);
 
@@ -102,12 +99,9 @@ namespace DirectoryWatcher.Tests
             Assert.True(list.Count == 0);
 
         }
-
-        // AddFile
-        // RemoveFile
-        // NewFileOffset
-        // CurrentFileOffset
-
-
     }
+
+
+
 }
+

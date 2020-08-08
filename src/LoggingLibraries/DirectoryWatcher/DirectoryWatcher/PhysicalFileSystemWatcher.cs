@@ -130,7 +130,7 @@ namespace DirectoryWatcher
             {
 
                 DisableWatcher();
-                string fileFilter = callbackAndFilter != null ? callbackAndFilter.fileFilter : String.Empty;
+                string fileFilter = callbackAndFilter != null ? callbackAndFilter.FileFilter : String.Empty;
 
                 // Let's better pass only one argument in case that implementation in FileSystemWatcher is different
                 _watcher = new FileSystemWatcher(_settings.ScanDirectory);
@@ -138,7 +138,7 @@ namespace DirectoryWatcher
 
                 _watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime | NotifyFilters.Attributes | NotifyFilters.Size;
                 if (callbackAndFilter != null)
-                    SetCallback(callbackAndFilter.action);
+                    SetCallback(callbackAndFilter.ActionChanges);
                 return true;
             }
             catch (Exception)

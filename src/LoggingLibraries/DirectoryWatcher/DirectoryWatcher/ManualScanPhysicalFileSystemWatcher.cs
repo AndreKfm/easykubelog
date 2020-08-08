@@ -27,7 +27,7 @@ namespace DirectoryWatcher
             // Don't allow values of 0 or lower, because this would consume 
             // too much CPU cycles for nothing 
             get { return _scanSpeedInSeconds; }
-            set { _scanSpeedInSeconds = value; if (_scanSpeedInSeconds <= 0) _scanSpeedInSeconds = 1; }
+            set { _scanSpeedInSeconds = value; if (_scanSpeedInSeconds < 0) _scanSpeedInSeconds = 0; }
         }
 
         private string _baseDirectoryToScan;
@@ -218,15 +218,26 @@ namespace DirectoryWatcher
         CancellationTokenSource _tokenSource;
         private async Task PeriodicallyScanDirectory(CancellationToken token, FilterAndCallbackArgument callbackAndFilter)
         {
-            int scanMs = _settings.ScanSpeedInSeconds * 1000;
-            string scanDir = _settings.ScanDirectory;
-            var current = _scanDirectory.Scan(scanDir);
-            while (token.IsCancellationRequested == false)
+            try
             {
-                await Task.Delay(scanMs);
-                var fileListNew = _scanDirectory.Scan(scanDir);
-                ReportChanges(current, fileListNew, token, callbackAndFilter);
-                current = fileListNew;
+                int scanMs = _settings.ScanSpeedInSeconds * 1000;
+                if (scanMs == 0)
+                    scanMs = 100;
+                string scanDir = _settings.ScanDirectory;
+                var current = _scanDirectory.Scan(scanDir);
+                while (token.IsCancellationRequested == false)
+                {
+                    await Task.Delay(scanMs);
+                    if (callbackAndFilter.ActionScanning != null)
+                        callbackAndFilter.ActionScanning(this);
+                    var fileListNew = _scanDirectory.Scan(scanDir);
+                    ReportChanges(current, fileListNew, token, callbackAndFilter);
+                    current = fileListNew;
+                }
+            }
+            catch(Exception)
+            {
+
             }
         }
 
@@ -234,13 +245,17 @@ namespace DirectoryWatcher
         {
             try
             {
-                var Report = callbackAndFilter.action;
+                var Report = callbackAndFilter.ActionChanges;
                 var changed = _diffs.GetChangedFiles(oldList, newList);
                 ReportChangeType(changed, token, Report, IFileSystemWatcherChangeType.Changed);
                 var newFiles = _diffs.GetNewFiles(oldList, newList);
                 ReportChangeType(newFiles, token, Report, IFileSystemWatcherChangeType.Created);
                 var deletedFiles = _diffs.GetDeletedFiles(oldList, newList);
                 ReportChangeType(deletedFiles, token, Report, IFileSystemWatcherChangeType.Deleted);
+            }
+            catch(OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception)
             { }
@@ -251,10 +266,10 @@ namespace DirectoryWatcher
                                       Action<object, WatcherCallbackArgs> Report, 
                                       IFileSystemWatcherChangeType changeType)
         {
+            if (token.IsCancellationRequested)
+                throw new OperationCanceledException();
             foreach (var file in current)
             {
-                if (token.IsCancellationRequested)
-                    throw new OperationCanceledException();
                 Report(this, new WatcherCallbackArgs(file.Key, changeType));
             }
         }
@@ -274,9 +289,9 @@ namespace DirectoryWatcher
             _tokenSource = new CancellationTokenSource();
             _currentFileSystemWatcher = Task.Factory.StartNew(
                 async () => await PeriodicallyScanDirectory(_tokenSource.Token, callbackAndFilter), 
-                TaskCreationOptions.LongRunning);
+                TaskCreationOptions.LongRunning).Result;
 
-            return false;
+            return true;
         }
     }
 

@@ -20,14 +20,17 @@ namespace DirectoryWatcher
     {
 
         public FilterAndCallbackArgument(string fileFilter,
-                                         Action<object, WatcherCallbackArgs> action = null)
+                                         Action<object, WatcherCallbackArgs> actionChanges = null,
+                                         Action<object> actionScanning = null)
         {
-            this.fileFilter = fileFilter;
-            this.action = action;
+            this.FileFilter = fileFilter;
+            this.ActionChanges = actionChanges;
+            this.ActionScanning = actionScanning;
         }
 
-        public string fileFilter = String.Empty; // Specifies the files to watch = String.Empty = all files
-        public readonly Action<object, WatcherCallbackArgs> action; // Callback to call on specified changes
+        public readonly string FileFilter = String.Empty;                   // Specifies the files to watch = String.Empty = all files
+        public readonly Action<object, WatcherCallbackArgs> ActionChanges;  // Callback to call on specified changes
+        public readonly Action<object>                      ActionScanning; // If set will be called each time a scan is executed
     }
 
     public class WatcherCallbackArgs

@@ -81,7 +81,7 @@ namespace WatcherFileListClasses.Test
 
         void CheckHelper(FilterAndCallbackArgument local, string fileName, ref FileEntry lastEntry, IFileSystemWatcherChangeType ft)
         {
-            local.action(this, new WatcherCallbackArgs(fileName, ft));
+            local.ActionChanges(this, new WatcherCallbackArgs(fileName, ft));
             Assert.True(lastEntry.FileName == fileName && lastEntry.LastChanges == ft);
         }
     }

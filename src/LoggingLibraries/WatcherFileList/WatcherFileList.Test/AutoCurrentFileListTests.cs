@@ -46,7 +46,7 @@ namespace WatcherFileListClasses.Test
 
             void FilterCallback(string filter, FilterAndCallbackArgument callback)
             {
-                actionFileChanges = callback.action;
+                actionFileChanges = callback.ActionChanges;
             }
 
             var mwatcher = new Mock<IFileSystemWatcher>();
