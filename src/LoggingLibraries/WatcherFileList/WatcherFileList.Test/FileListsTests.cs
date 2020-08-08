@@ -64,7 +64,7 @@ namespace WatcherFileListClasses.Test
 
             Mock<IFileSystemWatcher> m = new Mock<IFileSystemWatcher>();
             var f = new FilterAndCallbackArgument("*.txt");
-            m.Setup(x => x.Open(It.IsAny<String>(), It.IsAny<FilterAndCallbackArgument>())).Callback<string , FilterAndCallbackArgument>((string x, FilterAndCallbackArgument arg) => a(x, arg)).Returns(true);
+            m.Setup(x => x.Open(It.IsAny<FilterAndCallbackArgument>())).Callback<string , FilterAndCallbackArgument>((string x, FilterAndCallbackArgument arg) => a(x, arg)).Returns(true);
             WatcherFileList w = new WatcherFileList(directoryToWatch, m.Object, 0 /** NO throttling !!! */);
             w.Start(directoryToWatch, _ => lc(_));
 

@@ -47,7 +47,7 @@ namespace DirectoryWatcher
     // Interface for a file watcher which is watching a single directory (no subdirectories for changes)
     public interface IFileSystemWatcher : IDisposable
     {
-        bool Open(string directoryPath, FilterAndCallbackArgument callbackAndFilter = null);
+        bool Open(FilterAndCallbackArgument callbackAndFilter = null);
 
     }
 }

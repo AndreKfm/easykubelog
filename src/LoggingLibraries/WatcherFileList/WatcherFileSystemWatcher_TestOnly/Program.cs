@@ -97,8 +97,8 @@ namespace FileSystemWatcher_TestOnly
 
             });
 
-            FileDirectoryWatcher w = new FileDirectoryWatcher();
-            w.Open(directory, new FilterAndCallbackArgument(String.Empty, 
+            FileDirectoryWatcher w = new FileDirectoryWatcher(new FileDirectoryWatcherSettings(directory));
+            w.Open(new FilterAndCallbackArgument(String.Empty, 
                 (object sender, WatcherCallbackArgs args) =>
                 {
                     Console.WriteLine($"{args.ChangeType} {args.FileName}");

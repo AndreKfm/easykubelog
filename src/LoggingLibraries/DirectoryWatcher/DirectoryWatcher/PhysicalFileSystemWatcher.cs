@@ -6,6 +6,10 @@ using System.Text;
 
 namespace DirectoryWatcher
 {
+    public class PhysicalFileSystemWatcherWrapperSettings
+    {
+        public string ScanDirectory { get; set; }
+    }
 
     /// <summary>
     /// Uses .NET Core supported file system watcher, which under Linux uses the very performant
@@ -16,8 +20,10 @@ namespace DirectoryWatcher
     public class PhysicalFileSystemWatcherWrapper : IFileSystemWatcher
     {
         FileSystemWatcher _watcher;
-        public PhysicalFileSystemWatcherWrapper()
+        PhysicalFileSystemWatcherWrapperSettings _settings; 
+        public PhysicalFileSystemWatcherWrapper(PhysicalFileSystemWatcherWrapperSettings settings)
         {
+            _settings = settings; 
         }
 
         public void Dispose()
@@ -118,7 +124,7 @@ namespace DirectoryWatcher
         }
 
 
-        public bool Open(string directoryPath, FilterAndCallbackArgument callbackAndFilter)
+        public bool Open(FilterAndCallbackArgument callbackAndFilter)
         {
             try
             {
@@ -127,7 +133,7 @@ namespace DirectoryWatcher
                 string fileFilter = callbackAndFilter != null ? callbackAndFilter.fileFilter : String.Empty;
 
                 // Let's better pass only one argument in case that implementation in FileSystemWatcher is different
-                _watcher = new FileSystemWatcher(directoryPath);
+                _watcher = new FileSystemWatcher(_settings.ScanDirectory);
                 //new FileSystemWatcher(directoryPath, fileFilter);
 
                 _watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime | NotifyFilters.Attributes | NotifyFilters.Size;

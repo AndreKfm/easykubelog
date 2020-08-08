@@ -3,18 +3,26 @@
 namespace DirectoryWatcher
 {
 
+    public class FileDirectoryWatcherSettings
+    {
+        public FileDirectoryWatcherSettings() { }
+        public FileDirectoryWatcherSettings(string scanDir) { ScanDirectory = scanDir;  }
+        public string ScanDirectory { get; set; }
+    }
+
 
     public class FileDirectoryWatcher : IDisposable
     {
-
-        public FileDirectoryWatcher(IFileSystemWatcher watcher = null)
+        FileDirectoryWatcherSettings _settings; 
+        public FileDirectoryWatcher(FileDirectoryWatcherSettings settings, IFileSystemWatcher watcher = null)
         {
-            _watcher = watcher ?? new PhysicalFileSystemWatcherWrapper();
+            _settings = settings;
+            _watcher = watcher ?? new PhysicalFileSystemWatcherWrapper(new PhysicalFileSystemWatcherWrapperSettings { ScanDirectory = _settings.ScanDirectory });
         }
 
-        public bool Open(string path, FilterAndCallbackArgument filterAndCallback = null)
+        public bool Open(FilterAndCallbackArgument filterAndCallback = null)
         {
-            return _watcher.Open(path, filterAndCallback);
+            return _watcher.Open(filterAndCallback);
         }
 
         public void Dispose()

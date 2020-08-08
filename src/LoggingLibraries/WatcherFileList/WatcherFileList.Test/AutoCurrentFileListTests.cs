@@ -50,7 +50,7 @@ namespace WatcherFileListClasses.Test
             }
 
             var mwatcher = new Mock<IFileSystemWatcher>();
-            mwatcher.Setup((x) => x.Open(It.IsAny<string>(), It.IsAny<FilterAndCallbackArgument>())).Callback((Action<string, FilterAndCallbackArgument>)FilterCallback).Returns(true);
+            mwatcher.Setup((x) => x.Open(It.IsAny<FilterAndCallbackArgument>())).Callback((Action<string, FilterAndCallbackArgument>)FilterCallback).Returns(true);
 
             autoCurrentFileList.Start("dummy", mwatcher.Object);
             string mustBeThis = "must be this";

@@ -98,8 +98,8 @@ namespace WatcherFileListClasses
         public void Start(string fileFilter, Action<ReadOnlyCollection<FileEntry>> fileListChangeCallback)
         {
             DiscardOldWatcher();
-            _watcher = new FileDirectoryWatcher(_watcherInterface);
-            _watcher.Open(_directoryToWatch, new FilterAndCallbackArgument(fileFilter, Callback));
+            _watcher = new FileDirectoryWatcher(new FileDirectoryWatcherSettings { ScanDirectory = _directoryToWatch}, _watcherInterface);
+            _watcher.Open(new FilterAndCallbackArgument(fileFilter, Callback));
             _fileListChangeCallback = fileListChangeCallback;
             _throttleCalls = new ThrottleCalls(CallAfterChange, _updateRatioInMilliseconds);
         }

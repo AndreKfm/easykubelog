@@ -15,6 +15,7 @@ namespace DirectoryWatcher
 {
     //using FileListEntry = (string fileName, DateTime lastWriteUtc, long fileLength);
     using FileList = Dictionary<string, (DateTime lastWriteUtc, long fileLength)>;
+    using FileListEnum = IEnumerable<KeyValuePair<string, (DateTime lastWriteUtc, long fileLength)>>;
 
     public class ManualScanPhysicalFileSystemWatcherSettings
     {
@@ -139,17 +140,17 @@ namespace DirectoryWatcher
 
     public class ManualScanDirectoryDifferences
     {
-        public IEnumerable<KeyValuePair<string, (DateTime lastWriteUtc, long fileLength)>> GetNewFiles(FileList oldScanned, FileList newScanned)
+        public FileListEnum GetNewFiles(FileList oldScanned, FileList newScanned)
         {
             return newScanned.Where(s => oldScanned.ContainsKey(s.Key) == false);
         }
 
-        public IEnumerable<KeyValuePair<string, (DateTime lastWriteUtc, long fileLength)>> GetDeletedFiles(FileList oldScanned, FileList newScanned)
+        public FileListEnum GetDeletedFiles(FileList oldScanned, FileList newScanned)
         {
             return oldScanned.Where(s => newScanned.ContainsKey(s.Key) == false);
         }
 
-        public IEnumerable<KeyValuePair<string, (DateTime lastWriteUtc, long fileLength)>> GetChangedFiles(FileList oldScanned, FileList newScanned)
+        public FileListEnum GetChangedFiles(FileList oldScanned, FileList newScanned)
         {
             return newScanned.Where(s => oldScanned.ContainsKey(s.Key) && (oldScanned[s.Key] != s.Value));
         }
@@ -158,7 +159,7 @@ namespace DirectoryWatcher
 
     public interface IManualScanDirectory
     {
-        public List<(string fileName, DateTime lastWriteUtc, long fileLength)> Scan(string directory);
+        public FileList Scan(string directory);
     }
 
     internal class ManualScanDirectory : IManualScanDirectory
@@ -167,10 +168,10 @@ namespace DirectoryWatcher
         {
         }
 
-        public List<(string fileName, DateTime lastWriteUtc, long fileLength)> Scan(string directory)
+        public FileList Scan(string directory)
         {
             string[] files = Directory.GetFiles(directory);
-            List<(string fileName, DateTime lastWriteUtc, long fileLength)> list = new List<(string fileName, DateTime lastWriteUtc, long fileLength)>();
+            FileList list = new FileList();
             foreach(var file in files)
             {
                 var fileInfo = new FileInfo(file);
@@ -178,7 +179,7 @@ namespace DirectoryWatcher
                 {
                     var length = fileInfo.Length;
                     var lastWriteUtc = fileInfo.LastWriteTimeUtc;
-                    list.Add((file, lastWriteUtc, length));
+                    list.Add(file, (lastWriteUtc, length));
                 }
                 catch (Exception) { }
             }
@@ -196,14 +197,15 @@ namespace DirectoryWatcher
     public class ManualScanPhysicalFileSystemWatcher : IFileSystemWatcher
     {
 
-        ManualScanPhysicalFileSystemWatcherSettings settings;
+        ManualScanPhysicalFileSystemWatcherSettings _settings;
+        ManualScanDirectoryDifferences _diffs = new ManualScanDirectoryDifferences();
         IManualScanDirectory _scanDirectory;
         Task _currentFileSystemWatcher = null;
 
-        public ManualScanPhysicalFileSystemWatcher(IManualScanDirectory scanDirectory = null, 
-                                                   ManualScanPhysicalFileSystemWatcherSettings watcherSettings = null)
+        public ManualScanPhysicalFileSystemWatcher(ManualScanPhysicalFileSystemWatcherSettings watcherSettings = null,
+                                                   IManualScanDirectory scanDirectory = null)
         {
-            settings = watcherSettings ?? new ManualScanPhysicalFileSystemWatcherSettings();
+            _settings = watcherSettings ?? new ManualScanPhysicalFileSystemWatcherSettings();
             _scanDirectory = scanDirectory ?? new ManualScanDirectory();
         }
 
@@ -214,17 +216,49 @@ namespace DirectoryWatcher
         }
 
         CancellationTokenSource _tokenSource;
-        private async Task PeriodicallyScanDirectory(CancellationToken token)
+        private async Task PeriodicallyScanDirectory(CancellationToken token, FilterAndCallbackArgument callbackAndFilter)
         {
-            int scanMs = settings.ScanSpeedInSeconds * 1000;
-            string scanDir = settings.ScanDirectory;
+            int scanMs = _settings.ScanSpeedInSeconds * 1000;
+            string scanDir = _settings.ScanDirectory;
             var current = _scanDirectory.Scan(scanDir);
             while (token.IsCancellationRequested == false)
             {
                 await Task.Delay(scanMs);
-                var fileList = _scanDirectory.Scan(scanDir);
+                var fileListNew = _scanDirectory.Scan(scanDir);
+                ReportChanges(current, fileListNew, token, callbackAndFilter);
+                current = fileListNew;
             }
         }
+
+        private void ReportChanges(FileList oldList, FileList newList, CancellationToken token, FilterAndCallbackArgument callbackAndFilter)
+        {
+            try
+            {
+                var Report = callbackAndFilter.action;
+                var changed = _diffs.GetChangedFiles(oldList, newList);
+                ReportChangeType(changed, token, Report, IFileSystemWatcherChangeType.Changed);
+                var newFiles = _diffs.GetNewFiles(oldList, newList);
+                ReportChangeType(newFiles, token, Report, IFileSystemWatcherChangeType.Created);
+                var deletedFiles = _diffs.GetDeletedFiles(oldList, newList);
+                ReportChangeType(deletedFiles, token, Report, IFileSystemWatcherChangeType.Deleted);
+            }
+            catch (Exception)
+            { }
+        }
+
+        private void ReportChangeType(FileListEnum current, 
+                                      CancellationToken token, 
+                                      Action<object, WatcherCallbackArgs> Report, 
+                                      IFileSystemWatcherChangeType changeType)
+        {
+            foreach (var file in current)
+            {
+                if (token.IsCancellationRequested)
+                    throw new OperationCanceledException();
+                Report(this, new WatcherCallbackArgs(file.Key, changeType));
+            }
+        }
+
 
         private void Stop()
         {
@@ -234,11 +268,13 @@ namespace DirectoryWatcher
             _tokenSource = null;
         }
 
-        public bool Open(string directoryPathToScanFiles, FilterAndCallbackArgument callbackAndFilter = null)
+        public bool Open(FilterAndCallbackArgument callbackAndFilter)
         {
             Stop();
             _tokenSource = new CancellationTokenSource();
-            _currentFileSystemWatcher = Task.Factory.StartNew(async () => await PeriodicallyScanDirectory(_tokenSource.Token), TaskCreationOptions.LongRunning);
+            _currentFileSystemWatcher = Task.Factory.StartNew(
+                async () => await PeriodicallyScanDirectory(_tokenSource.Token, callbackAndFilter), 
+                TaskCreationOptions.LongRunning);
 
             return false;
         }
