@@ -9,6 +9,7 @@ namespace DirectoryWatcher
     public class PhysicalFileSystemWatcherWrapperSettings
     {
         public string ScanDirectory { get; set; }
+        public bool IncludeSubdirectories { get; set; } = true;
     }
 
     /// <summary>
@@ -54,11 +55,11 @@ namespace DirectoryWatcher
             _watcher.Disposed += WatcherDisposed;
             _watcher.Renamed += WatcherRenamed;
             _watcher.Error += WatcherError;
-            _watcher.IncludeSubdirectories = false;
+            _watcher.IncludeSubdirectories = true;
             _watcher.InternalBufferSize = 65536; // Reserve for a larger number of containers running
 
             if (this._callbackFileSystemChanged != null)
-                _watcher.EnableRaisingEvents = true;
+                _watcher.EnableRaisingEvents = _settings.IncludeSubdirectories;
 
         }
 

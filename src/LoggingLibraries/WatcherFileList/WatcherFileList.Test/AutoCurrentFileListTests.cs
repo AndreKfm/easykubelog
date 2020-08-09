@@ -19,7 +19,7 @@ namespace WatcherFileListClasses.Test
         public void SimpleCreate_WithMockedParameter_IGetFile()
         {
             var m = new Mock<IGetFile>();           
-            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(m.Object);
+            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(null, m.Object);
             Assert.True(autoCurrentFileList != null);
         }
 
@@ -39,7 +39,7 @@ namespace WatcherFileListClasses.Test
             var m = new Mock<IGetFile>();
             var wrapper = new MockFileWrapper();
             m.Setup((x) => x.GetFile(It.IsAny<string>())).Returns(wrapper);
-            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(m.Object);
+            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(null, m.Object);
 
 
             Action<object, WatcherCallbackArgs> actionFileChanges = null;

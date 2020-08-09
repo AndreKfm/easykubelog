@@ -39,7 +39,7 @@ namespace LogEntries
     // grafana-c6bfd5949-6g6h2_monitoring_grafana-8fdbfdebc4370290aaed8dc47782571bef9c8ac294e012a14af5546fb7df4f62.log
     public class KubernetesContainerNameTools
     {
-        public static (string deployment, string containerName, string nm, string contId) DeserializeContainerName(string containerName)
+        public static (string deployment, string containerName, string nm, string contId) DeserializeContainerNameContainerLogs(string containerName)
         {
             var array = containerName.Split('_');
             if (array.Length < 3)
@@ -51,6 +51,27 @@ namespace LogEntries
             var containerId = array[2].Substring(idPosition + 1);
             return (array[0], containerShortName, array[1], containerId);
         }
+
+        public static (string containerName, string nm, string podId) DeserializeContainerName(string fileEntry)
+        {
+            var array = fileEntry.Split('_');
+            if (array.Length < 3)
+            {
+                return ("#", "#", "#");
+            }
+            var podId = array[2];
+            var containerName = array[1];
+            var nm = array[0];
+            int indexOfPathEnd = podId.IndexOfAny(pathChars);
+            if (indexOfPathEnd > 0)
+            {
+                podId = array[2].Substring(0, indexOfPathEnd);
+            }
+            return (containerName, nm, podId);
+        }
+
+        static private readonly char[] pathChars = new char[] { '\\', '/' };
+
     }
 
     // Log entry in Kubernetes format - reads itself with Json deserializer from a log entry (commonly a single line) 

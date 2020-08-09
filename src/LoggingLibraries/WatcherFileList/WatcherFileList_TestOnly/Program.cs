@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using WatcherFileListClasses;
@@ -27,7 +28,9 @@ namespace WatcherFileListClasses_TestOnly
 
         static void Main(string[] args)
         {
-
+            var consoleTracer = new ConsoleTraceListener(true);
+            Trace.Listeners.Add(consoleTracer);
+            consoleTracer.Name = "ManualFileSystemWatcherTrace";
 
 
 

@@ -9,7 +9,7 @@ namespace DirectoryWatcher
         public FileDirectoryWatcherSettings(string scanDir) { ScanDirectory = scanDir;  }
         public string ScanDirectory { get; set; }
 
-        public bool UseManualScan { get; set; } = true; // By default use manual scanning
+        public bool UseManualScan { get; set; } = false; // By default use physical scanning
     }
 
 

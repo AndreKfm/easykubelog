@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -230,6 +231,7 @@ namespace DirectoryWatcher
                     await Task.Delay(scanMs);
                     if (callbackAndFilter.ActionScanning != null)
                         callbackAndFilter.ActionScanning(this);
+                    Trace.TraceInformation($"Scanning now directory: {_settings.ScanDirectory}");
                     var fileListNew = _scanDirectory.Scan(scanDir);
                     ReportChanges(current, fileListNew, token, callbackAndFilter);
                     current = fileListNew;
@@ -270,6 +272,7 @@ namespace DirectoryWatcher
                 throw new OperationCanceledException();
             foreach (var file in current)
             {
+                Trace.TraceInformation($"Reporting changes in directory: {_settings.ScanDirectory}  file: {file} changetype: {changeType}");
                 Report(this, new WatcherCallbackArgs(file.Key, changeType));
             }
         }
@@ -277,6 +280,8 @@ namespace DirectoryWatcher
 
         private void Stop()
         {
+            if (_tokenSource != null && _tokenSource.IsCancellationRequested == false)
+                Trace.TraceInformation($"Stop scanning directory: {_settings.ScanDirectory}");
             _tokenSource?.Cancel();
             _currentFileSystemWatcher?.Wait();
             _currentFileSystemWatcher = null;
@@ -286,6 +291,7 @@ namespace DirectoryWatcher
         public bool Open(FilterAndCallbackArgument callbackAndFilter)
         {
             Stop();
+            Trace.TraceInformation($"Open directory for scanning: {_settings.ScanDirectory} - scanning period: {_settings.ScanSpeedInSeconds} seconds");
             _tokenSource = new CancellationTokenSource();
             _currentFileSystemWatcher = Task.Factory.StartNew(
                 async () => await PeriodicallyScanDirectory(_tokenSource.Token, callbackAndFilter), 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -39,6 +40,13 @@ namespace WatcherFileListClasses
         public Task BlockingReadAsyncNewOutput(Action<NewOutput, CancellationToken> callback); // Stop() will abort read
     }
 
+
+    public class AutoCurrentFileListSettings
+    {
+        public bool FilterDirectoriesForwardFilesOnly { get; set; } = true; // Forward only files and no directory changes if set
+    }
+
+
     public class AutoCurrentFileList : IAutoCurrentFileList
     {
         WatcherFileList _watcher;
@@ -46,9 +54,12 @@ namespace WatcherFileListClasses
         string _directoryToWatch;
         readonly IGetFile _getFile;
         Task _current;
-        public AutoCurrentFileList(IGetFile openFile = null)
+        AutoCurrentFileListSettings _settings;
+
+        public AutoCurrentFileList(AutoCurrentFileListSettings settings = null, IGetFile openFile = null)
         {
             _getFile = openFile ?? new GetFileWrapper();
+            _settings = settings ?? new AutoCurrentFileListSettings();
         }
 
         public void Stop()
@@ -113,6 +124,17 @@ namespace WatcherFileListClasses
 
         private void WriteToChannel(FileEntry change, FileTaskEnum operation)
         {
+            if (_settings.FilterDirectoriesForwardFilesOnly)
+            {
+                Trace.TraceInformation($"Checking if [{change.FileName}] is a directory");
+                FileAttributes attr = File.GetAttributes(Path.Combine(_directoryToWatch, change.FileName));
+                if (attr.HasFlag(FileAttributes.Directory))
+                {
+                    Trace.TraceInformation($"[{change.FileName}] is a directory - skipping due to filter");
+                    return;
+                }
+            }
+
             if (!_channel.Writer.TryWrite(new FileTask(change.FileName, operation, _lastError)))
             {
                 Error($"HandleFileChanges - Channel full: {change.FileName} {operation}");

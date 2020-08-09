@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -81,13 +83,29 @@ namespace ManualFileSystemWatcherConsole
         static void Main(string[] args)
         {
 
-            SimpleTestCreateNewFile s = new SimpleTestCreateNewFile(); s.TestNewFiles();
-            return;
+            var consoleTracer = new ConsoleTraceListener(true);
+            Trace.Listeners.Add(consoleTracer);
+            consoleTracer.Name = "ManualFileSystemWatcherTrace";
+            var dir = @"c:\test\manual";
+
+            if (args.Count() > 0)
+                dir = args[0];
+
+            Console.WriteLine($"Scan directory: {dir}");
+            //SimpleTestCreateNewFile s = new SimpleTestCreateNewFile(); s.TestNewFiles(); return;
 
             ManualScanPhysicalFileSystemWatcherSettings settings = 
-                new ManualScanPhysicalFileSystemWatcherSettings { ScanDirectory = @"c:\test\manual", ScanSpeedInSeconds = 1 };
+                new ManualScanPhysicalFileSystemWatcherSettings { ScanDirectory = dir, ScanSpeedInSeconds = 1 };
             ManualScanPhysicalFileSystemWatcher w = new ManualScanPhysicalFileSystemWatcher(settings);
             w.Open(new FilterAndCallbackArgument(String.Empty, CallbackChanges));
+
+            // Uncomment for Physical file watcher - for testing purposes only
+            //PhysicalFileSystemWatcherWrapperSettings settingsP =
+            //    new PhysicalFileSystemWatcherWrapperSettings { ScanDirectory = dir };
+            //PhysicalFileSystemWatcherWrapper wP = new PhysicalFileSystemWatcherWrapper(settingsP);
+            //wP.Open(new FilterAndCallbackArgument(String.Empty, CallbackChanges));
+
+
             Console.WriteLine("Waiting for file changes\r\n\r\n");
             Console.ReadLine();
         }

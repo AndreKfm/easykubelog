@@ -41,58 +41,65 @@ namespace EasyLogService.Services.CentralLogService
                         newEntry.SetContainerName(entry.FileName);
                         lock (_logCache)
                         {
-                            if (!_fileIndexList.TryGetValue(entry.FileName, out int fileIndex))
-                            {
-                                fileIndex = ++_currentFileIndex;
-                                _fileIndexList.Add(entry.FileName, fileIndex);
-                            }
-                            try
-                            {
-                                _logCache.Add((newEntry.Time, fileIndex), newEntry);
-                            }
-                            catch (Exception)
-                            {
-                                // Sometimes - for what reason ever there are multiple entries in log files 
-                                // so convert this message into an internal exception error and pass the original log entry 
-                                // in the error message itself
-
-                                const int MaxStringLength = 200;
-                                var logLine = newEntry.Log.Length > MaxStringLength ? newEntry.Log.Substring(0, MaxStringLength) + "..." : newEntry.Log;
-
-                                var dummyEntry = new KubernetesLogEntry
-                                {
-                                    Log = $"EASYLOGERROR: Exception - entry with the same time added already - original text: {logLine}",
-                                    Time = newEntry.Time,
-                                    Stream = "EASYLOG"
-                                };
-
-                                _logger.LogError($"Could not write log entry: {dummyEntry.Time} : { logLine }");
-
-                                try
-                                {
-                                    _logCache.Add((newEntry.Time, 0), dummyEntry);
-                                }
-                                catch(Exception)
-                                {
-                                    try
-                                    {
-                                        dummyEntry.Log = "EASYLOGERROR: SECOND exception: " + dummyEntry.Log;
-                                        _logCache.Add((DateTimeOffset.Now, 0), dummyEntry);
-                                    }
-                                    catch (Exception)
-                                    {
-                                        _logger.LogError($"Could not write log entry multiple times: {dummyEntry.Time} : { dummyEntry.Log }");
-                                    }
-                                }
-                            }
+                            InternalAddNewLogEntry(entry, newEntry);
                         }
                     }
                 }
             }
         }
 
+        private void InternalAddNewLogEntry(LogEntry entry, KubernetesLogEntry newEntry)
+        {
+            if (!_fileIndexList.TryGetValue(entry.FileName, out int fileIndex))
+            {
+                fileIndex = ++_currentFileIndex;
+                _fileIndexList.Add(entry.FileName, fileIndex);
+            }
+            try
+            {
+                _logCache.Add((newEntry.Time, fileIndex), newEntry);
+            }
+            catch (Exception)
+            {
+                HandleAddEntryErrors(newEntry);
+            }
+        }
 
+        private void HandleAddEntryErrors(KubernetesLogEntry newEntry)
+        {
+            // Sometimes - for what reason ever there are multiple entries in log files 
+            // so convert this message into an internal exception error and pass the original log entry 
+            // in the error message itself
 
+            const int MaxStringLength = 200;
+            var logLine = newEntry.Log.Length > MaxStringLength ? newEntry.Log.Substring(0, MaxStringLength) + "..." : newEntry.Log;
+
+            var dummyEntry = new KubernetesLogEntry
+            {
+                Log = $"EASYLOGERROR: Exception - entry with the same time added already - original text: {logLine}",
+                Time = newEntry.Time,
+                Stream = "EASYLOG"
+            };
+
+            _logger.LogError($"Could not write log entry: {dummyEntry.Time} : { logLine }");
+
+            try
+            {
+                _logCache.Add((newEntry.Time, 0), dummyEntry);
+            }
+            catch (Exception)
+            {
+                try
+                {
+                    dummyEntry.Log = "EASYLOGERROR: SECOND exception: " + dummyEntry.Log;
+                    _logCache.Add((DateTimeOffset.Now, 0), dummyEntry);
+                }
+                catch (Exception)
+                {
+                    _logger.LogError($"Could not write log entry multiple times: {dummyEntry.Time} : { dummyEntry.Log }");
+                }
+            }
+        }
 
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {

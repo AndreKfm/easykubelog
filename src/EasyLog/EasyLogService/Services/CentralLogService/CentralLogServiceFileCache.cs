@@ -26,12 +26,6 @@ namespace EasyLogService.Services.CentralLogService
             _fileName = fileName;
             _file = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
             _stream = new StreamReader(_file);
-
-            // We need to do that dumb counting for the first time to get the number of lines :-/ 
-            //while (_stream.ReadLine() != null)
-            //{
-            //    ++_lines;
-            //}
         }
 
 
@@ -113,8 +107,6 @@ namespace EasyLogService.Services.CentralLogService
         public EndlessFileStreamCache(EndlessFileStream stream)
         {
             _stream = stream;
-
-            // We need to do that dumb counting for the first time to get the number of lines :-/ 
         }
 
 
@@ -123,20 +115,6 @@ namespace EasyLogService.Services.CentralLogService
             _stream?.Dispose(); _stream = null;
         }
 
-        //IEnumerable<KubernetesLogEntry> EnumerateStreamLines(StreamReader localStream)
-        //{
-        //    //lock (_lockObject)
-        //    {
-        //        localStream.BaseStream.Seek(0, SeekOrigin.Begin);
-        //        for (; ; )
-        //        {
-        //            var line = localStream.ReadLine();
-        //            if (line != null)
-        //                yield return KubernetesLogEntry.Parse(line);
-        //            else break;
-        //        }
-        //    }
-        //}
 
         private bool CheckInBetween(KubernetesLogEntry k, DateTimeOffset from, DateTimeOffset to)
         {
