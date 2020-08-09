@@ -12,13 +12,13 @@
     "EasyLogService": {
       "commandName": "Project",
       //"commandLineArgs": "WatchDirectory=C:\\test\\logs EasyLogCentralLogDir=C:\\test\\endless",
-      "commandLineArgs": "WatchDirectory=C:\\temp\\var\\log\\pods EasyLogCentralLogDir=C:\\test\\endless",
+      "commandLineArgs": "WatchDirectory=C:\\temp\\var\\log\\pods CentralLogServiceCacheSettings:CentralMasterLogDirectory=C:\\test\\endless",
       "launchBrowser": true,
       "launchUrl": "/",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:5001;http://localhost:5000"
+      "applicationUrl": "https://localhost:5001"
     }
   }
 }

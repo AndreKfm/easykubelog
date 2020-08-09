@@ -24,7 +24,7 @@ namespace FileArrayConsole
 
         static void ReadWhileWrite()
         {
-            var stream = new EndlessFileStream(@"C:\test\FileArray", 1);
+            var stream = new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\FileArray", MaxLogFileSizeInMByte = 1 });
             Task w = Task.Run(() => TestWritingAndPerformance(stream));
 
             for (; ; )
@@ -51,7 +51,7 @@ namespace FileArrayConsole
 
         static void TestWritingAndPerformance(EndlessFileStream fileStream = null)
         {
-            var list = fileStream ?? new EndlessFileStream(@"C:\test\FileArray", 1);
+            var list = fileStream ?? new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\FileArray", MaxLogFileSizeInMByte = 1 });
             long size = 0;
             Stopwatch w = Stopwatch.StartNew();
             int index = 0;
@@ -76,7 +76,7 @@ namespace FileArrayConsole
             //b.GenerateOutputFile(@"c:\test\logs", @"c:\test\central_test.log");
             //EndlessFileStreamBuilder b = new EndlessFileStreamBuilder(); b.GenerateEndlessFileStream(@"c:\test\logs", @"C:\test\endless");
 
-            EndlessFileStream e = new EndlessFileStream(@"C:\test\endless", 1024);
+            EndlessFileStream e = new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\endless", MaxLogFileSizeInMByte = 1024 });
             var stream = e.Reader.ReadEntries(int.MaxValue);
             string search = "gonzo";
             Stopwatch w = Stopwatch.StartNew();

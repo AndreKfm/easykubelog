@@ -46,7 +46,7 @@ namespace EasyLogService.Services.CentralLogService
         public CentralLogService(ILogger<CentralLogServiceCache> logger, IConfiguration config, ICentralLogServiceCache cache = null, int maxEntriesInChannelQueue = 1024)
         {
             _logEntryChannel = Channel.CreateBounded<LogEntry>(maxEntriesInChannelQueue);
-            _cache = cache ?? new CentralLogServiceCache(maxEntriesInChannelQueue, config, logger);
+            //_cache = cache ?? new CentralLogServiceCache(maxEntriesInChannelQueue, config, logger);
         }
 
 

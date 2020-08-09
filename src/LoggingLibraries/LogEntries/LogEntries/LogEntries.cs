@@ -121,7 +121,7 @@ namespace LogEntries
                     return k;
                 }
             }
-            catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Parse: {e.Message}"); }
+            catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Parse: {e.Message} - Line: {line}"); }
             return Default;
         }
 

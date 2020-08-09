@@ -426,19 +426,27 @@ namespace EndlessFileStreamClasses
         }
     }
 
+    public class EndlessFileStreamSettings
+    {
+        
+        public string BaseDirectory { get; set; }
+        public long MaxLogFileSizeInMByte { get; set; } = 1024;
+    }
 
     public class EndlessFileStream : IDisposable
     {
         IEndlessFileStreamWriter _writer;
         IEndlessFileStreamReader _reader;
         IEndlessFileStreamIO _io;
+        EndlessFileStreamSettings _settings; 
 
-        public EndlessFileStream(string baseDirectory, long maxLogFileSizeInMByte = 1024,
+        public EndlessFileStream(EndlessFileStreamSettings settings,
                                  IEndlessFileStreamWriter writer = null,
                                  IEndlessFileStreamReader reader = null,
                                  IEndlessFileStreamIO io = null)
         {
-            _io = io ?? new EndlessFileStreamIO(baseDirectory, maxLogFileSizeInMByte);
+            _settings = settings;
+            _io = io ?? new EndlessFileStreamIO(settings.BaseDirectory, settings.MaxLogFileSizeInMByte);
             _writer = writer ?? new EndlessFileStreamWriter(_io);
             _reader = reader ?? new EndlessFileStreamReader(_io);
         }
@@ -545,13 +553,13 @@ namespace EndlessFileStreamClasses
             }
         }
 
-        public void GenerateEndlessFileStream(string sourceDirectory, string endlessFileStreamDirectory)
+        public void GenerateEndlessFileStream(EndlessFileStreamSettings settings, string sourceDirectory)
         {
             List<IEnumerable<(string filename, string content)>> streams = OpenFiles(sourceDirectory);
 
             var listEnumerator = streams.AsEnumerable();
 
-            using EndlessFileStream file = new EndlessFileStream(endlessFileStreamDirectory, 1024);
+            using EndlessFileStream file = new EndlessFileStream(settings);
             foreach (var s in EnumerateSortedByDateTime(listEnumerator))
             {
                 s.Write((string line) => { file.Writer.WriteToFileStream(line); file.Writer.Flush(); });

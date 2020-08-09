@@ -1,12 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using EndlessFileStreamClasses;
 using LogEntries;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace EasyLogService.Services.CentralLogService
 {
 
+
+    public class CentralLogServiceCacheSettings
+    {
+        public string CentralMasterLogDirectory { get; set; }
+        public long MaxLogFileSizeInMByte { get; set; } = 1024;
+    }
 
 
     public class CentralLogServiceCache : ICentralLogServiceCache
@@ -16,11 +24,23 @@ namespace EasyLogService.Services.CentralLogService
         readonly ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> _logCache;
         readonly ILogger<CentralLogServiceCache> _logger;
 
-        public CentralLogServiceCache(int maxLines, IConfiguration config, ILogger<CentralLogServiceCache> logger, ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> cache = null)
+        public CentralLogServiceCache(IOptions<CentralLogServiceCacheSettings> settings, 
+                                      IConfiguration config, 
+                                      ILogger<CentralLogServiceCache> logger, 
+                                      ICache<(DateTimeOffset, int fileIndex), 
+                                      KubernetesLogEntry> cache = null)
         {
             //_logCache = cache ?? new MemoryCacheTreeDictionary(maxLines);
             //_logCache = cache ?? new FileCache(@"c:\test\central_test.log", maxLines);
-            var endlessStream = new EndlessFileStreamClasses.EndlessFileStream(config["EasyLogCentralLogDir"]);
+
+            EndlessFileStreamSettings endlessSettings = 
+                new EndlessFileStreamSettings 
+                { 
+                    BaseDirectory = settings.Value.CentralMasterLogDirectory, 
+                    MaxLogFileSizeInMByte = settings.Value.MaxLogFileSizeInMByte 
+                };
+
+            var endlessStream = new EndlessFileStreamClasses.EndlessFileStream(endlessSettings);
             _logCache = cache ?? new EndlessFileStreamCache(endlessStream);
             //_logCache = cache ?? new FileCache(@"c:\test\central.log", maxLines);
             _logger = logger;
@@ -30,6 +50,8 @@ namespace EasyLogService.Services.CentralLogService
         //readonly TreeDictionary<(DateTimeOffset time, int fileIndex), KubernetesLogEntry> _logCache = new TreeDictionary<(DateTimeOffset time, int fileIndex), KubernetesLogEntry>();
         public void AddEntry(LogEntry entry)
         {
+            if (entry.FileName.StartsWith("kube-system"))
+                return;
             var lines = entry.Lines.Split('\n');
             foreach (string line in lines)
             {

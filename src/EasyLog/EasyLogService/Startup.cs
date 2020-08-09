@@ -16,6 +16,7 @@ using EasyLogService.Tool.Simulator;
 using EasyLogService.Services.CentralLogService;
 using Microsoft.Extensions.Logging;
 using LogEntries;
+using Microsoft.Extensions.Options;
 
 namespace EasyLogService
 {
@@ -85,11 +86,14 @@ namespace EasyLogService
         {
             services.AddControllers();
             services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
+            services.AddOptions();
 
+            services.Configure<CentralLogServiceCacheSettings>(Configuration.GetSection("CentralLogServiceCacheSettings"));
             services.AddSingleton<ICentralLogServiceCache>(x =>
             {
                 var logger = x.GetService<ILogger<CentralLogServiceCache>>();
-                return new CentralLogServiceCache(Int32.Parse(Configuration["MaxLogLines"]), Configuration, logger);
+                var settings = x.GetService<IOptions<CentralLogServiceCacheSettings>>();
+                return new CentralLogServiceCache(settings, Configuration, logger);
             });
 
             services.AddSingleton<ICentralLogService, CentralLogService>();
