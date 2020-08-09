@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using EndlessFileStreamClasses;
 using LogEntries;
 using Microsoft.Extensions.Configuration;
@@ -51,7 +52,10 @@ namespace EasyLogService.Services.CentralLogService
         public void AddEntry(LogEntry entry)
         {
             if (entry.FileName.StartsWith("kube-system"))
+            {
+                Trace.TraceInformation($"Filtering out kube-system: [{entry.FileName}]");
                 return;
+            }
             var lines = entry.Lines.Split('\n');
             foreach (string line in lines)
             {
@@ -74,6 +78,7 @@ namespace EasyLogService.Services.CentralLogService
         {
             if (!_fileIndexList.TryGetValue(entry.FileName, out int fileIndex))
             {
+                Trace.TraceInformation($"Add new entry to cache: {entry.FileName} : {entry.Lines}");
                 fileIndex = ++_currentFileIndex;
                 _fileIndexList.Add(entry.FileName, fileIndex);
             }
@@ -81,8 +86,9 @@ namespace EasyLogService.Services.CentralLogService
             {
                 _logCache.Add((newEntry.Time, fileIndex), newEntry);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Trace.TraceError($"Exception: {e.Message} while adding {entry.FileName} : {entry.Lines}");
                 HandleAddEntryErrors(newEntry);
             }
         }

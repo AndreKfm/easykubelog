@@ -15,7 +15,7 @@ namespace WatcherFileListClasses_TestOnly
             a.Start(directory);
             var task = a.BlockingReadAsyncNewOutput((output, token) =>
             {
-                Console.WriteLine($"XXX: {output.Filename} {output.Lines}");
+                Console.WriteLine($"XXX: {output.FileName} {output.Lines}");
                 //return AutoCurrentFileList.ReadAsyncOperation.ContinueRead;
             });
             Console.WriteLine("CurrentFileListTest wait...");

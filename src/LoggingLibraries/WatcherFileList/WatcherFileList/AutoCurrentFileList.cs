@@ -24,13 +24,13 @@ namespace WatcherFileListClasses
         public NewOutput(string lines, string filename, string lastError)
         {
             Lines = lines;
-            Filename = filename;
+            FileName = filename;
             LastError = lastError;
         }
 
         public readonly string LastError;
         public readonly string Lines;
-        public readonly string Filename;
+        public readonly string FileName;
     }
 
     public interface IAutoCurrentFileList : IDisposable
@@ -126,15 +126,15 @@ namespace WatcherFileListClasses
         {
             if (_settings.FilterDirectoriesForwardFilesOnly)
             {
-                Trace.TraceInformation($"Checking if [{change.FileName}] is a directory");
                 FileAttributes attr = File.GetAttributes(Path.Combine(_directoryToWatch, change.FileName));
                 if (attr.HasFlag(FileAttributes.Directory))
                 {
-                    Trace.TraceInformation($"[{change.FileName}] is a directory - skipping due to filter");
+                    //Trace.TraceInformation($"[{change.FileName}] is a directory - skipping due to filter");
                     return;
                 }
             }
 
+            Trace.TraceInformation($"Adding changes from [{change.FileName}] - [{change.LastChanges}]");
             if (!_channel.Writer.TryWrite(new FileTask(change.FileName, operation, _lastError)))
             {
                 Error($"HandleFileChanges - Channel full: {change.FileName} {operation}");
@@ -174,6 +174,8 @@ namespace WatcherFileListClasses
             while (!token.IsCancellationRequested)
             {
                 var newOutput = await ReadAsyncNewOutput();
+                Trace.TraceInformation($"Reading and forwarding changes [{newOutput.FileName}] - [{newOutput.Lines}]");
+
                 callback(newOutput, _source.Token);
                 //if (callback(newOutput, _source.Token) != ReadAsyncOperation.ContinueRead)
                 //  break; // Cancelled by external callee

@@ -60,7 +60,7 @@ namespace WatcherFileListClasses.Test
             var task = autoCurrentFileList.BlockingReadAsyncNewOutput((output, token) =>
             {
                 lastOutput = output.Lines;
-                lastFileName = output.Filename;
+                lastFileName = output.FileName;
                 waitForInput.Set();
             });
             wrapper.CurrentOutput = mustBeThis;

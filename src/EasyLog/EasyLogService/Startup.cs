@@ -17,6 +17,7 @@ using EasyLogService.Services.CentralLogService;
 using Microsoft.Extensions.Logging;
 using LogEntries;
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
 
 namespace EasyLogService
 {
@@ -66,7 +67,8 @@ namespace EasyLogService
         private void HandleWrittenLogs(NewOutput newOutput, CancellationToken token)
         {
             // Wait for new entries written to any log file and pass it to the central log service
-            _centralLogService.AddLogEntry(new LogEntry(newOutput.Filename, newOutput.Lines));
+            Trace.TraceInformation($"CentralLogService add log entry: [{newOutput.FileName}] - [{newOutput.Lines}]");
+            _centralLogService.AddLogEntry(new LogEntry(newOutput.FileName, newOutput.Lines));
         }
     }
 
@@ -84,6 +86,12 @@ namespace EasyLogService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var consoleTracer = new ConsoleTraceListener(true);
+            Trace.Listeners.Add(consoleTracer);
+            consoleTracer.Name = "EasyLogService";
+
+
+
             services.AddControllers();
             services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
             services.AddOptions();

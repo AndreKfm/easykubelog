@@ -109,7 +109,7 @@ namespace LogEntries
 
         private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { Time = default, Log = String.Empty, Stream = String.Empty, Container = String.Empty };
 
-        static public KubernetesLogEntry Parse(string line, string optionalContainerName = null)
+        static public KubernetesLogEntry ParseFromContainer(string line, string optionalContainerName = null)
         {
             try
             {
@@ -118,6 +118,33 @@ namespace LogEntries
                     var k = JsonSerializer.Deserialize<KubernetesLogEntry>(line, Options);
                     if (String.IsNullOrEmpty(k.Container)) 
                         k.SetContainerName(optionalContainerName); // Only use external container name if not yet assigned
+                    return k;
+                }
+            }
+            catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Parse: {e.Message} - Line: {line}"); }
+            return Default;
+        }
+
+        /// <summary>
+        /// Parsing from POD logs
+        /// </summary>
+        static public KubernetesLogEntry Parse(string line, string optionalContainerName = null)
+        {
+            try
+            {
+                if (line.Length > 0)
+                {
+                    // 2020-08-09T19:19:48.670551Z stdout F root@xxx:/# echo #################xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx###############################
+                    var indexDateTime = line.IndexOf(' '); if (indexDateTime < 0) return default;
+                    var indexStream = line.IndexOf(' ', indexDateTime + 1); if (indexStream < 0) return default;
+                    var indexLog = line.IndexOf(' ', indexStream + 1); if (indexLog < 0) return default;
+
+                    var dateTime = DateTime.Parse(line.Substring(0, indexDateTime - 1));
+                    var stream = line.Substring(indexDateTime + 1, indexStream - indexDateTime - 1);
+                    var log = line.Substring(indexLog + 1);
+
+                    KubernetesLogEntry k = new KubernetesLogEntry { Log = log, Time = dateTime, Stream = stream, Container = optionalContainerName != null ? optionalContainerName : String.Empty };
+                        
                     return k;
                 }
             }
