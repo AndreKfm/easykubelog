@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DirectoryWatcher.Tests
 {
-    using FileList = Dictionary<string, (DateTime lastWriteUtc, long fileLength)>;
+    using FileList = Dictionary<string, long>;
 
     public class ManualScanDirectoryDifferencesTests
     {
@@ -22,7 +22,7 @@ namespace DirectoryWatcher.Tests
             FileList list = new FileList();
             foreach (var file in files)
             {
-                list.Add(file, (time, len));
+                list.Add(file, len);
             }
             return list; 
         }
@@ -45,9 +45,9 @@ namespace DirectoryWatcher.Tests
             Assert.True(newFiles.Count(s => s.Key == "b") == 0);
             Assert.True(newFiles.Count(s => s.Key == "c") == 0);
 
-            newList1["a"] = (DateTime.Now, 2);
-            newList1["b"] = (default, 3);
-            newList1["c"] = (DateTime.Now, 4);
+            newList1["a"] = 2;
+            newList1["b"] = 3;
+            newList1["c"] = 4;
             Assert.True(newFiles.Count(s => s.Key == "d") == 1);
             Assert.True(newFiles.Count(s => s.Key == "a") == 0);
             Assert.True(newFiles.Count(s => s.Key == "b") == 0);
@@ -85,8 +85,8 @@ namespace DirectoryWatcher.Tests
             Assert.True(delFiles.Count(s => s.Key == "a") == 0);
             Assert.True(delFiles.Count(s => s.Key == "b") == 0);
 
-            newList2["a"] = (DateTime.Now, 2);
-            newList2["b"] = (default, 3);
+            newList2["a"] = 2;
+            newList2["b"] = 3;
             delFiles = m.GetDeletedFiles(oldList, newList2);
             Assert.True(delFiles.Count() == 1);
             Assert.True(delFiles.Count(s => s.Key == "c") == 1);
@@ -112,18 +112,18 @@ namespace DirectoryWatcher.Tests
             Assert.True(changed.Count(s => s.Key == "c") == 0);
 
             
-            newList1["a"] = (time, 2);
-            newList1["b"] = (default, 3);
+            newList1["a"] = 2;
+            newList1["b"] = 3;
             changed = m.GetChangedFiles(oldList, newList1);
             Assert.True(changed.Count() == 2);
             Assert.True(changed.Count(s => s.Key == "a") == 1);
             Assert.True(changed.Count(s => s.Key == "b") == 1);
             Assert.True(changed.Count(s => s.Key == "c") == 0);
-            Assert.True(changed.Where(s => s.Key == "a").Where(s => s.Value.fileLength == 2).Count() == 1);
-            Assert.True(changed.Where(s => s.Key == "a").Where(s => s.Value.fileLength == 1).Count() == 0);
-            Assert.True(changed.Where(s => s.Key == "a").Where(s => s.Value.lastWriteUtc == time).Count() == 1);
-            Assert.True(changed.Where(s => s.Key == "b").Where(s => s.Value.lastWriteUtc == default).Count() == 1);
-            Assert.True(changed.Where(s => s.Key == "b").Where(s => s.Value.fileLength == 3).Count() == 1);
+            Assert.True(changed.Where(s => s.Key == "a").Where(s => s.Value == 2).Count() == 1);
+            Assert.True(changed.Where(s => s.Key == "a").Where(s => s.Value == 1).Count() == 0);
+            //Assert.True(changed.Where(s => s.Key == "a").Where(s => s.Value.lastWriteUtc == time).Count() == 1);
+            //Assert.True(changed.Where(s => s.Key == "b").Where(s => s.Value.lastWriteUtc == default).Count() == 1);
+            Assert.True(changed.Where(s => s.Key == "b").Where(s => s.Value == 3).Count() == 1);
 
         }
     }

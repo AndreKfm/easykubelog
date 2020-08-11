@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 namespace DirectoryWatcher
 {
     //using FileListEntry = (string fileName, DateTime lastWriteUtc, long fileLength);
-    using FileList = Dictionary<string, (DateTime lastWriteUtc, long fileLength)>;
-    using FileListEnum = IEnumerable<KeyValuePair<string, (DateTime lastWriteUtc, long fileLength)>>;
+    using FileList = Dictionary<string, long>;
+    using FileListEnum = IEnumerable<KeyValuePair<string, long>>;
 
     public class ManualScanPhysicalFileSystemWatcherSettings
     {
@@ -163,13 +163,13 @@ namespace DirectoryWatcher
         public FileList Scan(string directory);
     }
 
-    internal class ManualScanDirectory : IManualScanDirectory
+    public class ManualScanDirectory : IManualScanDirectory
     {
         public ManualScanDirectory()
         {
         }
 
-        public FileList Scan(string directory)
+        public FileList ScanFastWithFileInfo(string directory)
         {
             string[] files = Directory.GetFiles(directory);
             FileList list = new FileList();
@@ -179,8 +179,25 @@ namespace DirectoryWatcher
                 try
                 {
                     var length = fileInfo.Length;
-                    var lastWriteUtc = fileInfo.LastWriteTimeUtc;
-                    list.Add(file, (lastWriteUtc, length));
+                    // var lastWriteUtc = fileInfo.LastWriteTimeUtc; Not needed anymore - since not reliable with file links
+                    list.Add(file, length);
+                }
+                catch (Exception) { }
+            }
+            return list;
+        }
+
+        public FileList Scan(string directory)
+        {
+            string[] files = Directory.GetFiles(directory);
+            FileList list = new FileList();
+            foreach (var file in files)
+            {
+                using var fileStream = File.OpenRead(file);
+                try
+                {
+                    var length = fileStream.Length; // This ensures to get the changed length from the destination file a link is pointing to
+                    list.Add(file, length);
                 }
                 catch (Exception) { }
             }

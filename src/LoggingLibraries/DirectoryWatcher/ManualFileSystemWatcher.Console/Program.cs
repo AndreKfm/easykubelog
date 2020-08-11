@@ -82,7 +82,6 @@ namespace ManualFileSystemWatcherConsole
 
         static void Main(string[] args)
         {
-
             var consoleTracer = new ConsoleTraceListener(true);
             Trace.Listeners.Add(consoleTracer);
             consoleTracer.Name = "ManualFileSystemWatcherTrace";

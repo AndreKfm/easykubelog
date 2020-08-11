@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace LogEntries
 {
@@ -39,7 +40,7 @@ namespace LogEntries
     // grafana-c6bfd5949-6g6h2_monitoring_grafana-8fdbfdebc4370290aaed8dc47782571bef9c8ac294e012a14af5546fb7df4f62.log
     public class KubernetesContainerNameTools
     {
-        public static (string deployment, string containerName, string nm, string contId) DeserializeContainerNameContainerLogs(string containerName)
+        public static (string deployment, string containerName, string nm, string contId) DeserializeContainerName(string containerName)
         {
             var array = containerName.Split('_');
             if (array.Length < 3)
@@ -52,7 +53,7 @@ namespace LogEntries
             return (array[0], containerShortName, array[1], containerId);
         }
 
-        public static (string containerName, string nm, string podId) DeserializeContainerName(string fileEntry)
+        public static (string containerName, string nm, string podId) DeserializeContainerNameSimple(string fileEntry)
         {
             var array = fileEntry.Split('_');
             if (array.Length < 3)
@@ -86,12 +87,12 @@ namespace LogEntries
             return options;
         }
 
-        public void Write(Action<string> writer)
+        public void Write(Func<string, Task> writer)
         {
             try
             {
                 string line = JsonSerializer.Serialize<KubernetesLogEntry>(this);
-                writer(line);
+                writer(line).Wait();
             }
             catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Write.Action: {e.Message}"); }
         }
