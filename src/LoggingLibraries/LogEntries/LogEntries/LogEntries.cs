@@ -1,13 +1,150 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace LogEntries
 {
+
+    public class LogSamples
+    {
+        public const string ContainerDSample = @"2020-08-09T16:19:52.5938217Z stdout F root@loga1:/# echo loga#24
+2020-08-09T16:19:52.5938818Z stdout F loga#24
+2020-08-09T16:19:54.009581Z stdout F root@loga1:/# echo loga#25
+2020-08-09T16:19:54.0096391Z stdout F loga#25
+2020-08-09T16:19:55.3300352Z stdout F root@loga1:/# echo loga#26
+2020-08-09T16:19:55.3300942Z stdout F loga#26
+2020-08-09T16:19:56.1456899Z stdout F root@loga1:/# echo loga#27
+2020-08-09T16:19:56.1457454Z stdout F loga#27";
+    }
+
+
+    
+    public interface IParser
+    {
+        DockerFormat ParseLine(string line, string optionalContainerName = default);
+    }
+
+    public struct DockerFormat
+    {
+        [JsonPropertyName("cont")]
+        public string Container { get; set; } // Container name
+
+        [JsonPropertyName("log")]
+        public string Log { get; set; } // Log lines to add
+
+        [JsonPropertyName("stream")]
+        public string Stream { get; set; } // Type of log
+
+        [JsonPropertyName("time")]
+        public DateTimeOffset Time { get; set; }  // Date time when log entry was written on client side - use string to preserve ticks
+
+        static public string NormalizeContainerName(string containerName)
+        {
+            if ((containerName != null))
+            {
+                int index = containerName.LastIndexOf('.');
+                if (index > 0)
+                {
+                    // Remove the filename extension if exists
+                    containerName = containerName.Substring(0, index);
+                }
+            }
+            return containerName;
+        }
+    }
+
+
+
+
+    public class LogParserContainerd : IParser
+    {
+        public LogParserContainerd()
+        {
+        }
+
+        public DockerFormat ParseLine(string line, string optionalContainerName = default)
+        {
+            // 2020-08-09T16:19:56.1457454Z stdout F loga#27";
+            var indexDateTimeEnd = line.IndexOf(' '); if (indexDateTimeEnd <= 0) return default;
+            var indexStream = line.IndexOf(' ', indexDateTimeEnd + 1); if (indexStream <= 0) return default;
+            var indexLog = line.IndexOf(' ', indexStream + 1); if (indexLog <= 0) return default;
+
+            var dateTime = DateTime.Parse(line.Substring(0, indexDateTimeEnd - 1));
+            var stream = line.Substring(indexDateTimeEnd + 1, indexStream - indexDateTimeEnd - 1);
+            var log = line.Substring(indexLog + 1);
+
+            return new DockerFormat 
+            { 
+                Time = dateTime, 
+                Stream = stream, 
+                Log = log, 
+                Container = DockerFormat.NormalizeContainerName(optionalContainerName == default ? String.Empty : optionalContainerName) 
+            };
+        }
+    }
+
+
+    public class LogParserDocker : IParser
+    {
+        public LogParserDocker()
+        {
+        }
+
+        private static JsonSerializerOptions InitOptions()
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.Converters.Add(new KubernetesJsonDateTimeOffsetConverter());
+            //options.PropertyNameCaseInsensitive = true;
+            return options;
+        }
+
+        private static readonly JsonSerializerOptions Options = InitOptions();
+
+        public DockerFormat ParseLine(string line, string optionalContainerName)
+        {
+            try
+            {
+                if (line.Length > 0)
+                {
+                    var d = JsonSerializer.Deserialize<DockerFormat>(line, Options);
+                    if (String.IsNullOrEmpty(d.Container))
+                        d.Container = DockerFormat.NormalizeContainerName(optionalContainerName); // Only use external container name if not yet assigned
+                    return d;
+                }
+            }
+            catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Parse: {e.Message} - Line: {line}"); }
+            return default;
+        }
+    }
+
+
+    public class LogParserAutoDetect
+    {
+        static bool Check(IParser parser, string line, out IParser parserOut)
+        {
+            if (parser != null && parser.ParseLine(line).Equals(default(DockerFormat)) == false)
+            {
+                parserOut = parser; 
+                return true;
+            }
+            parserOut = null;
+            return false;            
+        }
+
+        public static IParser GetAutoParser(string line)
+        {
+            if (Check(new LogParserDocker(), line, out var retDocker)) return retDocker;
+            if (Check(new LogParserContainerd(), line, out var retContainerd)) return retContainerd;
+            return null;
+        }
+    }
+
     public class LogEntry
     {
         // Unformatted log entry directly read from log files 
