@@ -39,18 +39,20 @@ namespace WatcherFileListClasses.Test
             var m = new Mock<IGetFile>();
             var wrapper = new MockFileWrapper();
             m.Setup((x) => x.GetFile(It.IsAny<string>())).Returns(wrapper);
-            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(null, m.Object);
+            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(new AutoCurrentFileListSettings { FilterDirectoriesForwardFilesOnly = false }, m.Object);
 
 
             Action<object, WatcherCallbackArgs> actionFileChanges = null;
+            Action<object> actionScanning = null;
 
-            void FilterCallback(string filter, FilterAndCallbackArgument callback)
+            void FilterCallback(FilterAndCallbackArgument callback)
             {
                 actionFileChanges = callback.ActionChanges;
+                actionScanning = callback.ActionScanning;
             }
 
             var mwatcher = new Mock<IFileSystemWatcher>();
-            mwatcher.Setup((x) => x.Open(It.IsAny<FilterAndCallbackArgument>())).Callback((Action<string, FilterAndCallbackArgument>)FilterCallback).Returns(true);
+            mwatcher.Setup((x) => x.Open(It.IsAny<FilterAndCallbackArgument>())).Callback((Action<FilterAndCallbackArgument>)FilterCallback).Returns(true);
 
             autoCurrentFileList.Start("dummy", mwatcher.Object);
             string mustBeThis = "must be this";

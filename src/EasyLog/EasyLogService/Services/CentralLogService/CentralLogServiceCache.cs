@@ -24,6 +24,7 @@ namespace EasyLogService.Services.CentralLogService
         int _currentFileIndex = 0;
         readonly ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> _logCache;
         readonly ILogger<CentralLogServiceCache> _logger;
+        IParser _defaultParser = null;
 
         public CentralLogServiceCache(IOptions<CentralLogServiceCacheSettings> settings, 
                                       IConfiguration config, 
@@ -61,7 +62,7 @@ namespace EasyLogService.Services.CentralLogService
             {
                 if (line.Length > 0)
                 {
-                    var newEntry = KubernetesLogEntry.Parse(line);
+                    var newEntry = KubernetesLogEntry.Parse(ref _defaultParser, line);
                     if (!newEntry.IsDefault())
                     {
                         newEntry.SetContainerName(entry.FileName);
@@ -100,14 +101,17 @@ namespace EasyLogService.Services.CentralLogService
             // in the error message itself
 
             const int MaxStringLength = 200;
-            var logLine = newEntry.Log.Length > MaxStringLength ? newEntry.Log.Substring(0, MaxStringLength) + "..." : newEntry.Log;
+            var line = newEntry.Line;
+            var logLine = line.Length > MaxStringLength ? line.Substring(0, MaxStringLength) + "..." : line;
 
-            var dummyEntry = new KubernetesLogEntry
+            var log = new DockerLog
             {
-                Log = $"EASYLOGERROR: Exception - entry with the same time added already - original text: {logLine}",
+                Line = $"EASYLOGERROR: Exception - entry with the same time added already - original text: {logLine}",
                 Time = newEntry.Time,
                 Stream = "EASYLOG"
             };
+
+            var dummyEntry = new KubernetesLogEntry { SetLog = log};
 
             _logger.LogError($"Could not write log entry: {dummyEntry.Time} : { logLine }");
 
@@ -119,12 +123,12 @@ namespace EasyLogService.Services.CentralLogService
             {
                 try
                 {
-                    dummyEntry.Log = "EASYLOGERROR: SECOND exception: " + dummyEntry.Log;
+                    dummyEntry.ReplaceLine("EASYLOGERROR: SECOND exception: " + dummyEntry.Line);
                     _logCache.Add((DateTimeOffset.Now, 0), dummyEntry);
                 }
                 catch (Exception)
                 {
-                    _logger.LogError($"Could not write log entry multiple times: {dummyEntry.Time} : { dummyEntry.Log }");
+                    _logger.LogError($"Could not write log entry multiple times: {dummyEntry.Time} : { dummyEntry.Line }");
                 }
             }
         }

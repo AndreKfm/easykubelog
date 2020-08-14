@@ -19,6 +19,7 @@ namespace EasyLogService.Services.CentralLogService
         readonly string _fileName;
         FileStream _file;
         StreamReader _stream;
+        IParser _defaultParser = null; 
 
 
         public FileCache(string fileName)
@@ -54,7 +55,7 @@ namespace EasyLogService.Services.CentralLogService
                 {
                     var line = localStream.ReadLine();
                     if (line != null)
-                        yield return KubernetesLogEntry.Parse(line);
+                        yield return KubernetesLogEntry.Parse(ref _defaultParser, line);
                     else break;
                 }
             }
@@ -62,7 +63,8 @@ namespace EasyLogService.Services.CentralLogService
 
         private bool CheckInBetween(KubernetesLogEntry k, DateTimeOffset from, DateTimeOffset to)
         {
-            return (from == default || from <= k.Time) && (to == default || to >= k.Time);
+            var time = k.Time;
+            return (from == default || from <= time) && (to == default || to >= time);
         }
 
 
@@ -73,7 +75,7 @@ namespace EasyLogService.Services.CentralLogService
             using StreamReader localStream = new StreamReader(file);
             var result = EnumerateStreamLines(localStream).
                 Where(x => CheckInBetween(x, from, to)).
-                Where(x => x.Log.Contains(simpleQuery)).
+                Where(x => x.Line.Contains(simpleQuery)).
                 Take(maxResults).
                 OrderBy(x => x.Time);
             return result.ToArray();
@@ -86,7 +88,7 @@ namespace EasyLogService.Services.CentralLogService
             using StreamReader localStream = new StreamReader(file);
             var result = EnumerateStreamLines(localStream).
                 Where(x => CheckInBetween(x, from, to)).
-                Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Log, simpleQuery, CompareOptions.IgnoreCase) >= 0).
+                Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Line, simpleQuery, CompareOptions.IgnoreCase) >= 0).
                 Take(maxResults).
                 OrderBy(x => x.Time);
             return result.ToArray();
@@ -102,6 +104,7 @@ namespace EasyLogService.Services.CentralLogService
     {
         
         EndlessFileStream _stream;
+        IParser _defaultParser; 
 
 
         public EndlessFileStreamCache(EndlessFileStream stream)
@@ -118,14 +121,15 @@ namespace EasyLogService.Services.CentralLogService
 
         private bool CheckInBetween(KubernetesLogEntry k, DateTimeOffset from, DateTimeOffset to)
         {
-            return (from == default || from <= k.Time) && (to == default || to >= k.Time);
+            DateTimeOffset time = k.Time;
+            return (from == default || from <= time) && (to == default || to >= time);
         }
 
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
             var result = _stream.Reader.ReadEntries(int.MaxValue).
                 Where(x => x.content.Contains(simpleQuery)).
-                Select(x => KubernetesLogEntry.Parse(x.content, x.filename)).
+                Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
                 Where(x => CheckInBetween(x, from, to)).
                 Take(maxResults);
             return result.ToArray();
@@ -136,7 +140,7 @@ namespace EasyLogService.Services.CentralLogService
         {
             var result = _stream.Reader.ReadEntries(int.MaxValue).
               Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.content, simpleQuery, CompareOptions.IgnoreCase) >= 0).
-              Select(x => KubernetesLogEntry.Parse(x.content, x.filename)).
+              Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
               Where(x => CheckInBetween(x, from, to)).
               Take(maxResults);
             return result.ToArray();

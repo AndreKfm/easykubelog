@@ -193,7 +193,7 @@ namespace DirectoryWatcher
             FileList list = new FileList();
             foreach (var file in files)
             {
-                using var fileStream = File.OpenRead(file);
+                using var fileStream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 try
                 {
                     var length = fileStream.Length; // This ensures to get the changed length from the destination file a link is pointing to
@@ -236,14 +236,14 @@ namespace DirectoryWatcher
         CancellationTokenSource _tokenSource;
         private async Task PeriodicallyScanDirectory(CancellationToken token, FilterAndCallbackArgument callbackAndFilter)
         {
-            try
+            int scanMs = _settings.ScanSpeedInSeconds * 1000;
+            if (scanMs == 0)
+                scanMs = 100;
+            string scanDir = _settings.ScanDirectory;
+            var current = _scanDirectory.Scan(scanDir);
+            while (token.IsCancellationRequested == false)
             {
-                int scanMs = _settings.ScanSpeedInSeconds * 1000;
-                if (scanMs == 0)
-                    scanMs = 100;
-                string scanDir = _settings.ScanDirectory;
-                var current = _scanDirectory.Scan(scanDir);
-                while (token.IsCancellationRequested == false)
+                try
                 {
                     await Task.Delay(scanMs);
                     if (callbackAndFilter.ActionScanning != null)
@@ -253,9 +253,10 @@ namespace DirectoryWatcher
                     ReportChanges(current, fileListNew, token, callbackAndFilter);
                     current = fileListNew;
                 }
-            }
-            catch(Exception)
-            {
+                catch (Exception e)
+                {
+                    Trace.TraceError($"Failed to scan directory: exception [{e.Message}]");
+                }
 
             }
         }

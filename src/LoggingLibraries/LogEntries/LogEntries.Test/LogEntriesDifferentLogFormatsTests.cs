@@ -21,9 +21,9 @@ namespace LogEntries.Test
             LogParserContainerd contd = new LogParserContainerd();
             var parsed = contd.ParseLine(LogFormatContainerD);
             Assert.NotEqual(default, parsed);
-            Assert.Equal("loga#26", parsed.Log);
-            Assert.NotEqual(" loga#26", parsed.Log);
-            Assert.NotEqual("loga#26 ", parsed.Log);
+            Assert.Equal("loga#26", parsed.Line);
+            Assert.NotEqual(" loga#26", parsed.Line);
+            Assert.NotEqual("loga#26 ", parsed.Line);
             Assert.Equal("stdout", parsed.Stream);
         }
 

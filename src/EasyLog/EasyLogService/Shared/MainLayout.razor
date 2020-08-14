@@ -60,8 +60,7 @@
         foreach (var queryResult in logEntries)
         {
             var e = new EasyLogService.Components.ListElement();
-
-            e.Set(queryResult.Time, queryResult.Log, queryResult.Stream, queryResult.Container);
+            e.Set(queryResult.Time, queryResult.Line, queryResult.Stream, queryResult.Container);
             list.Add(e);
         }
         _mainList.Set(list, Refresh.ImmediatelyRefresh);

@@ -474,6 +474,9 @@ namespace EndlessFileStreamClasses
     /// </summary>
     public class EndlessFileStreamBuilder
     {
+
+        IParser _defaultParser;
+
         public EndlessFileStreamBuilder()
         {
 
@@ -500,7 +503,7 @@ namespace EndlessFileStreamClasses
                 {
                     if (String.IsNullOrEmpty(iterator.Current.content) == false)
                     {
-                        var k = KubernetesLogEntry.Parse(iterator.Current.content);
+                        var k = KubernetesLogEntry.Parse(ref _defaultParser, iterator.Current.content);
 
 
                         if ((k != null) && (!k.IsDefault())) // Just to play it safe - remove empty lines

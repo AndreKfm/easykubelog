@@ -45,11 +45,11 @@ namespace EasyLogService.Services.CentralLogService
             {
                 var result = _logCache.AsParallel().
                     Where(x => CheckInBetween(x.Value, from, to)).
-                    Where(x => x.Value.Log.Contains(simpleQuery)).
+                    Where(x => x.Value.Line.Contains(simpleQuery)).
                     Take(maxResults).
                     Select(x => x.Value).
                     OrderBy(x => x.Time);
-                //var result = _logCache.Where(x => x.Value.log.Contains(simpleQuery)).Select(x => x.Value);
+                //var result = _logCache.Where(x => x.Value.Contains(simpleQuery)).Select(x => x.Value);
                 return result.ToArray();
             }
         }
@@ -61,11 +61,11 @@ namespace EasyLogService.Services.CentralLogService
             {
                 var result = _logCache.AsParallel().
                     Where(x => CheckInBetween(x.Value, from, to)).
-                    Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Value.Log, simpleQuery, CompareOptions.IgnoreCase) >= 0).
+                    Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Value.Line, simpleQuery, CompareOptions.IgnoreCase) >= 0).
                     Take(maxResults).
                     Select(x => x.Value).
                     OrderBy(x => x.Time);
-                //var result = _logCache.Where(x => x.Value.log.Contains(simpleQuery)).Select(x => x.Value);
+                //var result = _logCache.Where(x => x.Value.Contains(simpleQuery)).Select(x => x.Value);
                 return result.ToArray();
             }
         }
