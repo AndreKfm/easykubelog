@@ -12,7 +12,7 @@
     "EasyLogService": {
       "commandName": "Project",
       //"commandLineArgs": "WatchDirectory=C:\\test\\logs EasyLogCentralLogDir=C:\\test\\endless",
-      "commandLineArgs": "WatchDirectory=C:\\temp\\var\\log\\pods CentralLogServiceCacheSettings:CentralMasterLogDirectory=C:\\test\\endless",
+      "commandLineArgs": "FileDirectoryWatcherSettings:ScanDirectory=C:\\temp\\var\\log\\pods CentralLogServiceCacheSettings:CentralMasterLogDirectory=C:\\test\\endless",
       "launchBrowser": true,
       "launchUrl": "/",
       "environmentVariables": {

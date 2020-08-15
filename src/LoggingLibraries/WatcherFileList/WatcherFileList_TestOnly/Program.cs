@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DirectoryWatcher;
+using Microsoft.Extensions.Options;
+using System;
 using System.Diagnostics;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -11,8 +13,9 @@ namespace WatcherFileListClasses_TestOnly
         
         static void CurrentFileListTest(string directory)
         {
-            AutoCurrentFileList a = new AutoCurrentFileList();
-            a.Start(directory);
+            var settings = Options.Create(new FileDirectoryWatcherSettings());
+            AutoCurrentFileList a = new AutoCurrentFileList(settings);
+            a.Start();
             var task = a.BlockingReadAsyncNewOutput((output, token) =>
             {
                 Console.WriteLine($"XXX: {output.FileName} {output.Lines}");
@@ -38,7 +41,7 @@ namespace WatcherFileListClasses_TestOnly
 
             CurrentFileListTest(directory); return; 
 
-            WatcherFileList w = new WatcherFileList(directory, null, 15000);
+            WatcherFileList w = new WatcherFileList(new FileDirectoryWatcherSettings { }, null, 15000);
             w.Start((list) =>
             {
                 foreach (var e in list)

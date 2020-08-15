@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using LogEntries;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
+using DirectoryWatcher;
 
 namespace EasyLogService
 {
@@ -49,7 +50,7 @@ namespace EasyLogService
         {
             Stop();
             _centralLogService.Start();
-            _watchCurrentFileList.Start(_directory);
+            _watchCurrentFileList.Start();
             _current = _watchCurrentFileList.BlockingReadAsyncNewOutput(HandleWrittenLogs);
         }
 
@@ -93,10 +94,12 @@ namespace EasyLogService
 
 
             services.AddControllers();
+            services.Configure<AutoCurrentFileListSettings>(Configuration.GetSection("AutoCurrentFileListSettings"));
             services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
             services.AddOptions();
 
             services.Configure<CentralLogServiceCacheSettings>(Configuration.GetSection("CentralLogServiceCacheSettings"));
+            services.Configure<FileDirectoryWatcherSettings>(Configuration.GetSection("FileDirectoryWatcherSettings"));
             services.AddSingleton<ICentralLogServiceCache>(x =>
             {
                 var logger = x.GetService<ILogger<CentralLogServiceCache>>();

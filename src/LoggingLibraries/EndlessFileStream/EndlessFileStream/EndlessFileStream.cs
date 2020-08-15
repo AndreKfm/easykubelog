@@ -287,6 +287,18 @@ namespace EndlessFileStreamClasses
                                    int splitIntoCountFiles = 4)
         {
             _baseDirectory = baseDirectory;
+
+            try
+            {
+                if (!Directory.Exists(_baseDirectory))
+                    Directory.CreateDirectory(_baseDirectory);
+            }
+            catch(Exception)
+            {
+
+            }
+
+
             _fileNames = fileNames ?? new EndlessFileStreamNames(baseDirectory);
             _fileOperations = fileOperations ?? new EndlessFileStreamFileOperations(_fileNames);
             _fileList = fileList ?? new EndlessFileStreamFileList(splitIntoCountFiles, _baseDirectory, _fileOperations, _fileNames);

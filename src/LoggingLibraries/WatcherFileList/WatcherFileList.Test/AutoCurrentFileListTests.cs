@@ -3,7 +3,9 @@
 namespace WatcherFileListClasses.Test
 {
     using DirectoryWatcher;
+    using Microsoft.Extensions.Options;
     using Moq;
+    using System.IO;
     using System.Threading;
     using Xunit;
     public class AutoCurrentFileListTests
@@ -11,7 +13,7 @@ namespace WatcherFileListClasses.Test
         [Fact]
         public void SimpleCreate()
         {
-            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList();
+            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(_settingsFileWatcher, _settingsAutoCurrentFileList);
             Assert.True(autoCurrentFileList != null);
         }
 
@@ -19,7 +21,7 @@ namespace WatcherFileListClasses.Test
         public void SimpleCreate_WithMockedParameter_IGetFile()
         {
             var m = new Mock<IGetFile>();           
-            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(null, m.Object);
+            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(_settingsFileWatcher, _settingsAutoCurrentFileList, m.Object);
             Assert.True(autoCurrentFileList != null);
         }
 
@@ -33,13 +35,18 @@ namespace WatcherFileListClasses.Test
             public string CurrentOutput { get; set; } = String.Empty;
         }
 
+        IOptions<AutoCurrentFileListSettings> _settingsAutoCurrentFileList = Options.Create(new AutoCurrentFileListSettings { FilterDirectoriesForwardFilesOnly = false });
+        IOptions<FileDirectoryWatcherSettings> _settingsFileWatcher = Options.Create(new FileDirectoryWatcherSettings { ScanDirectory = Path.GetTempPath(), UseManualScan = false });
+
+
         [Fact]
         public void SimulateFileWriting_CheckResult()
         {
             var m = new Mock<IGetFile>();
             var wrapper = new MockFileWrapper();
             m.Setup((x) => x.GetFile(It.IsAny<string>())).Returns(wrapper);
-            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(new AutoCurrentFileListSettings { FilterDirectoriesForwardFilesOnly = false }, m.Object);
+            
+            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(_settingsFileWatcher, _settingsAutoCurrentFileList, m.Object);
 
 
             Action<object, WatcherCallbackArgs> actionFileChanges = null;
@@ -54,7 +61,7 @@ namespace WatcherFileListClasses.Test
             var mwatcher = new Mock<IFileSystemWatcher>();
             mwatcher.Setup((x) => x.Open(It.IsAny<FilterAndCallbackArgument>())).Callback((Action<FilterAndCallbackArgument>)FilterCallback).Returns(true);
 
-            autoCurrentFileList.Start("dummy", mwatcher.Object);
+            autoCurrentFileList.Start(mwatcher.Object);
             string mustBeThis = "must be this";
             string lastOutput = String.Empty;
             string lastFileName = String.Empty;

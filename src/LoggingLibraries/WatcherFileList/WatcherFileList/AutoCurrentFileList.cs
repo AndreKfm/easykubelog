@@ -1,4 +1,5 @@
 ﻿using DirectoryWatcher;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -35,7 +36,7 @@ namespace WatcherFileListClasses
 
     public interface IAutoCurrentFileList : IDisposable
     {
-        public void Start(string directoryToWatch, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0);
+        public void Start(IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0);
         public void Stop();
         public Task BlockingReadAsyncNewOutput(Action<NewOutput, CancellationToken> callback); // Stop() will abort read
     }
@@ -51,15 +52,23 @@ namespace WatcherFileListClasses
     {
         WatcherFileList _watcher;
         WatcherCurrentFileList fileList;
-        string _directoryToWatch;
         readonly IGetFile _getFile;
         Task _current;
         AutoCurrentFileListSettings _settings;
+        FileDirectoryWatcherSettings _settingsFileWatcher;
 
-        public AutoCurrentFileList(AutoCurrentFileListSettings settings = null, IGetFile openFile = null)
+        public AutoCurrentFileList(IOptions<FileDirectoryWatcherSettings> settingsFileWatcher, IOptions<AutoCurrentFileListSettings> settings = null, IGetFile openFile = null)
         {
-            _getFile = openFile ?? new GetFileWrapper();
-            _settings = settings ?? new AutoCurrentFileListSettings();
+            Debug.Assert(settingsFileWatcher != null); // Due to scan base directory this is not allowed
+            _getFile = openFile ?? new GetFileWrapper();            
+            _settings = settings?.Value ?? new AutoCurrentFileListSettings();
+            _settingsFileWatcher = settingsFileWatcher?.Value ?? new FileDirectoryWatcherSettings();
+
+            if (String.IsNullOrEmpty(_settingsFileWatcher.ScanDirectory))
+            {
+                Trace.TraceError("AutoCurrentFileList settings files wather is not set - not base directory available - use temp path");
+                _settingsFileWatcher.ScanDirectory = Path.GetTempPath(); 
+            }
         }
 
         public void Stop()
@@ -73,11 +82,10 @@ namespace WatcherFileListClasses
             return;
         }
 
-        public void Start(string directoryToWatch, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
+        public void Start(IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
         {
             Stop();
-            _directoryToWatch = directoryToWatch;
-            _watcher = new WatcherFileList(directoryToWatch, watcherInterface, updateRatioInMilliseconds);
+            _watcher = new WatcherFileList(_settingsFileWatcher, watcherInterface, updateRatioInMilliseconds);
             _source = new CancellationTokenSource(); ;
             fileList = new WatcherCurrentFileList();
 
@@ -126,7 +134,7 @@ namespace WatcherFileListClasses
         {
             if (_settings.FilterDirectoriesForwardFilesOnly)
             {
-                FileAttributes attr = File.GetAttributes(Path.Combine(_directoryToWatch, change.FileName));
+                FileAttributes attr = File.GetAttributes(Path.Combine(_settingsFileWatcher.ScanDirectory, change.FileName));
                 if (attr.HasFlag(FileAttributes.Directory))
                 {
                     //Trace.TraceInformation($"[{change.FileName}] is a directory - skipping due to filter");
@@ -230,12 +238,12 @@ namespace WatcherFileListClasses
                     }
                 }
             }
-            catch (Exception) { }
+            catch (Exception e) { Trace.TraceError($"Error reading channel in AutoCurrentFileList.ReadChannel: [{e.Message}]"); }
         }
 
         private IFile AddFile(FileTask op)
         {
-            var fileStream = _getFile.GetFile(Path.Combine(_directoryToWatch, op.FileName));
+            var fileStream = _getFile.GetFile(Path.Combine(_settingsFileWatcher.ScanDirectory, op.FileName));
             fileList.AddFile(new CurrentFileEntry(op.FileName, fileStream));
             return fileStream;
         }

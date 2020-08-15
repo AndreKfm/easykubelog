@@ -77,7 +77,7 @@ namespace EasyLogService.Services.CentralLogService
                 Where(x => CheckInBetween(x, from, to)).
                 Where(x => x.Line.Contains(simpleQuery)).
                 Take(maxResults).
-                OrderBy(x => x.Time);
+                OrderByDescending(x => x.Time);
             return result.ToArray();
         }
 
@@ -90,7 +90,7 @@ namespace EasyLogService.Services.CentralLogService
                 Where(x => CheckInBetween(x, from, to)).
                 Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Line, simpleQuery, CompareOptions.IgnoreCase) >= 0).
                 Take(maxResults).
-                OrderBy(x => x.Time);
+                OrderByDescending(x => x.Time);
             return result.ToArray();
         }
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to)
@@ -131,7 +131,9 @@ namespace EasyLogService.Services.CentralLogService
                 Where(x => x.content.Contains(simpleQuery)).
                 Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
                 Where(x => CheckInBetween(x, from, to)).
-                Take(maxResults);
+                Take(maxResults).
+                OrderByDescending(x => x.Time);
+
             return result.ToArray();
         }
         
@@ -142,7 +144,8 @@ namespace EasyLogService.Services.CentralLogService
               Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.content, simpleQuery, CompareOptions.IgnoreCase) >= 0).
               Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
               Where(x => CheckInBetween(x, from, to)).
-              Take(maxResults);
+              Take(maxResults).
+              OrderByDescending(x => x.Time);
             return result.ToArray();
         }
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to)

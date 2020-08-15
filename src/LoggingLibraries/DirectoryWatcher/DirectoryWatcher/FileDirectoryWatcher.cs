@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace DirectoryWatcher
 {
@@ -10,6 +11,8 @@ namespace DirectoryWatcher
         public string ScanDirectory { get; set; }
 
         public bool UseManualScan { get; set; } = false; // By default use physical scanning
+        public int ScanIntervalInSeconds { get; set; } = 5; // Will be used only if UseManualScan is set - specifies how often the manual scanner
+                                                            // scans the specified [ScanDirectory] directory
     }
 
 
@@ -27,7 +30,7 @@ namespace DirectoryWatcher
         private IFileSystemWatcher CreateWatcher()
         {
             if (_settings.UseManualScan == true)
-                return new ManualScanPhysicalFileSystemWatcher(new ManualScanPhysicalFileSystemWatcherSettings { ScanDirectory = _settings.ScanDirectory });
+                return new ManualScanPhysicalFileSystemWatcher(new ManualScanPhysicalFileSystemWatcherSettings {ScanSpeedInSeconds = _settings.ScanIntervalInSeconds, ScanDirectory = _settings.ScanDirectory });
             else
                 return new PhysicalFileSystemWatcherWrapper(new PhysicalFileSystemWatcherWrapperSettings { ScanDirectory = _settings.ScanDirectory });            
         }

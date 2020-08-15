@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using DirectoryWatcher;
+using Microsoft.Extensions.Options;
 
 namespace WatcherFileListClasses
 {
@@ -82,10 +83,21 @@ namespace WatcherFileListClasses
 
     public class WatcherFileList : IDisposable
     {
-        public WatcherFileList(string directoryToWatch, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
+        FileDirectoryWatcherSettings _fileDirectoryWatcherSettings;
+        readonly object syncListAccess = new object();
+        readonly IFileSystemWatcher _watcherInterface;
+        readonly string _directoryToWatch;
+        readonly int _updateRatioInMilliseconds;
+        Action<ReadOnlyCollection<FileEntry>> _fileListChangeCallback;
+        ThrottleCalls _throttleCalls;
+        List<FileEntry> currentList;
+        FileDirectoryWatcher _watcher;
+
+
+        public WatcherFileList(FileDirectoryWatcherSettings settings = null, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
         {
+            _fileDirectoryWatcherSettings = settings ?? new FileDirectoryWatcherSettings { UseManualScan = true, ScanDirectory = _directoryToWatch };
             _watcherInterface = watcherInterface;
-            _directoryToWatch = directoryToWatch;
             _updateRatioInMilliseconds = updateRatioInMilliseconds;
         }
 
@@ -98,7 +110,7 @@ namespace WatcherFileListClasses
         public void Start(string fileFilter, Action<ReadOnlyCollection<FileEntry>> fileListChangeCallback)
         {
             DiscardOldWatcher();
-            _watcher = new FileDirectoryWatcher(new FileDirectoryWatcherSettings { ScanDirectory = _directoryToWatch}, _watcherInterface);
+            _watcher = new FileDirectoryWatcher(_fileDirectoryWatcherSettings, _watcherInterface);
             _watcher.Open(new FilterAndCallbackArgument(fileFilter, Callback));
             _fileListChangeCallback = fileListChangeCallback;
             _throttleCalls = new ThrottleCalls(CallAfterChange, _updateRatioInMilliseconds);
@@ -158,15 +170,5 @@ namespace WatcherFileListClasses
             DiscardOldWatcher();
         }
 
-        readonly object syncListAccess = new object();
-        
-        List<FileEntry> currentList;
-
-        FileDirectoryWatcher _watcher;
-        readonly IFileSystemWatcher _watcherInterface;
-        readonly string _directoryToWatch;
-        readonly int _updateRatioInMilliseconds;
-        Action<ReadOnlyCollection<FileEntry>>  _fileListChangeCallback;
-        ThrottleCalls _throttleCalls;
     }
 }
