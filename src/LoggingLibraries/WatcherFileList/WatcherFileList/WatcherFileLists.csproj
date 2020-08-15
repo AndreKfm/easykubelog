@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\DirectoryWatcher\DirectoryWatcher\DirectoryWatcher.csproj" />
+    <ProjectReference Include="..\..\FileTools\FileTools\FileTools.csproj" />
   </ItemGroup>
 
 </Project>

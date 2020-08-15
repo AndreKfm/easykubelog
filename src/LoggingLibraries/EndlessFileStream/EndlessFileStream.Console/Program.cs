@@ -1,4 +1,5 @@
 ﻿using EndlessFileStreamClasses;
+using FileToolsClasses;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -31,7 +32,7 @@ namespace FileArrayConsole
             {
                 try
                 {
-                    var entries = stream.Reader.ReadEntries(10);
+                    var entries = stream.Reader.ReadEntries(FileStreamDirection.Forward, 10);
                     foreach (var a in entries)
                     {
                         Console.WriteLine($"READ: {a}");
@@ -80,7 +81,7 @@ namespace FileArrayConsole
 
             return; 
             EndlessFileStream e = new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\endless", MaxLogFileSizeInMByte = 1024 });
-            var stream = e.Reader.ReadEntries(int.MaxValue);
+            var stream = e.Reader.ReadEntries(FileStreamDirection.Forward, int.MaxValue);
             string search = "gonzo";
             Stopwatch w = Stopwatch.StartNew();
             int count = 0;

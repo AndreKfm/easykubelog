@@ -4,7 +4,6 @@ using System;
 using System.Diagnostics;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using WatcherCurrentFileListClasses;
 using WatcherFileListClasses;
 
 namespace WatcherFileListClasses_TestOnly

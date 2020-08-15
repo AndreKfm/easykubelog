@@ -86,7 +86,6 @@ namespace WatcherFileListClasses
         FileDirectoryWatcherSettings _fileDirectoryWatcherSettings;
         readonly object syncListAccess = new object();
         readonly IFileSystemWatcher _watcherInterface;
-        readonly string _directoryToWatch;
         readonly int _updateRatioInMilliseconds;
         Action<ReadOnlyCollection<FileEntry>> _fileListChangeCallback;
         ThrottleCalls _throttleCalls;
@@ -96,7 +95,7 @@ namespace WatcherFileListClasses
 
         public WatcherFileList(FileDirectoryWatcherSettings settings = null, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
         {
-            _fileDirectoryWatcherSettings = settings ?? new FileDirectoryWatcherSettings { UseManualScan = true, ScanDirectory = _directoryToWatch };
+            _fileDirectoryWatcherSettings = settings ?? new FileDirectoryWatcherSettings { UseManualScan = true };
             _watcherInterface = watcherInterface;
             _updateRatioInMilliseconds = updateRatioInMilliseconds;
         }

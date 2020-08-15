@@ -43,7 +43,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystemWatcher.Console",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EndlessFileStream", "..\LoggingLibraries\EndlessFileStream\EndlessFileStream\EndlessFileStream.csproj", "{7BAF8825-7F43-4DC0-B667-C18E289C58CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManualFileSystemWatcher.Console", "..\LoggingLibraries\DirectoryWatcher\ManualFileSystemWatcher.Console\ManualFileSystemWatcher.Console.csproj", "{2C2AD434-40EC-4F85-9B1E-0D5E54B95F86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManualFileSystemWatcher.Console", "..\LoggingLibraries\DirectoryWatcher\ManualFileSystemWatcher.Console\ManualFileSystemWatcher.Console.csproj", "{2C2AD434-40EC-4F85-9B1E-0D5E54B95F86}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FileTools", "FileTools", "{0E0187AF-8401-40BB-982A-B43646A06271}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileTools", "..\LoggingLibraries\FileTools\FileTools\FileTools.csproj", "{688E4FBB-1D18-4487-B405-01B335415EA0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileTools.Test", "..\LoggingLibraries\FileTools\FileTools.Test\FileTools.Test.csproj", "{B29A7024-6DEC-4225-BBD2-8A8FA4943828}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -103,6 +109,14 @@ Global
 		{2C2AD434-40EC-4F85-9B1E-0D5E54B95F86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C2AD434-40EC-4F85-9B1E-0D5E54B95F86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C2AD434-40EC-4F85-9B1E-0D5E54B95F86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{688E4FBB-1D18-4487-B405-01B335415EA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{688E4FBB-1D18-4487-B405-01B335415EA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{688E4FBB-1D18-4487-B405-01B335415EA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{688E4FBB-1D18-4487-B405-01B335415EA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B29A7024-6DEC-4225-BBD2-8A8FA4943828}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B29A7024-6DEC-4225-BBD2-8A8FA4943828}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B29A7024-6DEC-4225-BBD2-8A8FA4943828}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B29A7024-6DEC-4225-BBD2-8A8FA4943828}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -126,6 +140,9 @@ Global
 		{183FF5A8-0F0E-4F21-90FA-B4DD2F8E03DF} = {9AC1FD91-034B-49F1-947B-CF52C5F826CC}
 		{7BAF8825-7F43-4DC0-B667-C18E289C58CD} = {46258E0F-867E-4FAA-8859-9E35E3AC790E}
 		{2C2AD434-40EC-4F85-9B1E-0D5E54B95F86} = {9AC1FD91-034B-49F1-947B-CF52C5F826CC}
+		{0E0187AF-8401-40BB-982A-B43646A06271} = {ABC4148E-CD11-4FBF-AC80-C7919A5BE4FB}
+		{688E4FBB-1D18-4487-B405-01B335415EA0} = {0E0187AF-8401-40BB-982A-B43646A06271}
+		{B29A7024-6DEC-4225-BBD2-8A8FA4943828} = {0E0187AF-8401-40BB-982A-B43646A06271}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9D1BF3C4-FFEE-43FF-8016-7458E4F2617E}

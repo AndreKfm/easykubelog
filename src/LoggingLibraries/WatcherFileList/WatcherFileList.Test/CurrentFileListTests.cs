@@ -6,6 +6,7 @@ using System.Text;
 
 namespace WatcherFileListClasses.Test
 {
+    using FileToolsClasses;
     using Moq;
     using System.IO;
     using Xunit;

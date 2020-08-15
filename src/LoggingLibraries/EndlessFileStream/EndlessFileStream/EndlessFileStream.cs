@@ -1,4 +1,5 @@
-﻿using LogEntries;
+﻿using FileToolsClasses;
+using LogEntries;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -158,12 +159,47 @@ namespace EndlessFileStreamClasses
             }
         }
 
+        static public IEnumerable<(string filename, string content)> ReadFromFileStreamBackwards(string fileName,
+                                                             Func<string, FileStream> OpenFile, long maxLines = long.MaxValue)
+        {
+            FileSeeker f = new FileSeeker();
+            using var fileStream = new FileStreamWrapper(OpenFile(fileName));
+            fileStream.Seek(0, SeekOrigin.End); // We want to read backwards - so start at the end
+            for (; ; )
+            {
+                string line = null;
+                try
+                {
+                    line = f.SeekLastLineFromCurrentAndPositionOnStartOfItAndReturnReadLine(fileStream);
+                }
+                catch (Exception)
+                {
+                }
+
+                if (line != null && --maxLines > 0)
+                    yield return (Path.GetFileNameWithoutExtension(fileName), line);
+                else break;
+            }
+        }
+
         static public IEnumerable<(string filename, string content)> ReadFromFileStream(string[] listToRead, long maxLines, Func<string, FileStream> OpenFile)
         {
 
             foreach (var file in listToRead)
             {
                 foreach (var line in ReadFromFileStream(file, OpenFile, maxLines))
+                {
+                    yield return line;
+                }
+            }
+        }
+
+        static public IEnumerable<(string filename, string content)> ReadFromFileStreamBackwards(string[] listToRead, long maxLines, Func<string, FileStream> OpenFile)
+        {
+
+            foreach (var file in listToRead)
+            {
+                foreach (var line in ReadFromFileStreamBackwards(file, OpenFile, maxLines))
                 {
                     yield return line;
                 }
@@ -264,6 +300,7 @@ namespace EndlessFileStreamClasses
     {
         public Task WriteToFileStream(string line);
         public IEnumerable<(string filename, string content)> ReadFromFileStream(int maxLines);
+        public IEnumerable<(string filename, string content)> ReadFromFileStreamBackwards(int maxLines);
 
         public Task Flush();
 
@@ -376,6 +413,13 @@ namespace EndlessFileStreamClasses
             return FileHelper.ReadFromFileStream(fileList, maxLines, this.Open);
         }
 
+        public IEnumerable<(string filename, string content)> ReadFromFileStreamBackwards(int maxLines)
+
+        {
+            var listToRead = _fileList.GetFileList();
+            var fileList = listToRead.Select(x => x.Value.FileName).ToArray();
+            return FileHelper.ReadFromFileStreamBackwards(fileList, maxLines, this.Open);
+        }
 
 
 
@@ -395,8 +439,10 @@ namespace EndlessFileStreamClasses
 
     public interface IEndlessFileStreamReader
     {
-        public IEnumerable<(string filename, string content)> ReadEntries(int maxLines = 100);
+        public IEnumerable<(string filename, string content)> ReadEntries(FileStreamDirection direction, int maxLines = 100);
     }
+
+
 
     public class EndlessFileStreamReader : IEndlessFileStreamReader
     {
@@ -408,8 +454,10 @@ namespace EndlessFileStreamClasses
         }
 
 
-        public IEnumerable<(string filename, string content)> ReadEntries(int maxLines = 100)
+        public IEnumerable<(string filename, string content)> ReadEntries(FileStreamDirection direction, int maxLines = 100)
         {
+            if (direction == FileStreamDirection.Backwards)
+                return _fileIO.ReadFromFileStreamBackwards(maxLines).Take(maxLines);
             return _fileIO.ReadFromFileStream(maxLines).Take(maxLines);
         }
     }

@@ -1,4 +1,5 @@
 ﻿using EndlessFileStreamClasses;
+using FileToolsClasses;
 using LogEntries;
 using System;
 using System.Collections.Generic;
@@ -107,12 +108,14 @@ namespace EasyLogService.Services.CentralLogService
     {
         
         EndlessFileStream _stream;
-        IParser _defaultParser; 
+        IParser _defaultParser;
 
+        FileStreamDirection _direction;
 
-        public EndlessFileStreamCache(EndlessFileStream stream)
+        public EndlessFileStreamCache(EndlessFileStream stream, FileStreamDirection direction = FileStreamDirection.Backwards)
         {
             _stream = stream;
+            _direction = direction;
         }
 
 
@@ -130,7 +133,7 @@ namespace EasyLogService.Services.CentralLogService
 
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            var result = _stream.Reader.ReadEntries(int.MaxValue).
+            var result = _stream.Reader.ReadEntries(_direction, int.MaxValue).
                 Where(x => x.content.Contains(simpleQuery)).
                 Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
                 Where(x => CheckInBetween(x, from, to)).
@@ -143,7 +146,7 @@ namespace EasyLogService.Services.CentralLogService
 
         private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            var result = _stream.Reader.ReadEntries(int.MaxValue).
+            var result = _stream.Reader.ReadEntries(_direction, int.MaxValue).
               Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.content, simpleQuery, CompareOptions.IgnoreCase) >= 0).
               Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
               Where(x => CheckInBetween(x, from, to)).

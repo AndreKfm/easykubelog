@@ -1,4 +1,5 @@
 ﻿using DirectoryWatcher;
+using FileToolsClasses;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;

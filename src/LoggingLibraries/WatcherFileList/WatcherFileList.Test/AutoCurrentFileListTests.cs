@@ -3,6 +3,7 @@
 namespace WatcherFileListClasses.Test
 {
     using DirectoryWatcher;
+    using FileToolsClasses;
     using Microsoft.Extensions.Options;
     using Moq;
     using System.IO;
