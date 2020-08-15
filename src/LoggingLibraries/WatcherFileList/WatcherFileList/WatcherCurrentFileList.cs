@@ -82,6 +82,7 @@ namespace WatcherFileListClasses
         long Position { get; set; }
         long Length { get; }
         int Read(Span<byte> buffer);
+        int Read(byte[] buffer); // Mainly for unit test since [Span] is not "mock friendly"
 
         IFileStreamReader GetStreamReader();
         public bool SeekLastLineFromCurrentAndPositionOnStartOfIt();
@@ -269,6 +270,10 @@ namespace WatcherFileListClasses
             return _stream.Read(buffer);
         }
 
+        public int Read(byte[] buffer)
+        {
+            return _stream.Read(buffer);
+        }
 
         bool SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(int steps)
         {
@@ -386,62 +391,6 @@ namespace WatcherFileListClasses
             _stream = null;
         }
 
-        public struct xDockerLog
-        {
-            [JsonPropertyName("cont")]
-            public string Container { get; set; } // Container name
-
-            [JsonPropertyName("log")]
-            public string Line { get; set; } // Log lines to add
-
-            [JsonPropertyName("stream")]
-            public string Stream { get; set; } // Type of log
-
-            [JsonPropertyName("time")]
-            public DateTimeOffset Time { get; set; }  // Date time when log entry was written on client side - use string to preserve ticks
-
-            static public string NormalizeContainerName(string containerName)
-            {
-                if ((containerName != null))
-                {
-                    int index = containerName.LastIndexOf('.');
-                    if (index > 0)
-                    {
-                        // Remove the filename extension if exists
-                        containerName = containerName.Substring(0, index);
-                    }
-                }
-                return containerName;
-            }
-        }
-
-        internal class xLogParserJsonDateTimeOffsetConverter : JsonConverter<DateTimeOffset>
-        {
-            public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
-                return DateTimeOffset.Parse(reader.GetString());
-            }
-
-            // This method is not needed but has to be implemented 
-            public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
-            {
-                throw new NotImplementedException();
-            }
-
-        }
-
-
-        private static JsonSerializerOptions InitOptions()
-        {
-            JsonSerializerOptions options = new JsonSerializerOptions();
-            options.Converters.Add(new xLogParserJsonDateTimeOffsetConverter());
-            //options.PropertyNameCaseInsensitive = true;
-            return options;
-        }
-
-        JsonSerializerOptions options = InitOptions();
-
-
         public string ReadLineFromCurrentPositionToEnd(long maxStringSize = 65536 * 4)
         {
             var result = InternalReadLineFromCurrentPositionToEnd(maxStringSize);
@@ -521,21 +470,6 @@ namespace WatcherFileListClasses
                     }
 
                 }
-
-
-                try
-                {
-                    string[] lines = result.Split("\n");
-                    foreach (var line in lines)
-                    {
-                        if (String.IsNullOrWhiteSpace(line)) continue;
-                        var v = JsonSerializer.Deserialize<xDockerLog>(line, options);
-                    }
-                }
-                catch(Exception)
-                {
-                }
-
 
                 return result;
             }

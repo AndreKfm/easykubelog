@@ -65,7 +65,7 @@ namespace WatcherCurrentFileListClasses
 
                 List<(string line, long position)> writtenEntries = new List<(string line, long position)>();
 
-                int[] writeLen = { 1, 190, 80, 40, 79, 120, 81, 80, 79 };
+                int[] writeLen = { 1, 190, 80, 40, 79, 120, 81, 80, 79, 2, 160, 161, 240, 0, 234 };
                 foreach (var len in writeLen)
                 {
                     WriteRandomStringAndAddToList(writtenEntries, len, writer);
