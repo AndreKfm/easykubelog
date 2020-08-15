@@ -1,5 +1,8 @@
 ﻿using LogEntries;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -41,10 +44,10 @@ namespace EasyLogService.Services.CentralLogService
         /// Creates a central object used to aggregate all incomming log entries
         /// </summary>
         /// <param name="maxEntriesInChannelQueue">Specifies how man entries can be added asynchronously to the channgel</param>
-        public CentralLogService(ILogger<CentralLogServiceCache> logger, ICentralLogServiceCache cache = null, int maxEntriesInChannelQueue = 1024)
+        public CentralLogService(ILogger<CentralLogServiceCache> logger, IConfiguration config, ICentralLogServiceCache cache = null, int maxEntriesInChannelQueue = 1024)
         {
             _logEntryChannel = Channel.CreateBounded<LogEntry>(maxEntriesInChannelQueue);
-            _cache = cache ?? new CentralLogServiceCache(maxEntriesInChannelQueue, logger);
+            _cache = cache; // ?? new CentralLogServiceCache(new CentralLogServiceCacheSettings { }, config, logger);
         }
 
 
@@ -70,19 +73,34 @@ namespace EasyLogService.Services.CentralLogService
             var token = _source.Token;
             while (token.IsCancellationRequested == false)
             {
-                var available = await _logEntryChannel.Reader.WaitToReadAsync(token);
-                if (!available) // If false the channel is closed
-                    break;
+                try
+                {
+                    var available = await _logEntryChannel.Reader.WaitToReadAsync(token);
+                    if (!available) // If false the channel is closed
+                        break;
 
-                var newEntry = await _logEntryChannel.Reader.ReadAsync();
-                _cache.AddEntry(newEntry);
-
+                    var newEntry = await _logEntryChannel.Reader.ReadAsync();
+                    Trace.TraceInformation($"CentralLogService add log entry to cache: [{newEntry.FileName}] - [{newEntry.Lines}]");
+                    _cache.AddEntry(newEntry);
+                }
+                catch(Exception e)
+                {
+                    Trace.TraceError($"WaitForNewEntriesAndWrite - Exception: {e.Message}"); 
+                }
             }
         }
 
         public async Task<bool> AddLogEntry(LogEntry newEntry)
         {
-            return await Task.FromResult(_logEntryChannel.Writer.TryWrite(newEntry));
+            try
+            {
+                return await Task.FromResult(_logEntryChannel.Writer.TryWrite(newEntry));
+            }
+            catch(Exception e)
+            {
+                Trace.TraceError($"AddLogEntry - Exception: {e.Message}");
+            }
+            return await Task.FromResult(false);
         }
 
         public void Dispose()
@@ -92,9 +110,9 @@ namespace EasyLogService.Services.CentralLogService
         }
 
 
-        KubernetesLogEntry[] ICentralLogServiceQuery.Query(string simpleQuery, int maxResults)
+        KubernetesLogEntry[] ICentralLogServiceQuery.Query(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            return _cache.Query(simpleQuery, maxResults);
+            return _cache.Query(simpleQuery, maxResults, from, to);
         }
 
     }

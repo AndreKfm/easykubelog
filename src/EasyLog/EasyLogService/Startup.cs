@@ -16,6 +16,9 @@ using EasyLogService.Tool.Simulator;
 using EasyLogService.Services.CentralLogService;
 using Microsoft.Extensions.Logging;
 using LogEntries;
+using Microsoft.Extensions.Options;
+using System.Diagnostics;
+using DirectoryWatcher;
 
 namespace EasyLogService
 {
@@ -26,7 +29,10 @@ namespace EasyLogService
         public void Stop();
     }
 
-
+    /// <summary>
+    /// Configurations: 
+    ///    WatchDirectory
+    /// </summary>
     public class CentralLogServiceWatcher : ICentralLogServiceWatcher
     {
         readonly IAutoCurrentFileList _watchCurrentFileList;
@@ -44,7 +50,7 @@ namespace EasyLogService
         {
             Stop();
             _centralLogService.Start();
-            _watchCurrentFileList.Start(_directory);
+            _watchCurrentFileList.Start();
             _current = _watchCurrentFileList.BlockingReadAsyncNewOutput(HandleWrittenLogs);
         }
 
@@ -62,7 +68,8 @@ namespace EasyLogService
         private void HandleWrittenLogs(NewOutput newOutput, CancellationToken token)
         {
             // Wait for new entries written to any log file and pass it to the central log service
-            _centralLogService.AddLogEntry(new LogEntry(newOutput.Filename, newOutput.Lines));
+            Trace.TraceInformation($"CentralLogService add log entry: [{newOutput.FileName}] - [{newOutput.Lines}]");
+            _centralLogService.AddLogEntry(new LogEntry(newOutput.FileName, newOutput.Lines));
         }
     }
 
@@ -80,13 +87,24 @@ namespace EasyLogService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
-            services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
+            var consoleTracer = new ConsoleTraceListener(true);
+            Trace.Listeners.Add(consoleTracer);
+            consoleTracer.Name = "EasyLogService";
 
+
+
+            services.AddControllers();
+            services.Configure<AutoCurrentFileListSettings>(Configuration.GetSection("AutoCurrentFileListSettings"));
+            services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
+            services.AddOptions();
+
+            services.Configure<CentralLogServiceCacheSettings>(Configuration.GetSection("CentralLogServiceCacheSettings"));
+            services.Configure<FileDirectoryWatcherSettings>(Configuration.GetSection("FileDirectoryWatcherSettings"));
             services.AddSingleton<ICentralLogServiceCache>(x =>
             {
                 var logger = x.GetService<ILogger<CentralLogServiceCache>>();
-                return new CentralLogServiceCache(Int32.Parse(Configuration["MaxLogLines"]), logger);
+                var settings = x.GetService<IOptions<CentralLogServiceCacheSettings>>();
+                return new CentralLogServiceCache(settings, Configuration, logger);
             });
 
             services.AddSingleton<ICentralLogService, CentralLogService>();

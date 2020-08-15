@@ -67,6 +67,10 @@ namespace WatcherFileListClasses
         ImmutableDictionary<string /** fileName */, CurrentFileEntry> fileList = ImmutableDictionary<string, CurrentFileEntry>.Empty;
     }
 
+    public interface IFileStreamReader
+    {
+        string ReadLine();
+    }
 
     public interface IFileStream : IDisposable
     {
@@ -74,6 +78,33 @@ namespace WatcherFileListClasses
         long Position { get; set; }
         long Length { get; }
         int Read(byte[] buffer);
+
+        IFileStreamReader GetStreamReader();
+        public bool SeekLastLineFromCurrentAndPositionOnStartOfIt();
+
+    }
+
+    public class FileStreamReader : IFileStreamReader
+    {
+        StreamReader _reader;
+        public FileStreamReader(FileStream stream)
+        {
+            _reader = new StreamReader(stream);
+        }
+
+        public string ReadLine()
+        {
+            return _reader.ReadLine();
+        }
+
+        enum WhichPosition
+        {
+            OneBeforeIfNotStartOfFile, OneBehindIfNotStartOfFile
+        }
+        
+        
+
+
     }
 
     public class FileStreamWrapper : IFileStream
@@ -84,6 +115,7 @@ namespace WatcherFileListClasses
         }
 
         FileStream _stream;
+        FileStreamReader _reader;
 
         public long Position { get => _stream.Position; set => _stream.Position = value; }
 
@@ -104,11 +136,106 @@ namespace WatcherFileListClasses
         {
             return _stream.Read(buffer);
         }
+
+
+        bool SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(int steps)
+        {
+            Span<byte> buffer = new byte[steps];
+            var initial = _stream.Position;
+            for (; ; )
+            {
+                var current = _stream.Position;
+                if (current == 0)
+                {
+                    break;
+                }
+                int toRead = steps;
+                if (toRead > current)
+                {
+                    toRead = (int)current;
+                    buffer = buffer.Slice(0, steps);
+                }
+                SetPositionRelative(-toRead);
+                var currendMidPos0 = _stream.Position;
+                int size = _stream.Read(buffer);
+                var currentMidPos = _stream.Position;
+                if (size != steps)
+                {
+                    // That shouldn't happen ???
+                    break;
+                }
+
+                int index = buffer.LastIndexOf((byte)'\n');
+                if (index >= 0)
+                {
+                    var posBefore = _stream.Position;
+                    var newPos = toRead - index;
+                    SetPositionRelative(-newPos);
+                    var pos = _stream.Position;
+                    return true;
+                }
+                SetPositionRelative(-toRead); // Continue with next characters
+            }
+
+            SetPosition(initial);
+            return false;
+
+        }
+
+        bool SetPositionRelative(long offset)
+        {
+            var current = _stream.Position;
+            var newPos = _stream.Seek(offset, SeekOrigin.Current);
+            var current2 = _stream.Position;
+            return (newPos - current) == offset; // We assume that we won't position more than Int32.Max
+        }
+
+        void SetPosition(long position)
+        {
+            _stream.Seek(position, SeekOrigin.Begin);
+        }
+
+        public bool SeekLastLineFromCurrentAndPositionOnStartOfIt()
+        {
+            int steps = 80;
+
+            var pos1 = _stream.Position;
+
+            var found1 = SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(steps);
+            if (found1 == false)
+                return false; // No line feed found - so no line yet
+            var pos2 = _stream.Position;
+
+            var found2 = SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(steps);
+
+            var pos3 = _stream.Position;
+
+            if (found2)
+            {
+                // Ok we found a second linefeed - so one character after will be the start of our line
+                SetPositionRelative(1);
+                var pos4 = _stream.Position;
+                return true;
+            }
+
+            // We found one LF but not another one - so there is only one line 
+            // -> we can read this line if we position to the begin of the file
+            SetPosition(0);
+            return true;
+        }
+
+        public IFileStreamReader GetStreamReader()
+        {
+            if (_reader != null)
+                return _reader;
+            _reader = new FileStreamReader(_stream);
+            return _reader;
+        }
     }
 
     public class FileReadOnlyWrapper : IFile
     {
-        long currentPosition = 0;
+        long _currentPosition = 0;
         readonly string _fileName;
         IFileStream _stream;
         public FileReadOnlyWrapper(string fileName, IFileStream stream = null)
@@ -130,11 +257,17 @@ namespace WatcherFileListClasses
             {
                 if (_stream == null)
                 {
-                       _stream = new FileStreamWrapper(_fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                    _stream = new FileStreamWrapper(_fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                    _stream.Seek(0, SeekOrigin.End);
+                    _currentPosition = _stream.Position;
+
+                    // Seek back to the last line - if we don't do that we will miss the first written line
+
+                    bool foundLine = _stream.SeekLastLineFromCurrentAndPositionOnStartOfIt();
+                    if (!foundLine)
+                        return String.Empty; // There is no line feed - that is by definition wrong - so let's what has been written
                 }
-
-
-                _stream.Seek(currentPosition, SeekOrigin.Begin);
+                else _stream.Seek(_currentPosition, SeekOrigin.Begin);
 
                 long current = _stream.Position;
                 long maxToRead = _stream.Length - current;
@@ -157,7 +290,7 @@ namespace WatcherFileListClasses
                 ++lastIndex; // Return also the \n character
                 string result = System.Text.Encoding.Default.GetString(buffer, 0, lastIndex);
 
-                currentPosition = _stream.Position;
+                _currentPosition = _stream.Position;
                 return result;
             }
             catch (Exception e)

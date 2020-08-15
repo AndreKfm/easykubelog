@@ -4,13 +4,16 @@
     {
         <EasyLogService.Components.ListElement ContentDateTime=@e.ContentDateTime
                                                ContentLogOutput=@e.ContentLogOutput
+                                               ContentLogContainer=@e.ContentLogContainer
                                                ContentLogType=@e.ContentLogType />
     }
 
 </div>
+
+
 @code {
-    private int _count = 10;
-    public List<ListElement> _list = new List<ListElement>(100);
+    //private int _count = 10;
+    public List<Components.ListElement> _list = new List<Components.ListElement>(100);
 
     public void Set(List<ListElement> newList, Refresh refresh)
     {

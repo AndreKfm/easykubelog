@@ -2,25 +2,26 @@
 @inherits LayoutComponentBase
 
 
-<div class="main" >
+<div class="main">
     <div class="mt-3 ml-3 mr-3 mb-4 border rounded shadow bg-primary" name="mainHeader" style=""><h1 style="text-align: center">Easy Log</h1></div>
     <div class="" style="">
         <div class="m-3">
             <EasyLogService.Components.SearchField @ref="SearchField" />
         </div>
-        <div class="m-3 defpadding  ">Entries: @numEntries</div>
-        
+        <div class="m-3 defpadding  ">Found: @numEntries</div>
         <div class="m-3 border bg-light" name="MainList" style="position:absolute; width:auto; right:0; left:0; height:auto; top:180px; bottom:0; overflow:auto; box-sizing:border-box">
             <EasyLogService.Components.List @ref="_mainList" />
         </div>
     </div>
 </div>
 
+
+
 @using EasyLogService.Commands;
 @using LogEntries;
 @using Microsoft.Extensions.Configuration;
+@using System.Threading;
 @inject ISearchCommand  _searchCommand;
-@inject IConfiguration  _configuration;
 
 
 @code
@@ -30,25 +31,23 @@
 
 
 
-    int _maxResultLines = 0; // Specifies how many results in log lines will be returned by each query
 
-    EasyLogService.Components.SearchField searchField;
+    Components.SearchField _searchField;
 
     protected override void OnInitialized()
     {
-        _maxResultLines = _configuration.GetValue<int>("MaxLogQueryResultLines");
     }
 
-    EasyLogService.Components.SearchField SearchField
+    Components.SearchField SearchField
     {
         get
         {
-            return searchField;
+            return _searchField;
         }
 
         set
         {
-            searchField = value;
+            _searchField = value;
             InitSearchField();
         }
     }
@@ -61,8 +60,7 @@
         foreach (var queryResult in logEntries)
         {
             var e = new EasyLogService.Components.ListElement();
-
-            e.Set(queryResult.Time, queryResult.Log, queryResult.Stream);
+            e.Set(queryResult.Time, queryResult.Line, queryResult.Stream, queryResult.Container);
             list.Add(e);
         }
         _mainList.Set(list, Refresh.ImmediatelyRefresh);
@@ -71,17 +69,38 @@
 
     }
 
+    void EnableSpinner()
+    {
+        Interlocked.Increment(ref _spinnerCounter);
+        _searchField.DisplaySpinningSearch(true);
+    }
+
+    void DisableSpinner()
+    {
+        var spinnerCount = Interlocked.Decrement(ref _spinnerCounter);
+        if (spinnerCount <= 0)
+        {
+            if (spinnerCount < 0)
+                _spinnerCounter = 0; // Should not happen - but to play it safe if something going wrong the recover from that
+            _searchField.DisplaySpinningSearch(false);
+        }
+    }
+
+
+    int _spinnerCounter = 0;
+
     void InitSearchField()
     {
-        searchField.OnSearchQueryChange = (query) =>
+        _searchField.OnSearchQueryChange = (query, max, from, to) =>
         {
-            Send(query, (query) => Completed(query));
+            EnableSpinner();
+            Send(query, max, from, to, (result) => { DisableSpinner(); Completed(result); });
         };
     }
 
-    bool Send(string query, Action<KubernetesLogEntry[]> completed)
+    bool Send(string query, int max, DateTimeOffset from, DateTimeOffset to, Action<KubernetesLogEntry[]> completed)
     {
-        var t = Task.Run(() => _searchCommand.Search(new SearchRequest(query, _maxResultLines), completed));
+        var t = Task.Run(() => _searchCommand.Search(new SearchRequest(query, max, from, to), completed));
         return true;
     }
 

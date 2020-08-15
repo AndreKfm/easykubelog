@@ -26,7 +26,7 @@ namespace EasyLogService.Commands
         {
 
             Stopwatch w = Stopwatch.StartNew();
-            var result = _cacheQuery.Query(request.Query, request.MaxResults);
+            var result = _cacheQuery.Query(request.Query, request.MaxResults, request.From, request.To);
 
             completed(result);
             Console.WriteLine($"Queried:{request.Query} - result length: {result.Length} needed: {w.ElapsedMilliseconds} ms");
@@ -37,9 +37,13 @@ namespace EasyLogService.Commands
     {
         readonly public string Query;
         readonly public int MaxResults;
-        public SearchRequest(string query, int maxResults)
+        readonly public DateTimeOffset From;
+        readonly public DateTimeOffset To;
+        public SearchRequest(string query, int maxResults, DateTimeOffset from = default, DateTimeOffset to = default)
         {
             Query = query;
+            From = from;
+            To = to;
             MaxResults = maxResults;
         }
 

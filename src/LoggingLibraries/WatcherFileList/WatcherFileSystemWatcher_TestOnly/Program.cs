@@ -1,4 +1,4 @@
-﻿using DirectoryWatching;
+﻿using DirectoryWatcher;
 using System;
 using System.IO;
 using System.Threading;
@@ -73,10 +73,32 @@ namespace FileSystemWatcher_TestOnly
         static void Main(string[] args)
         {
 
-            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\xwatchertest";
+            //var dir = @"/mnt/c/test/deleteme/xwatchertest/";
+            var dir = @"/home/dev/log";
+            //var dir = @"/tmp/log";
 
-            DirectoryWatcher w = new DirectoryWatcher();
-            w.Open(directory, new FilterAndCallbackArgument("*.txt", 
+            //string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\xwatchertest";
+            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : dir;
+
+            Console.WriteLine($"Watching now directory: {directory}");
+
+            Task.Run(() =>
+            {
+                int n = 0;
+                string ldir = "/tmp/log/";
+                for (; ; )
+                {
+                    Task.Delay(1000).Wait();
+                    File.WriteAllText($"{ldir}linkhard.txt", $"hello{++n}");
+                    File.WriteAllText($"{ldir}linksoft.txt", $"hello{++n}");
+                    Console.Write('.');
+                    //File.WriteAllText($"{dir}linkhard.txt", $"hello{++n}");
+                }
+
+            });
+
+            FileDirectoryWatcher w = new FileDirectoryWatcher(new FileDirectoryWatcherSettings(directory));
+            w.Open(new FilterAndCallbackArgument(String.Empty, 
                 (object sender, WatcherCallbackArgs args) =>
                 {
                     Console.WriteLine($"{args.ChangeType} {args.FileName}");

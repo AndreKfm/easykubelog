@@ -1,62 +1,30 @@
 ﻿using System;
 using System.IO;
 
-namespace DirectoryWatching
+using System.Collections.Generic;
+using System.Text;
+
+namespace DirectoryWatcher
 {
-
-
-    [Flags]
-    public enum IFileSystemWatcherChangeType
+    public class PhysicalFileSystemWatcherWrapperSettings
     {
-        Created = 1,
-        Rename = 2,
-        Deleted = 4,
-        Changed = 8,
-        Dispose = 16,
-        Error = 32,
-        All = Created | Rename | Deleted | Changed | Dispose | Error 
+        public string ScanDirectory { get; set; }
+        public bool IncludeSubdirectories { get; set; } = true;
     }
 
-    public class FilterAndCallbackArgument
-    {
-
-        public FilterAndCallbackArgument(string fileFilter, 
-                                         Action<object, WatcherCallbackArgs> action = null)
-        {
-            this.fileFilter = fileFilter;
-            this.action = action;
-        }
-
-        public string fileFilter = String.Empty; // Specifies the files to watch = String.Empty = all files
-        public readonly Action<object, WatcherCallbackArgs> action; // Callback to call on specified changes
-    }
-
-    public class WatcherCallbackArgs
-    {
-        public WatcherCallbackArgs(string fileName, IFileSystemWatcherChangeType changeType)
-        {
-            FileName = fileName;
-            ChangeType = changeType;
-        }
-        public string FileName { get; private set; }
-
-        public IFileSystemWatcherChangeType ChangeType { get; private set; }
-    }
-
-
-    //
-    // Interface for a file watcher which is watching a single directory (no subdirectories for changes)
-    public interface IFileSystemWatcher : IDisposable
-    {
-        bool Open(string directoryPath, FilterAndCallbackArgument callbackAndFilter = null);
-
-    }
-
+    /// <summary>
+    /// Uses .NET Core supported file system watcher, which under Linux uses the very performant
+    /// inotify interface
+    /// 
+    /// !!! DOES NOT SUPPORT A DIRECTORY HOLDING SOFT OR HARDLINKS !!!
+    /// </summary>     
     public class PhysicalFileSystemWatcherWrapper : IFileSystemWatcher
     {
         FileSystemWatcher _watcher;
-        public PhysicalFileSystemWatcherWrapper()
+        PhysicalFileSystemWatcherWrapperSettings _settings; 
+        public PhysicalFileSystemWatcherWrapper(PhysicalFileSystemWatcherWrapperSettings settings)
         {
+            _settings = settings; 
         }
 
         public void Dispose()
@@ -87,11 +55,11 @@ namespace DirectoryWatching
             _watcher.Disposed += WatcherDisposed;
             _watcher.Renamed += WatcherRenamed;
             _watcher.Error += WatcherError;
-            _watcher.IncludeSubdirectories = false;
+            _watcher.IncludeSubdirectories = true;
             _watcher.InternalBufferSize = 65536; // Reserve for a larger number of containers running
 
             if (this._callbackFileSystemChanged != null)
-                _watcher.EnableRaisingEvents = true;
+                _watcher.EnableRaisingEvents = _settings.IncludeSubdirectories;
 
         }
 
@@ -120,7 +88,7 @@ namespace DirectoryWatching
 
         public void SetCallback(Action<object, WatcherCallbackArgs> action)
         {
-            if (_watcher != null) _watcher.EnableRaisingEvents = false; 
+            if (_watcher != null) _watcher.EnableRaisingEvents = false;
             _callbackFileSystemChanged = action;
             WatcherSetEvents();
         }
@@ -157,21 +125,21 @@ namespace DirectoryWatching
         }
 
 
-        public bool Open(string directoryPath, FilterAndCallbackArgument callbackAndFilter)
+        public bool Open(FilterAndCallbackArgument callbackAndFilter)
         {
             try
             {
 
                 DisableWatcher();
-                string fileFilter = callbackAndFilter != null ? callbackAndFilter.fileFilter : String.Empty;
+                string fileFilter = callbackAndFilter != null ? callbackAndFilter.FileFilter : String.Empty;
 
                 // Let's better pass only one argument in case that implementation in FileSystemWatcher is different
-                _watcher = fileFilter == String.Empty ? new FileSystemWatcher(directoryPath) :
-                                                        new FileSystemWatcher(directoryPath, fileFilter);
+                _watcher = new FileSystemWatcher(_settings.ScanDirectory);
+                //new FileSystemWatcher(directoryPath, fileFilter);
 
-                _watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.FileName | NotifyFilters.LastWrite;
+                _watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime | NotifyFilters.Attributes | NotifyFilters.Size;
                 if (callbackAndFilter != null)
-                    SetCallback(callbackAndFilter.action);
+                    SetCallback(callbackAndFilter.ActionChanges);
                 return true;
             }
             catch (Exception)
@@ -181,30 +149,5 @@ namespace DirectoryWatching
         }
 
         Action<object, WatcherCallbackArgs> _callbackFileSystemChanged;
-    }
-
-    public class DirectoryWatcher : IDisposable
-    {
-
-
-        public DirectoryWatcher(IFileSystemWatcher watcher = null)
-        {
-            _watcher = watcher ?? new PhysicalFileSystemWatcherWrapper();
-        }
-
-
-
-        public bool Open(string path, FilterAndCallbackArgument filterAndCallback = null)
-        {
-            return _watcher.Open(path, filterAndCallback);
-        }
-
-        public void Dispose()
-        {
-            _watcher?.Dispose();
-            _watcher = null;
-        }
-
-        IFileSystemWatcher _watcher;
     }
 }

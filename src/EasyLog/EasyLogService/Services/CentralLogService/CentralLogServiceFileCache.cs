@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 
 namespace EasyLogService.Services.CentralLogService
@@ -18,19 +19,14 @@ namespace EasyLogService.Services.CentralLogService
         readonly string _fileName;
         FileStream _file;
         StreamReader _stream;
+        IParser _defaultParser = null; 
 
 
         public FileCache(string fileName)
         {
             _fileName = fileName;
-            _file = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            _file = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
             _stream = new StreamReader(_file);
-
-            // We need to do that dumb counting for the first time to get the number of lines :-/ 
-            //while (_stream.ReadLine() != null)
-            //{
-            //    ++_lines;
-            //}
         }
 
 
@@ -59,40 +55,48 @@ namespace EasyLogService.Services.CentralLogService
                 {
                     var line = localStream.ReadLine();
                     if (line != null)
-                        yield return KubernetesLogEntry.Parse(line);
+                        yield return KubernetesLogEntry.Parse(ref _defaultParser, line);
                     else break;
                 }
             }
         }
 
-
-        private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults)
+        private bool CheckInBetween(KubernetesLogEntry k, DateTimeOffset from, DateTimeOffset to)
         {
-
-            using FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-            using StreamReader localStream = new StreamReader(file);
-            var result = EnumerateStreamLines(localStream).
-            Where(x => x.Log.Contains(simpleQuery)).
-            Take(maxResults).
-            OrderBy(x => x.Time);
-            return result.ToArray();
+            var time = k.Time;
+            return (from == default || from <= time) && (to == default || to >= time);
         }
 
 
-        private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults)
+        private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
+
             using FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
             using StreamReader localStream = new StreamReader(file);
             var result = EnumerateStreamLines(localStream).
-                Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Log, simpleQuery, CompareOptions.IgnoreCase) >= 0).
+                Where(x => CheckInBetween(x, from, to)).
+                Where(x => x.Line.Contains(simpleQuery)).
                 Take(maxResults).
-                OrderBy(x => x.Time);
+                OrderByDescending(x => x.Time);
             return result.ToArray();
         }
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode)
+
+
+        private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults);
-            return QueryCaseSensitive(simpleQuery, maxResults);
+            using FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            using StreamReader localStream = new StreamReader(file);
+            var result = EnumerateStreamLines(localStream).
+                Where(x => CheckInBetween(x, from, to)).
+                Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Line, simpleQuery, CompareOptions.IgnoreCase) >= 0).
+                Take(maxResults).
+                OrderByDescending(x => x.Time);
+            return result.ToArray();
+        }
+        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to)
+        {
+            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, from, to);
+            return QueryCaseSensitive(simpleQuery, maxResults, from, to);
         }
     }
 
@@ -100,13 +104,12 @@ namespace EasyLogService.Services.CentralLogService
     {
         
         EndlessFileStream _stream;
+        IParser _defaultParser; 
 
 
         public EndlessFileStreamCache(EndlessFileStream stream)
         {
             _stream = stream;
-
-            // We need to do that dumb counting for the first time to get the number of lines :-/ 
         }
 
 
@@ -115,47 +118,45 @@ namespace EasyLogService.Services.CentralLogService
             _stream?.Dispose(); _stream = null;
         }
 
-        //IEnumerable<KubernetesLogEntry> EnumerateStreamLines(StreamReader localStream)
-        //{
-        //    //lock (_lockObject)
-        //    {
-        //        localStream.BaseStream.Seek(0, SeekOrigin.Begin);
-        //        for (; ; )
-        //        {
-        //            var line = localStream.ReadLine();
-        //            if (line != null)
-        //                yield return KubernetesLogEntry.Parse(line);
-        //            else break;
-        //        }
-        //    }
-        //}
 
-
-        private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults)
+        private bool CheckInBetween(KubernetesLogEntry k, DateTimeOffset from, DateTimeOffset to)
         {
-            var result = _stream.Reader.ReadEntries(maxResults).
-            Where(x => x.Contains(simpleQuery)).
-            Take(maxResults).Select(x => KubernetesLogEntry.Parse(x));
-            return result.ToArray();
+            DateTimeOffset time = k.Time;
+            return (from == default || from <= time) && (to == default || to >= time);
         }
 
-
-        private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults)
+        private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            var result = _stream.Reader.ReadEntries(maxResults).
-            Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x, simpleQuery, CompareOptions.IgnoreCase) >= 0).
-            Take(maxResults).Select(x => KubernetesLogEntry.Parse(x));
+            var result = _stream.Reader.ReadEntries(int.MaxValue).
+                Where(x => x.content.Contains(simpleQuery)).
+                Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
+                Where(x => CheckInBetween(x, from, to)).
+                Take(maxResults).
+                OrderByDescending(x => x.Time);
+
             return result.ToArray();
         }
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode)
+        
+
+        private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults);
-            return QueryCaseSensitive(simpleQuery, maxResults);
+            var result = _stream.Reader.ReadEntries(int.MaxValue).
+              Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.content, simpleQuery, CompareOptions.IgnoreCase) >= 0).
+              Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
+              Where(x => CheckInBetween(x, from, to)).
+              Take(maxResults).
+              OrderByDescending(x => x.Time);
+            return result.ToArray();
+        }
+        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to)
+        {
+            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, from, to);
+            return QueryCaseSensitive(simpleQuery, maxResults, from, to);
         }
 
         public void Add((DateTimeOffset, int fileIndex) key, KubernetesLogEntry value)
         {
-            throw new NotImplementedException();
+            value.Write(_stream.Writer.WriteToFileStream);
         }
     }
 

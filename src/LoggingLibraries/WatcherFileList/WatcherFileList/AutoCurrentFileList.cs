@@ -1,7 +1,9 @@
-﻿using DirectoryWatching;
+﻿using DirectoryWatcher;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -23,32 +25,50 @@ namespace WatcherFileListClasses
         public NewOutput(string lines, string filename, string lastError)
         {
             Lines = lines;
-            Filename = filename;
+            FileName = filename;
             LastError = lastError;
         }
 
         public readonly string LastError;
         public readonly string Lines;
-        public readonly string Filename;
+        public readonly string FileName;
     }
 
     public interface IAutoCurrentFileList : IDisposable
     {
-        public void Start(string directoryToWatch, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0);
+        public void Start(IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0);
         public void Stop();
         public Task BlockingReadAsyncNewOutput(Action<NewOutput, CancellationToken> callback); // Stop() will abort read
     }
+
+
+    public class AutoCurrentFileListSettings
+    {
+        public bool FilterDirectoriesForwardFilesOnly { get; set; } = true; // Forward only files and no directory changes if set
+    }
+
 
     public class AutoCurrentFileList : IAutoCurrentFileList
     {
         WatcherFileList _watcher;
         WatcherCurrentFileList fileList;
-        string _directoryToWatch;
         readonly IGetFile _getFile;
         Task _current;
-        public AutoCurrentFileList(IGetFile openFile = null)
+        AutoCurrentFileListSettings _settings;
+        FileDirectoryWatcherSettings _settingsFileWatcher;
+
+        public AutoCurrentFileList(IOptions<FileDirectoryWatcherSettings> settingsFileWatcher, IOptions<AutoCurrentFileListSettings> settings = null, IGetFile openFile = null)
         {
-            _getFile = openFile ?? new GetFileWrapper();
+            Debug.Assert(settingsFileWatcher != null); // Due to scan base directory this is not allowed
+            _getFile = openFile ?? new GetFileWrapper();            
+            _settings = settings?.Value ?? new AutoCurrentFileListSettings();
+            _settingsFileWatcher = settingsFileWatcher?.Value ?? new FileDirectoryWatcherSettings();
+
+            if (String.IsNullOrEmpty(_settingsFileWatcher.ScanDirectory))
+            {
+                Trace.TraceError("AutoCurrentFileList settings files wather is not set - not base directory available - use temp path");
+                _settingsFileWatcher.ScanDirectory = Path.GetTempPath(); 
+            }
         }
 
         public void Stop()
@@ -62,11 +82,10 @@ namespace WatcherFileListClasses
             return;
         }
 
-        public void Start(string directoryToWatch, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
+        public void Start(IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
         {
             Stop();
-            _directoryToWatch = directoryToWatch;
-            _watcher = new WatcherFileList(directoryToWatch, watcherInterface, updateRatioInMilliseconds);
+            _watcher = new WatcherFileList(_settingsFileWatcher, watcherInterface, updateRatioInMilliseconds);
             _source = new CancellationTokenSource(); ;
             fileList = new WatcherCurrentFileList();
 
@@ -113,6 +132,17 @@ namespace WatcherFileListClasses
 
         private void WriteToChannel(FileEntry change, FileTaskEnum operation)
         {
+            if (_settings.FilterDirectoriesForwardFilesOnly)
+            {
+                FileAttributes attr = File.GetAttributes(Path.Combine(_settingsFileWatcher.ScanDirectory, change.FileName));
+                if (attr.HasFlag(FileAttributes.Directory))
+                {
+                    //Trace.TraceInformation($"[{change.FileName}] is a directory - skipping due to filter");
+                    return;
+                }
+            }
+
+            Trace.TraceInformation($"Adding changes from [{change.FileName}] - [{change.LastChanges}]");
             if (!_channel.Writer.TryWrite(new FileTask(change.FileName, operation, _lastError)))
             {
                 Error($"HandleFileChanges - Channel full: {change.FileName} {operation}");
@@ -152,6 +182,8 @@ namespace WatcherFileListClasses
             while (!token.IsCancellationRequested)
             {
                 var newOutput = await ReadAsyncNewOutput();
+                Trace.TraceInformation($"Reading and forwarding changes [{newOutput.FileName}] - [{newOutput.Lines}]");
+
                 callback(newOutput, _source.Token);
                 //if (callback(newOutput, _source.Token) != ReadAsyncOperation.ContinueRead)
                 //  break; // Cancelled by external callee
@@ -171,13 +203,13 @@ namespace WatcherFileListClasses
                         case FileTaskEnum.Add:
                             {
                                 AddFile(op);
-                                Console.WriteLine($"### ADD {op.FileName}");
+                                //Console.WriteLine($"### ADD {op.FileName}");
                                 break;
                             }
                         case FileTaskEnum.Remove:
                             {
                                 fileList.RemoveFile(op.FileName);
-                                Console.WriteLine($"### REMOVE {op.FileName}");
+                                //Console.WriteLine($"### REMOVE {op.FileName}");
                                 break;
                             }
                         case FileTaskEnum.Update:
@@ -194,10 +226,11 @@ namespace WatcherFileListClasses
                                 }
 
                                 string content = file.ReadLineFromCurrentPositionToEnd();
-                                Console.WriteLine($"### UpDATE {op.FileName}  {content}");
+                                
+                                //Console.WriteLine($"### UpDATE {op.FileName}  {content}");
                                 if (!_channelNewOutput.Writer.TryWrite(new NewOutput(content, op.FileName, op.LastError)))
                                 {
-                                    Error($"AutoCurrentFileList.ReadChannel error - write to callback for new outputs failed: {op.FileName}:prev error:{op.LastError}:{content}");
+                                    Error($"AutoCurrentFileList.ReadChannel - error: write to callback for new outputs failed: {op.FileName}:prev error:{op.LastError}:{content}");
                                 }
 
                                 break;
@@ -205,12 +238,12 @@ namespace WatcherFileListClasses
                     }
                 }
             }
-            catch (Exception) { }
+            catch (Exception e) { Trace.TraceError($"Error reading channel in AutoCurrentFileList.ReadChannel: [{e.Message}]"); }
         }
 
         private IFile AddFile(FileTask op)
         {
-            var fileStream = _getFile.GetFile(Path.Combine(_directoryToWatch, op.FileName));
+            var fileStream = _getFile.GetFile(Path.Combine(_settingsFileWatcher.ScanDirectory, op.FileName));
             fileList.AddFile(new CurrentFileEntry(op.FileName, fileStream));
             return fileStream;
         }

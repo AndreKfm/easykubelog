@@ -5,18 +5,25 @@
 
 <div class="loglist defpadding" style="width: auto; overflow: hidden">
     <div class="listelement ml-2 defpadding" style="width: auto; float: left; color:blue ">@ContentDateTime</div>
-    <div class="listelement ml-3 defpadding" style="width: 75%; float: left;">@ContentLogOutput</div>
+    <div class="listelement ml-3 defpadding" style="width: 15%; float: left;">@ContentLogContainer</div>
+    <div class="listelement ml-3 defpadding" style="width: 60%; float: left;">@ContentLogOutput</div>
     <div name="contentlogtype" class="listelement ml-2 defpadding mr-2" style="width:auto; float: left; color:@ContentLogTypeColor">@ContentLogType</div>
 </div>
 
+@using LogEntries;
 
 @code {
 
+
+
     [Parameter]
-    public DateTimeOffset ContentDateTime { get; set; }
+    public DateTime ContentDateTime { get; set; }
 
     [Parameter]
     public string ContentLogOutput { get; set; }
+
+    [Parameter]
+    public string ContentLogContainer { get; set; }
 
     [Parameter]
     public string ContentLogType { get; set; }
@@ -34,15 +41,15 @@
         }
     }
 
-    public ListElement()
+    public void Set(DateTimeOffset time, string output, string logtype, string container)
     {
-    }
-
-    public void Set(DateTimeOffset time, string output, string logtype)
-    {
-        ContentDateTime = time;
+        ContentDateTime = new DateTime(time.Ticks);
         ContentLogOutput = output;
         ContentLogType = logtype;
+
+        var cont = LogEntries.KubernetesContainerNameTools.DeserializeContainerName(container);
+
+        ContentLogContainer = cont.containerName;
     }
 
 }
