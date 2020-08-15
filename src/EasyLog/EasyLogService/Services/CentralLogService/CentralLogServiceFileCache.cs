@@ -2,6 +2,7 @@
 using LogEntries;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace EasyLogService.Services.CentralLogService
         readonly string _fileName;
         FileStream _file;
         StreamReader _stream;
+        StreamWriter _streamWriter;
         IParser _defaultParser = null; 
 
 
@@ -27,17 +29,18 @@ namespace EasyLogService.Services.CentralLogService
             _fileName = fileName;
             _file = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
             _stream = new StreamReader(_file);
+            _streamWriter = new StreamWriter(_file);
         }
 
 
         public void Add((DateTimeOffset, int fileIndex) key, KubernetesLogEntry value)
         {
+            _streamWriter.Write(value);
+        }
 
-            //if (lines > _maxLines)
-            //{
-
-            //}
-            //_logCache.Add(key, value);
+        public void Flush()
+        {
+            _streamWriter.Flush();
         }
 
         public void Dispose()
@@ -158,6 +161,12 @@ namespace EasyLogService.Services.CentralLogService
         {
             value.Write(_stream.Writer.WriteToFileStream);
         }
+
+        public void Flush()
+        {
+            _stream?.Writer?.Flush();
+        }
+
     }
 
 }

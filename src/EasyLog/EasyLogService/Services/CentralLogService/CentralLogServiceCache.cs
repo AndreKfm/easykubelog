@@ -73,6 +73,16 @@ namespace EasyLogService.Services.CentralLogService
                     }
                 }
             }
+
+            Flush();
+        }
+
+        private void Flush()
+        {
+            lock (_logCache)
+            {
+                _logCache.Flush();
+            }
         }
 
         private void InternalAddNewLogEntry(LogEntry entry, KubernetesLogEntry newEntry)

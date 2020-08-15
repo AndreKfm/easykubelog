@@ -29,6 +29,12 @@ namespace EasyLogService.Services.CentralLogService
             }
         }
 
+        public void Flush()
+        {
+            // Not really needed - memory needs no flush from applications
+        }
+
+
         public void Dispose()
         {
             _logCache.Clear();
@@ -74,5 +80,6 @@ namespace EasyLogService.Services.CentralLogService
             if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, from, to);
             return QueryCaseSensitive(simpleQuery, maxResults, from, to);
         }
+
     }
 }

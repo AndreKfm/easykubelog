@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using WatcherCurrentFileListClasses;
 using WatcherFileListClasses;
 
 namespace WatcherFileListClasses_TestOnly
@@ -31,28 +32,32 @@ namespace WatcherFileListClasses_TestOnly
 
         static void Main(string[] args)
         {
-            var consoleTracer = new ConsoleTraceListener(true);
-            Trace.Listeners.Add(consoleTracer);
-            consoleTracer.Name = "ManualFileSystemWatcherTrace";
+            WatcherCurrentFileLists_BackwardsSeekTests_PHYSICAL_FILE_ w = new WatcherCurrentFileLists_BackwardsSeekTests_PHYSICAL_FILE_();
+            w.CreateFileAndSeekBackwardsWithFileSeeker();
+            return;
+
+            //var consoleTracer = new ConsoleTraceListener(true);
+            //Trace.Listeners.Add(consoleTracer);
+            //consoleTracer.Name = "ManualFileSystemWatcherTrace";
 
 
 
-            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\logtest";
+            //string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\logtest";
 
-            CurrentFileListTest(directory); return; 
+            //CurrentFileListTest(directory); return; 
 
-            WatcherFileList w = new WatcherFileList(new FileDirectoryWatcherSettings { }, null, 15000);
-            w.Start((list) =>
-            {
-                foreach (var e in list)
-                {
-                    Console.WriteLine($"{e.FileName} : {e.LastChanges}");
-                }
+            //WatcherFileList w = new WatcherFileList(new FileDirectoryWatcherSettings { }, null, 15000);
+            //w.Start((list) =>
+            //{
+            //    foreach (var e in list)
+            //    {
+            //        Console.WriteLine($"{e.FileName} : {e.LastChanges}");
+            //    }
 
-            });
+            //});
 
-            Console.WriteLine("Waiting");
-            Console.ReadLine();
+            //Console.WriteLine("Waiting");
+            //Console.ReadLine();
         }
     }
 }

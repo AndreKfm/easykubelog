@@ -106,6 +106,7 @@ namespace EasyLogService.Services.CentralLogService
         public void Dispose()
         {
             _logEntryChannel.Writer.Complete();
+            Stop();
             _logEntryChannel = null;
         }
 

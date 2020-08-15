@@ -35,6 +35,7 @@ namespace EasyLogService.Services.CentralLogService
     public interface ICache<Key, Value> : IDisposable
     {
         void Add(Key key, Value value);
+        void Flush(); 
         KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to);
     }
 

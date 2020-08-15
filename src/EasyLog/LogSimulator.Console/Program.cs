@@ -9,7 +9,7 @@ namespace LogSimulator
         static void Main(string[] args)
         {
 
-            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\logtest";
+            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\\temp\\var\\log\\pods";
             int countFiles = 1; 
             if (args.Length > 1)
             {
