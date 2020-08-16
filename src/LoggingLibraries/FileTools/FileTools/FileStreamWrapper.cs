@@ -115,9 +115,9 @@ namespace FileToolsClasses
                     return String.Empty;
                 var c = buf[0];
 
-                if ((c == '\n') || (c == '\r'))
+                ++index;
+                if (c == '\n')
                     break;
-                ++index; 
             }
 
             buf = new byte[index];
@@ -210,9 +210,6 @@ namespace FileToolsClasses
                 }
 
                 ++lastIndex; // Return also the \n character
-                string result = System.Text.Encoding.Default.GetString(buffer);
-                if (String.IsNullOrEmpty(result) == false)
-                    _currentPosition = _stream.Position;
 
                 if (lastIndex < buffer.Length)
                 {
@@ -225,8 +222,18 @@ namespace FileToolsClasses
                         _currentPosition = 0;
                     }
 
+                    buffer = _localBuffer.AsSpan<byte>().Slice(0, lastIndex);
                 }
 
+                string result = System.Text.Encoding.Default.GetString(buffer);
+                if (String.IsNullOrEmpty(result) == false)
+                    _currentPosition = _stream.Position;
+
+
+                if (result[result.Length-1] != '\n')
+                {
+                    Console.WriteLine("AHA");
+                }
                 return (result, sizeExceeded);
             }
             catch (Exception e)

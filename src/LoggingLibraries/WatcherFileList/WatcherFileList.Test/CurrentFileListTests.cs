@@ -150,9 +150,8 @@ namespace WatcherFileListClasses.Test
                 return bytesRead;
             }
 
-            public void WriteReadCheck(string input, string expected, bool autoAppend = true, int maxSize = 16384)
+            public void WriteReadCheck(string input, string expected, int maxSize = 16384)
             {
-                if (autoAppend) input += Environment.NewLine;
                 var fileStream = Object();
                 FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
                 ReturnString = input;
@@ -172,10 +171,10 @@ namespace WatcherFileListClasses.Test
             var fileStream = f.Object();
             FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
 
-            string input = "hello world";
+            string input = "hello world\r\n";
             f.WriteReadCheck(input, input);
 
-            f.WriteReadCheck("", "");
+            f.WriteReadCheck("\r\n", "\r\n");
 
         }
 
@@ -187,10 +186,10 @@ namespace WatcherFileListClasses.Test
             var fileStream = f.Object();
             FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
 
-            string input = "hello worldöäüÖÄÜß你好，世界";
+            string input = "hello worldöäüÖÄÜß你好，世界\r\n";
             f.WriteReadCheck(input, input);
-            f.WriteReadCheck("\r\n", "");
-            f.WriteReadCheck("\n", "");
+            f.WriteReadCheck("\r\n", "\r\n");
+            f.WriteReadCheck("\n", "\n");
         }
 
         [Fact]
@@ -198,11 +197,11 @@ namespace WatcherFileListClasses.Test
         {
             FileStreamHelper f = new FileStreamHelper();
 
-            f.WriteReadCheck("hello world\r", "hello world", false);
-            f.WriteReadCheck("hello world\r\n", "hello world", false);
-            f.WriteReadCheck("", String.Empty, false);
-            f.WriteReadCheck("              ", String.Empty, false);
-            f.WriteReadCheck("", String.Empty, false);
+            f.WriteReadCheck("hello world\r", String.Empty);
+            f.WriteReadCheck("hello world\r\n", "hello world\r\n");
+            f.WriteReadCheck("", String.Empty);
+            f.WriteReadCheck("              ", String.Empty);
+            f.WriteReadCheck("", String.Empty);
 
         }
 
@@ -214,9 +213,9 @@ namespace WatcherFileListClasses.Test
             var fileStream = f.Object();
             FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
 
-            string returnStringX = "h1";
+            string returnStringX = "h1\r\n";
             string input = "\r\nh1\r\nhello world\r\n";
-            f.WriteReadCheck(input, String.Empty);
+            f.WriteReadCheck(input, "\r\n");
 
             input = "h1\r\nhello world";
             f.WriteReadCheck(input, returnStringX);
@@ -231,7 +230,8 @@ namespace WatcherFileListClasses.Test
             FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
 
             string bigInput = new String((char)65, 65536);
-            f.WriteReadCheck(bigInput, bigInput, true, bigInput.Length);
+            bigInput += Environment.NewLine;
+            f.WriteReadCheck(bigInput, bigInput, bigInput.Length);
         }
 
 
