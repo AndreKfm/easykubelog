@@ -14,7 +14,7 @@ namespace EasyLogService.Services.CentralLogService
 
     public interface ICentralLogService : IDisposable
     {
-        Task<bool> AddLogEntry(LogEntry newEntry);
+        ValueTask<bool> AddLogEntry(LogEntry newEntry);
         public void Start();
         public void Stop();
     }

@@ -39,7 +39,7 @@ namespace LogSimulator
             while (token.IsCancellationRequested == false)
             {
                 DateTime time = DateTime.Now;
-                string message = $"{++index}:{Guid.NewGuid()}";
+                string message = $"{++index}  :  {Guid.NewGuid()}";
                 string stream = streams[r.Next(0, 2)];
                 string logContent = $"{{\"log\":\"{message}\\n\",\"stream\":\"{stream}\",\"time\":\""+
                                     $"{time.Year}-{time.Month}-{time.Day}T{time.ToLongTimeString()}."+

@@ -90,11 +90,11 @@ namespace EasyLogService.Services.CentralLogService
             }
         }
 
-        public async Task<bool> AddLogEntry(LogEntry newEntry)
+        public async ValueTask<bool> AddLogEntry(LogEntry newEntry)
         {
             try
             {
-                return await Task.FromResult(_logEntryChannel.Writer.TryWrite(newEntry));
+                return _logEntryChannel.Writer.TryWrite(newEntry);
             }
             catch(Exception e)
             {
