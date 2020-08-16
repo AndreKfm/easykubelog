@@ -80,7 +80,9 @@ namespace EasyLogService.Services.CentralLogService
                         break;
 
                     var newEntry = await _logEntryChannel.Reader.ReadAsync();
-                    Trace.TraceInformation($"CentralLogService add log entry to cache: [{newEntry.FileName}] - [{newEntry.Lines}]");
+
+
+                    //Trace.TraceInformation($"CentralLogService add log entry to cache: [{newEntry.FileName}] - [{newEntry.Lines}]");
                     _cache.AddEntry(newEntry);
                 }
                 catch(Exception e)

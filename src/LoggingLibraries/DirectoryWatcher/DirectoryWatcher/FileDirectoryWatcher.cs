@@ -12,9 +12,9 @@ namespace DirectoryWatcher
         public string ScanDirectory { get; set; }
 
         public bool UseManualScan { get; set; } = false; // By default use physical scanning
-        public int MaxContentLenghtToForwardForEachScanInBytes { get; set; } = 256000;
-        public int ScanIntervalInSeconds { get; set; } = 5; // Will be used only if UseManualScan is set - specifies how often the manual scanner
-                                                            // scans the specified [ScanDirectory] directory
+        public int MaxContentLenghtToForwardForEachScanInBytes { get; set; } = 65536;
+        public int ScanIntervalInSeconds { get; set; } = 10; // Will be used only if UseManualScan is set - specifies how often the manual scanner
+                                                             // scans the specified [ScanDirectory] directory
     }
 
 

@@ -2,11 +2,9 @@
 using FileToolsClasses;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -139,12 +137,12 @@ namespace WatcherFileListClasses
                 FileAttributes attr = File.GetAttributes(Path.Combine(_settingsFileWatcher.ScanDirectory, change.FileName));
                 if (attr.HasFlag(FileAttributes.Directory))
                 {
-                    //Trace.TraceInformation($"[{change.FileName}] is a directory - skipping due to filter");
+                    Trace.TraceInformation($"[{change.FileName}] is a directory - skipping due to filter");
                     return;
                 }
             }
 
-            Trace.TraceInformation($"Adding changes from [{change.FileName}] - [{change.LastChanges}]");
+            //Trace.TraceInformation($"Adding changes from [{change.FileName}] - [{change.LastChanges}]");
             if (!_channel.Writer.TryWrite(new FileTask(change.FileName, operation, _lastError)))
             {
                 Error($"HandleFileChanges - Channel full: {change.FileName} {operation}");
@@ -184,7 +182,7 @@ namespace WatcherFileListClasses
             while (!token.IsCancellationRequested)
             {
                 var newOutput = await ReadAsyncNewOutput();
-                Trace.TraceInformation($"Reading and forwarding changes [{newOutput.FileName}] - [{newOutput.Lines}]");
+                //Trace.TraceInformation($"Reading and forwarding changes [{newOutput.FileName}] - [{newOutput.Lines}]");
 
                 callback(newOutput, _source.Token);
                 //if (callback(newOutput, _source.Token) != ReadAsyncOperation.ContinueRead)
@@ -205,13 +203,11 @@ namespace WatcherFileListClasses
                         case FileTaskEnum.Add:
                             {
                                 AddFile(op);
-                                //Console.WriteLine($"### ADD {op.FileName}");
                                 break;
                             }
                         case FileTaskEnum.Remove:
                             {
                                 fileList.RemoveFile(op.FileName);
-                                //Console.WriteLine($"### REMOVE {op.FileName}");
                                 break;
                             }
                         case FileTaskEnum.Update:
@@ -234,9 +230,6 @@ namespace WatcherFileListClasses
 
                                     (string content, ReadLine sizeExceeded)
                                         = file.ReadLineFromCurrentPositionToEnd(_settingsFileWatcher.MaxContentLenghtToForwardForEachScanInBytes);
-
-
-                                    //Console.WriteLine($"### UpDATE {op.FileName}  {content}");
                                     if (!_channelNewOutput.Writer.TryWrite(new NewOutput(content, op.FileName, op.LastError)))
                                     {
                                         Error($"AutoCurrentFileList.ReadChannel - error: write to callback for new outputs failed: {op.FileName}:prev error:{op.LastError}:{content}");

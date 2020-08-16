@@ -42,6 +42,7 @@ namespace LogSimulator
 
         private void CreateLogentries(CancellationToken token, int delayInMilliseconds = 0)
         {
+            int secondOffset = 0;
             int index = 0;
 
             string[] streams = { "stdout", "stderr"};
@@ -50,7 +51,9 @@ namespace LogSimulator
             File.Delete(_fileName);
             while (token.IsCancellationRequested == false)
             {
+                secondOffset++;
                 DateTime time = DateTime.Now;
+                time += TimeSpan.FromSeconds(secondOffset);
                 string message = $"{++index}  :  {Guid.NewGuid()}  {CreateRandomString(40)}";
                 string stream = streams[r.Next(0, 2)];
                 string logContent = $"{{\"log\":\"{message}\\n\",\"stream\":\"{stream}\",\"time\":\""+

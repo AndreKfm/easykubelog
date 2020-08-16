@@ -68,7 +68,7 @@ namespace EasyLogService
         private void HandleWrittenLogs(NewOutput newOutput, CancellationToken token)
         {
             // Wait for new entries written to any log file and pass it to the central log service
-            Trace.TraceInformation($"CentralLogService add log entry: [{newOutput.FileName}] - [{newOutput.Lines}]");
+            //Trace.TraceInformation($"CentralLogService add log entry: [{newOutput.FileName}] - [{newOutput.Lines}]");
             _centralLogService.AddLogEntry(new LogEntry(newOutput.FileName, newOutput.Lines));
         }
     }

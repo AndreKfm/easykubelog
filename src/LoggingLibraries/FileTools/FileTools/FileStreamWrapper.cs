@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http.Headers;
 using System.Text;
@@ -85,6 +87,14 @@ namespace FileToolsClasses
         long _currentPosition = 0;
         readonly string _fileName;
         IFileStream _stream;
+
+        byte[] _localBuffer; // We hold the buffer in a local variable for reuse - since we don't
+                             // want to have the GC to do that much
+
+        int _reallocCounter = 0;
+        int ReallocAfterXCountsLowerThan50Percent = 20; // If a smaller buffer would have reallocated for 20 times - then assume
+                                                        // we have allocated a really big one and free it again
+
         public FileReadOnlyWrapper(string fileName, IFileStream stream = null)
         {
             _fileName = fileName;
@@ -140,13 +150,22 @@ namespace FileToolsClasses
             }
             return result;
         }
+        private bool InitializeNewStream()
+        {
+            _stream = new FileStreamWrapper(_fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            _stream.Seek(0, SeekOrigin.End);
+            _currentPosition = _stream.Position;
 
-        byte[] _localBuffer; // We hold the buffer in a local variable for reuse - since we don't
-                             // want to have the GC to do that much
+            // Seek back to the last line - if we don't do that we will miss the first written line
 
-        int _reallocCounter = 0;
-        int ReallocAfterXCountsLowerThan50Percent = 20; // If a smaller buffer would have reallocated for 20 times - then assume
-                                                        // we have allocated a really big one and free it again
+            var foundLine = _stream.SeekLastLineFromCurrentAndPositionOnStartOfIt();
+            if (!foundLine)
+                return false; // There is no line feed - that is by definition wrong - so let's what has been written
+            _currentPosition = _stream.Position;
+            return true;
+        }
+
+
         public (string line, ReadLine sizeExceeded) InternalReadLineFromCurrentPositionToEnd(long maxStringSize)
         {
             try
@@ -154,16 +173,11 @@ namespace FileToolsClasses
                 ReadLine sizeExceeded = ReadLine.BufferSufficient;
                 if (_stream == null)
                 {
-                    _stream = new FileStreamWrapper(_fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                    _stream.Seek(0, SeekOrigin.End);
-                    _currentPosition = _stream.Position;
-
-                    // Seek back to the last line - if we don't do that we will miss the first written line
-
-                    var foundLine = _stream.SeekLastLineFromCurrentAndPositionOnStartOfIt();
-                    if (!foundLine)
-                        return (String.Empty, ReadLine.BufferSufficient); // There is no line feed - that is by definition wrong - so let's what has been written
-                    _currentPosition = _stream.Position;
+                    if (!InitializeNewStream())
+                    {
+                        Trace.TraceError("InternalReadLineFromCurrentPositionToEnd - initialize stream failed");
+                        return (String.Empty, ReadLine.BufferSufficient);
+                    }
                 }
                 else
                 {
@@ -181,23 +195,7 @@ namespace FileToolsClasses
                 if (toRead <= 0)
                     return (String.Empty, ReadLine.BufferSufficient);
 
-                if ((_localBuffer == null) || (_localBuffer.Length < toRead))
-                {
-                    _localBuffer = new byte[toRead];
-                    _reallocCounter = 0;
-                }
-                else
-                {
-                    // Following lines shall prevent a really big buffer of memory to be held forever if not needed
-                    if (_localBuffer.Length > (toRead * 2))
-                        ++_reallocCounter;
-                    else _reallocCounter = 0;
-                    if (_reallocCounter > ReallocAfterXCountsLowerThan50Percent)
-                    {
-                        _reallocCounter = 0;
-                        _localBuffer = new byte[toRead];
-                    }
-                }
+                CheckIfBufferNeedsReallocation(toRead);
 
                 Span<byte> buffer = _localBuffer.AsSpan<byte>().Slice(0, (int)toRead);
                 var read = _stream.Read(buffer);
@@ -206,34 +204,13 @@ namespace FileToolsClasses
 
                 if (lastIndex < 0)
                 {
+                    _currentPosition = current;
                     return (String.Empty, ReadLine.BufferSufficient);
                 }
 
-                ++lastIndex; // Return also the \n character
-
-                if (lastIndex < buffer.Length)
-                {
-                    // We couldn't read a complete line at the end - so position to the last index
-                    long diff = buffer.Length - lastIndex;
-                    _currentPosition -= diff;
-                    if (_currentPosition < 0)
-                    {
-                        // That shouldn't happen ?!
-                        _currentPosition = 0;
-                    }
-
-                    buffer = _localBuffer.AsSpan<byte>().Slice(0, lastIndex);
-                }
+                SetCurrentPositionAndResetBufferIfNeeded(ref buffer, ref lastIndex);
 
                 string result = System.Text.Encoding.Default.GetString(buffer);
-                if (String.IsNullOrEmpty(result) == false)
-                    _currentPosition = _stream.Position;
-
-
-                if (result[result.Length-1] != '\n')
-                {
-                    Console.WriteLine("AHA");
-                }
                 return (result, sizeExceeded);
             }
             catch (Exception e)
@@ -243,8 +220,47 @@ namespace FileToolsClasses
             }
         }
 
+        private void SetCurrentPositionAndResetBufferIfNeeded(ref Span<byte> buffer, ref int lastIndex)
+        {
+            ++lastIndex; // Return also the \n character
 
+            if (lastIndex < buffer.Length)
+            {
+                // We couldn't read a complete line at the end - so position to the last index
+                _currentPosition += lastIndex;
+                if (_currentPosition < 0)
+                {
+                    // That shouldn't happen ?!
+                    _currentPosition = 0;
+                }
 
+                buffer = _localBuffer.AsSpan<byte>().Slice(0, lastIndex);
+            }
+            else
+                _currentPosition = _stream.Position;
+        }
+
+        private void CheckIfBufferNeedsReallocation(long toRead)
+        {
+            if ((_localBuffer == null) || (_localBuffer.Length < toRead))
+            {
+                _localBuffer = new byte[toRead];
+                _reallocCounter = 0;
+            }
+            else
+            {
+                // Following lines shall prevent a really big buffer of memory to be held forever if not needed
+                if (_localBuffer.Length > (toRead * 2))
+                    ++_reallocCounter;
+                else _reallocCounter = 0;
+                if (_reallocCounter > ReallocAfterXCountsLowerThan50Percent)
+                {
+                    _reallocCounter = 0;
+                    _localBuffer = new byte[toRead];
+                }
+            }
+
+        }
     }
 
 
