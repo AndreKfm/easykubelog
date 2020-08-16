@@ -9,6 +9,7 @@ namespace FileToolsClasses
     public interface IFileSeeker
     {
         string SeekLastLineFromCurrentAndPositionOnStartOfItAndReturnReadLine(IFileStream stream);
+        bool SeekLastLineFromCurrentAndPositionOnStartOfIt(IFileStream stream);
     }
 
     public class FileSeeker : IFileSeeker
@@ -81,7 +82,7 @@ namespace FileToolsClasses
             stream.Seek(position, SeekOrigin.Begin);
         }
 
-        public string SeekLastLineFromCurrentAndPositionOnStartOfItAndReturnReadLine(IFileStream stream)
+        public bool SeekLastLineFromCurrentAndPositionOnStartOfIt(IFileStream stream)
         {
             int steps = 80;
 
@@ -91,13 +92,12 @@ namespace FileToolsClasses
             if (found1 == false)
             {
                 if (pos1 == 0)
-                    return null; // We cannot differentiate between String.Empty nothing found and String.Empty = empty log 
+                    return false; // We cannot differentiate between String.Empty nothing found and String.Empty = empty log 
                                  // (though by definition right now a log is not empty) but to prevent errors just return null == nothing found
-                return String.Empty; // No line feed found - so no line yet
+                return false; // No line feed found - so no line yet
             }
 
             var found2 = SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(stream, steps);
-
 
             if (found2)
             {
@@ -108,6 +108,14 @@ namespace FileToolsClasses
             // We found one LF but not another one - so there is only one line 
             // -> we can read this line if we position to the begin of the file
             else SetPosition(stream, 0);
+
+            return true;
+        }
+
+        public string SeekLastLineFromCurrentAndPositionOnStartOfItAndReturnReadLine(IFileStream stream)
+        {
+            if (!SeekLastLineFromCurrentAndPositionOnStartOfIt(stream))
+                return null;
 
             var current = stream.Position;
 

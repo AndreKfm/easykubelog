@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,6 +29,17 @@ namespace LogSimulator
             _tokenSource = null;
         }
 
+        Random _rand = new Random();
+        private string CreateRandomString(int len)
+        {
+            var builder = new StringBuilder(len);
+            for (int i = 0; i < len; ++i)
+            {
+                builder.Append((char)_rand.Next('A', 'Z'));
+            }
+            return builder.ToString();
+        }
+
         private void CreateLogentries(CancellationToken token, int delayInMilliseconds = 0)
         {
             int index = 0;
@@ -39,13 +51,13 @@ namespace LogSimulator
             while (token.IsCancellationRequested == false)
             {
                 DateTime time = DateTime.Now;
-                string message = $"{++index}  :  {Guid.NewGuid()}";
+                string message = $"{++index}  :  {Guid.NewGuid()}  {CreateRandomString(40)}";
                 string stream = streams[r.Next(0, 2)];
                 string logContent = $"{{\"log\":\"{message}\\n\",\"stream\":\"{stream}\",\"time\":\""+
                                     $"{time.Year}-{time.Month}-{time.Day}T{time.ToLongTimeString()}."+
-                                    $"{time.Ticks * 100L % 1000000000L + (long)r.Next(0, 10)}Z\"}}\n";
+                                    $"{time.Ticks * 100L % 1000000000L }Z\"}}\n";
                 File.AppendAllText(_fileName, logContent);
-                System.Console.WriteLine($"[{index}] Written content to file {_fileName}");
+                System.Console.WriteLine($"[{index}] Written content to file {_fileName} {logContent}");
                 if (fi.Length > MaxFileSize)
                     File.Delete(_fileName);
                 if (delayInMilliseconds > 0)

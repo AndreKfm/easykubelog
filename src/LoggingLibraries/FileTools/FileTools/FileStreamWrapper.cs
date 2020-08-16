@@ -8,6 +8,10 @@ namespace FileToolsClasses
 
     public class FileStreamWrapper : IFileStream, IFileStreamWriter
     {
+        FileStream _stream;
+        FileStreamReader _reader;
+        FileSeeker _seeker = new FileSeeker();
+
         public FileStreamWrapper(string path, FileMode mode, FileAccess access, FileShare share)
         {
             _stream = new FileStream(path, mode, access, share);
@@ -17,9 +21,6 @@ namespace FileToolsClasses
         {
             _stream = assignStreamToThisClass;
         }
-
-        FileStream _stream;
-        FileStreamReader _reader;
 
         public long Position { get => _stream.Position; set => _stream.Position = value; }
 
@@ -46,49 +47,6 @@ namespace FileToolsClasses
             return _stream.Read(buffer);
         }
 
-        bool SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(int steps)
-        {
-            Span<byte> buffer = new byte[steps];
-            var initial = _stream.Position;
-            for (; ; )
-            {
-                var current = _stream.Position;
-                if (current == 0)
-                {
-                    break;
-                }
-                int toRead = steps;
-                if (toRead > current)
-                {
-                    toRead = (int)current;
-                    buffer = buffer.Slice(0, steps);
-                }
-                SetPositionRelative(-toRead);
-                var currendMidPos0 = _stream.Position;
-                int size = _stream.Read(buffer);
-                var currentMidPos = _stream.Position;
-                if (size != steps)
-                {
-                    // That shouldn't happen ???
-                    break;
-                }
-
-                int index = buffer.LastIndexOf((byte)'\n');
-                if (index >= 0)
-                {
-                    var posBefore = _stream.Position;
-                    var newPos = toRead - index;
-                    SetPositionRelative(-newPos);
-                    var pos = _stream.Position;
-                    return true;
-                }
-                SetPositionRelative(-toRead); // Continue with next characters
-            }
-
-            SetPosition(initial);
-            return false;
-
-        }
 
         bool SetPositionRelative(long offset)
         {
@@ -105,31 +63,7 @@ namespace FileToolsClasses
 
         public bool SeekLastLineFromCurrentAndPositionOnStartOfIt()
         {
-            int steps = 80;
-
-            var pos1 = _stream.Position;
-
-            var found1 = SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(steps);
-            if (found1 == false)
-                return false; // No line feed found - so no line yet
-            var pos2 = _stream.Position;
-
-            var found2 = SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(steps);
-
-            var pos3 = _stream.Position;
-
-            if (found2)
-            {
-                // Ok we found a second linefeed - so one character after will be the start of our line
-                SetPositionRelative(1);
-                var pos4 = _stream.Position;
-                return true;
-            }
-
-            // We found one LF but not another one - so there is only one line 
-            // -> we can read this line if we position to the begin of the file
-            SetPosition(0);
-            return true;
+            return _seeker.SeekLastLineFromCurrentAndPositionOnStartOfIt(this);
         }
 
         public IFileStreamReader GetStreamReader()
@@ -162,7 +96,7 @@ namespace FileToolsClasses
             _stream = null;
         }
 
-        public string ReadLineFromCurrentPositionToEnd(long maxStringSize = 65536 * 4)
+        public string ReadLineFromCurrentPositionToEnd(long maxStringSize)
         {
             var result = InternalReadLineFromCurrentPositionToEnd(maxStringSize);
             if (String.IsNullOrEmpty(result))
@@ -205,13 +139,16 @@ namespace FileToolsClasses
                 long maxToRead = _stream.Length - current;
                 long toRead = maxToRead;
                 if (toRead > maxStringSize)
+                {
                     toRead = maxStringSize;
+                }
                 if (toRead <= 0)
                     return String.Empty;
 
                 if ((_localBuffer == null) || (_localBuffer.Length != toRead))
                 {
                     _localBuffer = new byte[toRead];
+                    Console.WriteLine($"Realloc: [{toRead}]");
                 }
 
                 var buffer = _localBuffer;

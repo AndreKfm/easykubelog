@@ -25,10 +25,10 @@ namespace FileToolsClasses
 
     public interface IFile
     {
-        string ReadLineFromCurrentPositionToEnd(long maxStringSize = 16384); // Read all data as string from current position to the last occurence
-                                                                                    // of '\n'. If '\n' is not found the whole string will be returned if maxStringSize
-                                                                                    // has been reached - otherwise an empty string will be returned and more data
-                                                                                    // on the next call if '\n' is found
+        string ReadLineFromCurrentPositionToEnd(long maxStringSize = 256000); // Read all data as string from current position to the last occurence
+                                                                              // of '\n'. If '\n' is not found the whole string will be returned if maxStringSize
+                                                                              // has been reached - otherwise an empty string will be returned and more data
+                                                                              // on the next call if '\n' is found
     }
     public interface IFileStream : IDisposable
     {

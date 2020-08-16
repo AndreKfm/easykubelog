@@ -57,6 +57,10 @@ namespace WatcherFileListClasses
         Task _current;
         AutoCurrentFileListSettings _settings;
         FileDirectoryWatcherSettings _settingsFileWatcher;
+        const int MaxFileChanges = 16384;
+        Channel<FileTask> _channel;
+        Channel<NewOutput> _channelNewOutput;
+
 
         public AutoCurrentFileList(IOptions<FileDirectoryWatcherSettings> settingsFileWatcher, IOptions<AutoCurrentFileListSettings> settings = null, IGetFile openFile = null)
         {
@@ -119,9 +123,6 @@ namespace WatcherFileListClasses
             public readonly string LastError;
         }
 
-        const int MaxFileChanges = 16384;
-        Channel<FileTask> _channel;
-        Channel<NewOutput> _channelNewOutput;
 
         private void Error(string error)
         {
@@ -185,6 +186,7 @@ namespace WatcherFileListClasses
                 var newOutput = await ReadAsyncNewOutput();
                 Trace.TraceInformation($"Reading and forwarding changes [{newOutput.FileName}] - [{newOutput.Lines}]");
 
+                Console.WriteLine($"FORWARDING: {newOutput.Lines}");
                 callback(newOutput, _source.Token);
                 //if (callback(newOutput, _source.Token) != ReadAsyncOperation.ContinueRead)
                 //  break; // Cancelled by external callee
@@ -226,7 +228,7 @@ namespace WatcherFileListClasses
                                     file = value.CurrentFile;
                                 }
 
-                                string content = file.ReadLineFromCurrentPositionToEnd();
+                                string content = file.ReadLineFromCurrentPositionToEnd(_settingsFileWatcher.MaxContentLenghtToForwardForEachScanInBytes);
                                 
                                 //Console.WriteLine($"### UpDATE {op.FileName}  {content}");
                                 if (!_channelNewOutput.Writer.TryWrite(new NewOutput(content, op.FileName, op.LastError)))
