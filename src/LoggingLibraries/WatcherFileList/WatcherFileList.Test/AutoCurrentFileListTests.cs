@@ -29,9 +29,9 @@ namespace WatcherFileListClasses.Test
         public class MockFileWrapper : IFile
         {
             
-            public string ReadLineFromCurrentPositionToEnd(long maxStringSize = 16384)
+            public (string, ReadLine) ReadLineFromCurrentPositionToEnd(long maxStringSize = 16384)
             {
-                return CurrentOutput;
+                return (CurrentOutput, ReadLine.BufferSufficient);
             }
             public string CurrentOutput { get; set; } = String.Empty;
         }

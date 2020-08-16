@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace FileToolsClasses
@@ -96,10 +97,41 @@ namespace FileToolsClasses
             _stream = null;
         }
 
-        public string ReadLineFromCurrentPositionToEnd(long maxStringSize)
+
+
+        // Will be used for unit testing only - since Moq cannot handle Span<byte>
+        public string FOR_UNIT_TEST_SLOW_FUNCTION_ReadLineCharByCharTillCRLF()
+        {
+            if (_stream == null)
+                return String.Empty;
+
+            string result = String.Empty;
+            byte[] buf = new byte[1];
+            int index = 0;
+            var pos = _stream.Position; 
+            for (; ; )
+            {
+                if (_stream.Read(buf) != 1)
+                    return String.Empty;
+                var c = buf[0];
+
+                if ((c == '\n') || (c == '\r'))
+                    break;
+                ++index; 
+            }
+
+            buf = new byte[index];
+            _stream.Seek(pos, SeekOrigin.Begin);
+            if (_stream.Read(buf) != index)
+                return String.Empty;
+            string complete = System.Text.Encoding.Default.GetString(buf);
+            return complete;
+        }
+
+        public (string line, ReadLine sizeExceeded) ReadLineFromCurrentPositionToEnd(long maxStringSize)
         {
             var result = InternalReadLineFromCurrentPositionToEnd(maxStringSize);
-            if (String.IsNullOrEmpty(result))
+            if (String.IsNullOrEmpty(result.line))
             {
                 if (_stream != null)
                 {
@@ -112,11 +144,14 @@ namespace FileToolsClasses
         byte[] _localBuffer; // We hold the buffer in a local variable for reuse - since we don't
                              // want to have the GC to do that much
 
-
-        public string InternalReadLineFromCurrentPositionToEnd(long maxStringSize)
+        int _reallocCounter = 0;
+        int ReallocAfterXCountsLowerThan50Percent = 20; // If a smaller buffer would have reallocated for 20 times - then assume
+                                                        // we have allocated a really big one and free it again
+        public (string line, ReadLine sizeExceeded) InternalReadLineFromCurrentPositionToEnd(long maxStringSize)
         {
             try
             {
+                ReadLine sizeExceeded = ReadLine.BufferSufficient;
                 if (_stream == null)
                 {
                     _stream = new FileStreamWrapper(_fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
@@ -127,7 +162,7 @@ namespace FileToolsClasses
 
                     var foundLine = _stream.SeekLastLineFromCurrentAndPositionOnStartOfIt();
                     if (!foundLine)
-                        return String.Empty; // There is no line feed - that is by definition wrong - so let's what has been written
+                        return (String.Empty, ReadLine.BufferSufficient); // There is no line feed - that is by definition wrong - so let's what has been written
                     _currentPosition = _stream.Position;
                 }
                 else
@@ -141,28 +176,41 @@ namespace FileToolsClasses
                 if (toRead > maxStringSize)
                 {
                     toRead = maxStringSize;
+                    sizeExceeded = ReadLine.ReadLineContentExceedsSize;
                 }
                 if (toRead <= 0)
-                    return String.Empty;
+                    return (String.Empty, ReadLine.BufferSufficient);
 
-                if ((_localBuffer == null) || (_localBuffer.Length != toRead))
+                if ((_localBuffer == null) || (_localBuffer.Length < toRead))
                 {
                     _localBuffer = new byte[toRead];
-                    Console.WriteLine($"Realloc: [{toRead}]");
+                    _reallocCounter = 0;
+                }
+                else
+                {
+                    // Following lines shall prevent a really big buffer of memory to be held forever if not needed
+                    if (_localBuffer.Length > (toRead * 2))
+                        ++_reallocCounter;
+                    else _reallocCounter = 0;
+                    if (_reallocCounter > ReallocAfterXCountsLowerThan50Percent)
+                    {
+                        _reallocCounter = 0;
+                        _localBuffer = new byte[toRead];
+                    }
                 }
 
-                var buffer = _localBuffer;
+                Span<byte> buffer = _localBuffer.AsSpan<byte>().Slice(0, (int)toRead);
                 var read = _stream.Read(buffer);
 
-                var lastIndex = Array.LastIndexOf<byte>(buffer, (byte)'\n');
+                var lastIndex = buffer.LastIndexOf((byte)'\n');
 
                 if (lastIndex < 0)
                 {
-                    return String.Empty;
+                    return (String.Empty, ReadLine.BufferSufficient);
                 }
 
                 ++lastIndex; // Return also the \n character
-                string result = System.Text.Encoding.Default.GetString(buffer, 0, lastIndex);
+                string result = System.Text.Encoding.Default.GetString(buffer);
                 if (String.IsNullOrEmpty(result) == false)
                     _currentPosition = _stream.Position;
 
@@ -179,12 +227,12 @@ namespace FileToolsClasses
 
                 }
 
-                return result;
+                return (result, sizeExceeded);
             }
             catch (Exception e)
             {
                 Console.Error.Write(e.Message);
-                return String.Empty;
+                return (String.Empty, ReadLine.BufferSufficient);
             }
         }
 

@@ -92,7 +92,7 @@ namespace WatcherFileListClasses.Test
 
                 m.Setup(x => x.Read(It.IsAny<byte[]>())).Callback((byte[] buffer) => {
                     bytesRead = Read(buffer);
-                    position = position + bytesRead;
+                    //position = position + bytesRead;
                 }).Returns(() => { return bytesRead; });
                 FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", m.Object);
 
@@ -134,19 +134,31 @@ namespace WatcherFileListClasses.Test
             int Read(byte[] buffer)
             {
                 var bytes = UTF8Encoding.UTF8.GetBytes(ReturnString);
-                if (buffer.Length < bytes.Length)
+                //if (buffer.Length < bytes.Length)
+                //    return 0;
+
+                if (bytes.Length < (buffer.Length+position))
                     return 0;
-                bytes.AsSpan<byte>().CopyTo(buffer);
-                bytesRead = bytes.Length;
+
+                for (int i = 0; i < buffer.Length; ++i)
+                {
+                    buffer[i] = bytes[i + position];
+                }
+
+                bytesRead = buffer.Length;
+                position += bytesRead;
                 return bytesRead;
             }
 
-            public void WriteReadCheck(string input, string expected, int maxSize = 16384)
+            public void WriteReadCheck(string input, string expected, bool autoAppend = true, int maxSize = 16384)
             {
+                if (autoAppend) input += Environment.NewLine;
                 var fileStream = Object();
                 FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
-                ReturnString = input; var line = w.ReadLineFromCurrentPositionToEnd(maxSize);
-                Assert.Equal(expected, line);
+                ReturnString = input;
+                var read = w.FOR_UNIT_TEST_SLOW_FUNCTION_ReadLineCharByCharTillCRLF();
+                Assert.Equal(expected, read);
+                fileStream.Seek(0, SeekOrigin.Begin); // Reset
             }
 
         }
@@ -160,10 +172,10 @@ namespace WatcherFileListClasses.Test
             var fileStream = f.Object();
             FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
 
-            string input = "hello world\r\n";
+            string input = "hello world";
             f.WriteReadCheck(input, input);
 
-            f.WriteReadCheck("\r\n", "\r\n");
+            f.WriteReadCheck("", "");
 
         }
 
@@ -175,11 +187,10 @@ namespace WatcherFileListClasses.Test
             var fileStream = f.Object();
             FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
 
-            string input = "hello worldöäüÖÄÜß你好，世界\r\n";
+            string input = "hello worldöäüÖÄÜß你好，世界";
             f.WriteReadCheck(input, input);
-            f.WriteReadCheck("\r\n", "\r\n");
-            f.WriteReadCheck("\n\r", "\n");
-
+            f.WriteReadCheck("\r\n", "");
+            f.WriteReadCheck("\n", "");
         }
 
         [Fact]
@@ -187,11 +198,11 @@ namespace WatcherFileListClasses.Test
         {
             FileStreamHelper f = new FileStreamHelper();
 
-            f.WriteReadCheck("hello world\r", String.Empty);
-            f.WriteReadCheck("hello world", String.Empty);
-            f.WriteReadCheck("", String.Empty);
-            f.WriteReadCheck("              ", String.Empty);
-            f.WriteReadCheck("\r", String.Empty);
+            f.WriteReadCheck("hello world\r", "hello world", false);
+            f.WriteReadCheck("hello world\r\n", "hello world", false);
+            f.WriteReadCheck("", String.Empty, false);
+            f.WriteReadCheck("              ", String.Empty, false);
+            f.WriteReadCheck("", String.Empty, false);
 
         }
 
@@ -203,10 +214,10 @@ namespace WatcherFileListClasses.Test
             var fileStream = f.Object();
             FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
 
-            string input = "h1\r\nhello world\r\n";
-            f.WriteReadCheck(input, input);
+            string returnStringX = "h1";
+            string input = "\r\nh1\r\nhello world\r\n";
+            f.WriteReadCheck(input, String.Empty);
 
-            string returnStringX = "h1\r\n";
             input = "h1\r\nhello world";
             f.WriteReadCheck(input, returnStringX);
         }
@@ -220,9 +231,7 @@ namespace WatcherFileListClasses.Test
             FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
 
             string bigInput = new String((char)65, 65536);
-            bigInput += "\r\n";
-            f.WriteReadCheck(bigInput, String.Empty);
-            f.WriteReadCheck(bigInput, bigInput, bigInput.Length);
+            f.WriteReadCheck(bigInput, bigInput, true, bigInput.Length);
         }
 
 

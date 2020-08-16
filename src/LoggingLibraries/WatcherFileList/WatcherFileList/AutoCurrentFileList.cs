@@ -186,7 +186,6 @@ namespace WatcherFileListClasses
                 var newOutput = await ReadAsyncNewOutput();
                 Trace.TraceInformation($"Reading and forwarding changes [{newOutput.FileName}] - [{newOutput.Lines}]");
 
-                Console.WriteLine($"FORWARDING: {newOutput.Lines}");
                 callback(newOutput, _source.Token);
                 //if (callback(newOutput, _source.Token) != ReadAsyncOperation.ContinueRead)
                 //  break; // Cancelled by external callee
@@ -228,12 +227,23 @@ namespace WatcherFileListClasses
                                     file = value.CurrentFile;
                                 }
 
-                                string content = file.ReadLineFromCurrentPositionToEnd(_settingsFileWatcher.MaxContentLenghtToForwardForEachScanInBytes);
-                                
-                                //Console.WriteLine($"### UpDATE {op.FileName}  {content}");
-                                if (!_channelNewOutput.Writer.TryWrite(new NewOutput(content, op.FileName, op.LastError)))
+                                int maxLoop = 1000; // Just to play it safe if something severly gone wrong -> thousand read calls should be enough 
+
+                                for (; ; )
                                 {
-                                    Error($"AutoCurrentFileList.ReadChannel - error: write to callback for new outputs failed: {op.FileName}:prev error:{op.LastError}:{content}");
+
+                                    (string content, ReadLine sizeExceeded)
+                                        = file.ReadLineFromCurrentPositionToEnd(_settingsFileWatcher.MaxContentLenghtToForwardForEachScanInBytes);
+
+
+                                    //Console.WriteLine($"### UpDATE {op.FileName}  {content}");
+                                    if (!_channelNewOutput.Writer.TryWrite(new NewOutput(content, op.FileName, op.LastError)))
+                                    {
+                                        Error($"AutoCurrentFileList.ReadChannel - error: write to callback for new outputs failed: {op.FileName}:prev error:{op.LastError}:{content}");
+                                    }
+
+                                    if (sizeExceeded == ReadLine.BufferSufficient || (--maxLoop <= 0))
+                                        break;
                                 }
 
                                 break;
