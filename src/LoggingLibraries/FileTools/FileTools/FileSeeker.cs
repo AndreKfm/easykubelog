@@ -89,7 +89,12 @@ namespace FileToolsClasses
 
             var found1 = SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(stream, steps);
             if (found1 == false)
+            {
+                if (pos1 == 0)
+                    return null; // We cannot differentiate between String.Empty nothing found and String.Empty = empty log 
+                                 // (though by definition right now a log is not empty) but to prevent errors just return null == nothing found
                 return String.Empty; // No line feed found - so no line yet
+            }
 
             var found2 = SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(stream, steps);
 
@@ -132,6 +137,9 @@ namespace FileToolsClasses
                     result += System.Text.Encoding.Default.GetString(_buffer);
             }
             SetPosition(stream, current); // Reset so we will read the next line backwards on the next call
+            if (current == 0 && result == String.Empty)
+                return null; // We cannot differentiate between String.Empty nothing found and String.Empty = empty log 
+                             // (though by definition right now a log is not empty) but to prevent errors just return null == nothing found
             return result;
         }
     }
