@@ -318,10 +318,11 @@ namespace EndlessFileStreamClasses
 
         public EndlessFileStreamIO(string baseDirectory,
                                    long maxLogFileSizeInMBytes = 1024,
+                                   long maxLogFileSizeInKByte = 0, 
+                                   int splitIntoCountFiles = 4,
                                    IEndlessFileStreamFileList fileList = null,
                                    IEndlessFileStreamFileListOperations fileOperations = null,
-                                   IEndlessFileStreamNames fileNames = null,
-                                   int splitIntoCountFiles = 4)
+                                   IEndlessFileStreamNames fileNames = null)
         {
             _baseDirectory = baseDirectory;
 
@@ -341,7 +342,7 @@ namespace EndlessFileStreamClasses
             _fileList = fileList ?? new EndlessFileStreamFileList(splitIntoCountFiles, _baseDirectory, _fileOperations, _fileNames);
             if (splitIntoCountFiles <= 0)
                 throw new ArgumentException($"Invalid number of files to split logfile into: {splitIntoCountFiles}");
-            _maxLogFileSizeInBytesEachFile = maxLogFileSizeInMBytes * 1024 * 1024 / splitIntoCountFiles;
+            _maxLogFileSizeInBytesEachFile = (maxLogFileSizeInMBytes * 1024 * 1024 + maxLogFileSizeInKByte) / splitIntoCountFiles;
         }
 
         static void DisposeAndSetToNull<T>(ref T stream) where T : IDisposable
@@ -495,6 +496,8 @@ namespace EndlessFileStreamClasses
         
         public string BaseDirectory { get; set; }
         public long MaxLogFileSizeInMByte { get; set; } = 1024;
+        public int NumberOfLogFilesToUseForCentralDatabase { get; set; }
+        public int MaxLogFileSizeInKByte { get; set; } = 0;
     }
 
     public class EndlessFileStream : IDisposable
@@ -510,7 +513,10 @@ namespace EndlessFileStreamClasses
                                  IEndlessFileStreamIO io = null)
         {
             _settings = settings;
-            _io = io ?? new EndlessFileStreamIO(settings.BaseDirectory, settings.MaxLogFileSizeInMByte);
+            _io = io ?? new EndlessFileStreamIO(settings.BaseDirectory, 
+                                                settings.MaxLogFileSizeInMByte, 
+                                                settings.NumberOfLogFilesToUseForCentralDatabase,
+                                                settings.MaxLogFileSizeInKByte, null, null, null);
             _writer = writer ?? new EndlessFileStreamWriter(_io);
             _reader = reader ?? new EndlessFileStreamReader(_io);
         }
