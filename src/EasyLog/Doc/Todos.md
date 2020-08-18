@@ -6,5 +6,6 @@
 - Filtering by errors
 - Filtering by container
 - Separate log for error messages (deep storage)
+- Search not yet copied logs too (deep log)
 
 

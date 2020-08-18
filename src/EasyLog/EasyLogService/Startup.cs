@@ -144,9 +144,7 @@ namespace EasyLogService
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
-
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -155,8 +153,6 @@ namespace EasyLogService
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/Main");
             });
-
-            //app.AddComponent<App>("app");
 
             // Call ConfigureOwnServices with variable number of arguments automatically resolved by DI
             StartupHelper.RetrieveServicesAndCallMethod(this, "ConfigureOwnServices", app.ApplicationServices);

@@ -417,7 +417,7 @@ namespace EndlessFileStreamClasses
 
         {
             var listToRead = _fileList.GetFileList();
-            var fileList = listToRead.Select(x => x.Value.FileName).ToArray();
+            var fileList = listToRead.Select(x => x.Value.FileName).Reverse().ToArray();
             return FileHelper.ReadFromFileStreamBackwards(fileList, maxLines, this.Open);
         }
 
