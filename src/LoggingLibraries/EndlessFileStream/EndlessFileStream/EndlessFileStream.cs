@@ -496,7 +496,7 @@ namespace EndlessFileStreamClasses
         
         public string BaseDirectory { get; set; }
         public long MaxLogFileSizeInMByte { get; set; } = 1024;
-        public int NumberOfLogFilesToUseForCentralDatabase { get; set; }
+        public int NumberOfLogFilesToUseForCentralDatabase { get; set; } = 4;
         public int MaxLogFileSizeInKByte { get; set; } = 0;
     }
 
@@ -514,9 +514,10 @@ namespace EndlessFileStreamClasses
         {
             _settings = settings;
             _io = io ?? new EndlessFileStreamIO(settings.BaseDirectory, 
-                                                settings.MaxLogFileSizeInMByte, 
+                                                settings.MaxLogFileSizeInMByte,
+                                                settings.MaxLogFileSizeInKByte,
                                                 settings.NumberOfLogFilesToUseForCentralDatabase,
-                                                settings.MaxLogFileSizeInKByte, null, null, null);
+                                                null, null, null);
             _writer = writer ?? new EndlessFileStreamWriter(_io);
             _reader = reader ?? new EndlessFileStreamReader(_io);
         }

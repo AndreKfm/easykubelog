@@ -81,6 +81,8 @@ namespace EasyLogService.Services.CentralLogService
 
                     var newEntry = await _logEntryChannel.Reader.ReadAsync();
 
+                    if (token.IsCancellationRequested)
+                        break;
 
                     //Trace.TraceInformation($"CentralLogService add log entry to cache: [{newEntry.FileName}] - [{newEntry.Lines}]");
                     _cache.AddEntry(newEntry);
@@ -96,6 +98,8 @@ namespace EasyLogService.Services.CentralLogService
         {
             try
             {
+                if (_source.Token.IsCancellationRequested)
+                    return false;
                 return _logEntryChannel.Writer.TryWrite(newEntry);
             }
             catch(Exception e)

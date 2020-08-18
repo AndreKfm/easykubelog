@@ -245,7 +245,9 @@ namespace DirectoryWatcher
             {
                 try
                 {
-                    await Task.Delay(scanMs);
+                    await Task.Delay(scanMs, token);
+                    if (token.IsCancellationRequested)
+                        break;
                     if (callbackAndFilter.ActionScanning != null)
                         callbackAndFilter.ActionScanning(this);
                     Trace.TraceInformation($"Scanning now directory: {_settings.ScanDirectory}");
