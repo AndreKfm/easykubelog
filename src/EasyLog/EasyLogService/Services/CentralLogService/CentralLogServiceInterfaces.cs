@@ -1,7 +1,5 @@
 ﻿using LogEntries;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace EasyLogService.Services.CentralLogService
@@ -35,7 +33,7 @@ namespace EasyLogService.Services.CentralLogService
     public interface ICache<Key, Value> : IDisposable
     {
         void Add(Key key, Value value);
-        void Flush(); 
+        void Flush();
         KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to);
     }
 

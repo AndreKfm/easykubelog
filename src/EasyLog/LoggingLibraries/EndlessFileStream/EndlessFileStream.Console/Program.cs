@@ -1,18 +1,7 @@
 ﻿using EndlessFileStreamClasses;
 using FileToolsClasses;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.Intrinsics.X86;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FileArrayConsole
@@ -79,7 +68,7 @@ namespace FileArrayConsole
             //EndlessFileStreamBuilder b = new EndlessFileStreamBuilder(); b.GenerateEndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\endless" }, @"C:\temp\var\log\pods");
             EndlessFileStreamBuilder b = new EndlessFileStreamBuilder(); b.GenerateEndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\endless" }, @"c:\test\logs");
 
-            return; 
+            return;
             EndlessFileStream e = new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\endless", MaxLogFileSizeInMByte = 1024 });
             var stream = e.Reader.ReadEntries(FileStreamDirection.Forward, int.MaxValue);
             string search = "gonzo";

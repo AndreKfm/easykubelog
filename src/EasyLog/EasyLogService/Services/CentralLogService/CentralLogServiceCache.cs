@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using EndlessFileStreamClasses;
+﻿using EndlessFileStreamClasses;
 using LogEntries;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace EasyLogService.Services.CentralLogService
 {
@@ -25,23 +25,23 @@ namespace EasyLogService.Services.CentralLogService
         readonly Dictionary<string, int> _fileIndexList = new Dictionary<string, int>();
         readonly ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> _logCache;
         readonly ILogger<CentralLogServiceCache> _logger;
-        int                                     _currentFileIndex = 0;
-        IParser                                 _defaultParser= null;
-        CentralLogServiceCacheSettings          _settings;
+        int _currentFileIndex = 0;
+        IParser _defaultParser = null;
+        CentralLogServiceCacheSettings _settings;
 
-        public CentralLogServiceCache(IOptions<CentralLogServiceCacheSettings> settings, 
-                                      IConfiguration config, 
-                                      ILogger<CentralLogServiceCache> logger, 
-                                      ICache<(DateTimeOffset, int fileIndex), 
+        public CentralLogServiceCache(IOptions<CentralLogServiceCacheSettings> settings,
+                                      IConfiguration config,
+                                      ILogger<CentralLogServiceCache> logger,
+                                      ICache<(DateTimeOffset, int fileIndex),
                                       KubernetesLogEntry> cache = null)
         {
             _settings = settings.Value;
 
-            EndlessFileStreamSettings endlessSettings = 
-                new EndlessFileStreamSettings 
-                { 
-                    BaseDirectory = settings.Value.CentralMasterLogDirectory, 
-                    MaxLogFileSizeInMByte = settings.Value.MaxLogFileSizeInMByte 
+            EndlessFileStreamSettings endlessSettings =
+                new EndlessFileStreamSettings
+                {
+                    BaseDirectory = settings.Value.CentralMasterLogDirectory,
+                    MaxLogFileSizeInMByte = settings.Value.MaxLogFileSizeInMByte
                 };
 
             var endlessStream = new EndlessFileStreamClasses.EndlessFileStream(endlessSettings);
@@ -78,7 +78,7 @@ namespace EasyLogService.Services.CentralLogService
         private void Flush()
         {
             if (_settings.FlushWrite == false)
-                return; 
+                return;
 
             lock (_logCache)
             {
@@ -121,7 +121,7 @@ namespace EasyLogService.Services.CentralLogService
                 Stream = "EASYLOG"
             };
 
-            var dummyEntry = new KubernetesLogEntry { SetLog = log};
+            var dummyEntry = new KubernetesLogEntry { SetLog = log };
 
             _logger.LogError($"Could not write log entry: {dummyEntry.Time} : { logLine }");
 

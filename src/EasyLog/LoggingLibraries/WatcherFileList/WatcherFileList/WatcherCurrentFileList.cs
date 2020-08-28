@@ -1,13 +1,5 @@
 ﻿using FileToolsClasses;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace WatcherFileListClasses
 {

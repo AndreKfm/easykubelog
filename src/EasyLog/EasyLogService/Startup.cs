@@ -1,24 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using EasyLogService.Services;
+using DirectoryWatcher;
+using EasyLogService.Commands;
+using EasyLogService.Services.CentralLogService;
+using EasyLogService.Tool.Simulator;
+using LogEntries;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using WatcherFileListClasses;
-using EasyLogService.Commands;
-using System.IO;
-using System.Linq;
-using EasyLogService.Tool.Simulator;
-using EasyLogService.Services.CentralLogService;
 using Microsoft.Extensions.Logging;
-using LogEntries;
 using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using DirectoryWatcher;
+using System.Threading;
+using System.Threading.Tasks;
+using WatcherFileListClasses;
 
 namespace EasyLogService
 {
@@ -43,7 +40,7 @@ namespace EasyLogService
         {
             _watchCurrentFileList = watchCurrentFileList;
             _centralLogService = centralLogService;
-            _directory =  config["WatchDirectory"];
+            _directory = config["WatchDirectory"];
         }
 
         public void Start()
@@ -94,9 +91,10 @@ namespace EasyLogService
 
 
             services.AddControllers();
+            services.AddOptions();
+
             services.Configure<AutoCurrentFileListSettings>(Configuration.GetSection("AutoCurrentFileListSettings"));
             services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
-            services.AddOptions();
 
             services.Configure<CentralLogServiceCacheSettings>(Configuration.GetSection("CentralLogServiceCacheSettings"));
             services.Configure<FileDirectoryWatcherSettings>(Configuration.GetSection("FileDirectoryWatcherSettings"));
@@ -134,7 +132,6 @@ namespace EasyLogService
         }
 
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace FileToolsClasses
 {
@@ -93,7 +91,7 @@ namespace FileToolsClasses
             {
                 if (pos1 == 0)
                     return false; // We cannot differentiate between String.Empty nothing found and String.Empty = empty log 
-                                 // (though by definition right now a log is not empty) but to prevent errors just return null == nothing found
+                                  // (though by definition right now a log is not empty) but to prevent errors just return null == nothing found
                 return false; // No line feed found - so no line yet
             }
 

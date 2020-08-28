@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using WatcherFileListClasses;
 
@@ -10,7 +9,7 @@ namespace WatcherFileListClasses_TestOnly
 {
     class Program
     {
-        
+
         static void CurrentFileListTest(string directory)
         {
             var settings = Options.Create(new FileDirectoryWatcherSettings());
@@ -40,7 +39,7 @@ namespace WatcherFileListClasses_TestOnly
 
             string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\logtest";
 
-            CurrentFileListTest(directory); return; 
+            CurrentFileListTest(directory); return;
 
             WatcherFileList w = new WatcherFileList(new FileDirectoryWatcherSettings { }, null, 15000);
             w.Start((list) =>

@@ -1,7 +1,4 @@
 using Moq;
-using System;
-using System.IO;
-using System.Linq;
 using Xunit;
 
 namespace DirectoryWatcher.Tests
@@ -52,7 +49,7 @@ namespace DirectoryWatcher.Tests
             FileDirectoryWatcher w = new FileDirectoryWatcher(_settings, watcher.Object);
             w.Open();
             w.Dispose();
-            Assert.Throws<System.NullReferenceException>(() => w.Open());            
+            Assert.Throws<System.NullReferenceException>(() => w.Open());
         }
 
     }

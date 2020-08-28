@@ -21,14 +21,14 @@ namespace WatcherFileListClasses.Test
         [Fact]
         public void SimpleCreate_WithMockedParameter_IGetFile()
         {
-            var m = new Mock<IGetFile>();           
+            var m = new Mock<IGetFile>();
             AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(_settingsFileWatcher, _settingsAutoCurrentFileList, m.Object);
             Assert.True(autoCurrentFileList != null);
         }
 
         public class MockFileWrapper : IFile
         {
-            
+
             public (string, ReadLine) ReadLineFromCurrentPositionToEnd(long maxStringSize = 16384)
             {
                 return (CurrentOutput, ReadLine.BufferSufficient);
@@ -46,7 +46,7 @@ namespace WatcherFileListClasses.Test
             var m = new Mock<IGetFile>();
             var wrapper = new MockFileWrapper();
             m.Setup((x) => x.GetFile(It.IsAny<string>())).Returns(wrapper);
-            
+
             AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(_settingsFileWatcher, _settingsAutoCurrentFileList, m.Object);
 
 

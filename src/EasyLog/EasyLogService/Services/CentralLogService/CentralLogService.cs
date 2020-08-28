@@ -87,9 +87,9 @@ namespace EasyLogService.Services.CentralLogService
                     //Trace.TraceInformation($"CentralLogService add log entry to cache: [{newEntry.FileName}] - [{newEntry.Lines}]");
                     _cache.AddEntry(newEntry);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    Trace.TraceError($"WaitForNewEntriesAndWrite - Exception: {e.Message}"); 
+                    Trace.TraceError($"WaitForNewEntriesAndWrite - Exception: {e.Message}");
                 }
             }
         }
@@ -102,7 +102,7 @@ namespace EasyLogService.Services.CentralLogService
                     return false;
                 return _logEntryChannel.Writer.TryWrite(newEntry);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Trace.TraceError($"AddLogEntry - Exception: {e.Message}");
             }

@@ -1,13 +1,9 @@
-﻿using DirectoryWatcher;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -88,7 +84,7 @@ namespace DirectoryWatcher
             NormalizeFileName = settings.NormalizeFileName;
         }
 
-        public bool AddFileTruncPath(string fileName, DateTime initial = default, long fileLen = long.MinValue) 
+        public bool AddFileTruncPath(string fileName, DateTime initial = default, long fileLen = long.MinValue)
         {
             try
             {
@@ -113,7 +109,7 @@ namespace DirectoryWatcher
                     return true;
                 }
             }
-            catch(Exception) {}
+            catch (Exception) { }
 
             return false;
         }
@@ -173,7 +169,7 @@ namespace DirectoryWatcher
         {
             string[] files = Directory.GetFiles(directory);
             FileList list = new FileList();
-            foreach(var file in files)
+            foreach (var file in files)
             {
                 var fileInfo = new FileInfo(file);
                 try
@@ -275,7 +271,7 @@ namespace DirectoryWatcher
                 var deletedFiles = _diffs.GetDeletedFiles(oldList, newList);
                 ReportChangeType(deletedFiles, token, Report, IFileSystemWatcherChangeType.Deleted);
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 throw;
             }
@@ -283,9 +279,9 @@ namespace DirectoryWatcher
             { }
         }
 
-        private void ReportChangeType(FileListEnum current, 
-                                      CancellationToken token, 
-                                      Action<object, WatcherCallbackArgs> Report, 
+        private void ReportChangeType(FileListEnum current,
+                                      CancellationToken token,
+                                      Action<object, WatcherCallbackArgs> Report,
                                       IFileSystemWatcherChangeType changeType)
         {
             if (token.IsCancellationRequested)
@@ -314,7 +310,7 @@ namespace DirectoryWatcher
             Trace.TraceInformation($"Open directory for scanning: {_settings.ScanDirectory} - scanning period: {_settings.ScanSpeedInSeconds} seconds");
             _tokenSource = new CancellationTokenSource();
             _currentFileSystemWatcher = Task.Factory.StartNew(
-                async () => await PeriodicallyScanDirectory(_tokenSource.Token, callbackAndFilter), 
+                async () => await PeriodicallyScanDirectory(_tokenSource.Token, callbackAndFilter),
                 TaskCreationOptions.LongRunning).Result;
 
             return true;

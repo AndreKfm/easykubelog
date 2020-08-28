@@ -3,13 +3,9 @@ using FileToolsClasses;
 using LogEntries;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
 
 namespace EasyLogService.Services.CentralLogService
 {
@@ -22,7 +18,7 @@ namespace EasyLogService.Services.CentralLogService
         FileStream _file;
         StreamReader _stream;
         StreamWriter _streamWriter;
-        IParser _defaultParser = null; 
+        IParser _defaultParser = null;
 
 
         public FileCache(string fileName)
@@ -106,7 +102,7 @@ namespace EasyLogService.Services.CentralLogService
 
     public class EndlessFileStreamCache : ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry>
     {
-        
+
         EndlessFileStream _stream;
         IParser _defaultParser;
 
@@ -142,7 +138,7 @@ namespace EasyLogService.Services.CentralLogService
 
             return result.ToArray();
         }
-        
+
 
         private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {

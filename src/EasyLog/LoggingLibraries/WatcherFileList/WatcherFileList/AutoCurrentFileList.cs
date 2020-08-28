@@ -63,14 +63,14 @@ namespace WatcherFileListClasses
         public AutoCurrentFileList(IOptions<FileDirectoryWatcherSettings> settingsFileWatcher, IOptions<AutoCurrentFileListSettings> settings = null, IGetFile openFile = null)
         {
             Debug.Assert(settingsFileWatcher != null); // Due to scan base directory this is not allowed
-            _getFile = openFile ?? new GetFileWrapper();            
+            _getFile = openFile ?? new GetFileWrapper();
             _settings = settings?.Value ?? new AutoCurrentFileListSettings();
             _settingsFileWatcher = settingsFileWatcher?.Value ?? new FileDirectoryWatcherSettings();
 
             if (String.IsNullOrEmpty(_settingsFileWatcher.ScanDirectory))
             {
                 Trace.TraceError("AutoCurrentFileList settings files wather is not set - not base directory available - use temp path");
-                _settingsFileWatcher.ScanDirectory = Path.GetTempPath(); 
+                _settingsFileWatcher.ScanDirectory = Path.GetTempPath();
             }
         }
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
 
@@ -90,7 +89,8 @@ namespace WatcherFileListClasses.Test
 
 
 
-                m.Setup(x => x.Read(It.IsAny<byte[]>())).Callback((byte[] buffer) => {
+                m.Setup(x => x.Read(It.IsAny<byte[]>())).Callback((byte[] buffer) =>
+                {
                     bytesRead = Read(buffer);
                     //position = position + bytesRead;
                 }).Returns(() => { return bytesRead; });
@@ -123,11 +123,11 @@ namespace WatcherFileListClasses.Test
 
 
             string returnString;
-            public string ReturnString 
-            { 
-                get { return returnString; } 
-                set { returnString = value; if (fileSize < returnString.Length) fileSize = returnString.Length;  } 
-            } 
+            public string ReturnString
+            {
+                get { return returnString; }
+                set { returnString = value; if (fileSize < returnString.Length) fileSize = returnString.Length; }
+            }
             int bytesRead = 0;
             long fileSize = 1024;
             long position = 0;
@@ -137,7 +137,7 @@ namespace WatcherFileListClasses.Test
                 //if (buffer.Length < bytes.Length)
                 //    return 0;
 
-                if (bytes.Length < (buffer.Length+position))
+                if (bytes.Length < (buffer.Length + position))
                     return 0;
 
                 for (int i = 0; i < buffer.Length; ++i)

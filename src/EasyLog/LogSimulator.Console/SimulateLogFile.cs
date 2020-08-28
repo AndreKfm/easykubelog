@@ -46,7 +46,7 @@ namespace LogSimulator
             int secondOffset = 0;
             int index = 0;
 
-            string[] streams = { "stdout", "stderr"};
+            string[] streams = { "stdout", "stderr" };
             Random r = new Random();
             FileInfo fi = new FileInfo(_fileName);
             File.Delete(_fileName);
@@ -81,7 +81,7 @@ namespace LogSimulator
                     Task.Delay(delayInMilliseconds).Wait();
             }
         }
-        
+
         public void Dispose()
         {
             Stop();
@@ -91,6 +91,6 @@ namespace LogSimulator
         const long MaxFileSize = 1024 * 1024 * 10; // Max file size, if larger the file will be deleted
         CancellationTokenSource _tokenSource = null;
         Task _current;
-        string _fileName; 
+        string _fileName;
     }
 }
