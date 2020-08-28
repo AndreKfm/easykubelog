@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using Xunit;
 
 namespace DirectoryWatcher.Tests
@@ -24,7 +22,7 @@ namespace DirectoryWatcher.Tests
             {
                 list.Add(file, len);
             }
-            return list; 
+            return list;
         }
 
         [Fact]
@@ -36,7 +34,7 @@ namespace DirectoryWatcher.Tests
 
             FileList oldList = BuildFileList(new[] { "a", "b", "c" });
             FileList newList1 = BuildFileList(new[] { "a", "b", "c", "d" });
-            FileList newList2 = BuildFileList(new[] { "a", "b"});
+            FileList newList2 = BuildFileList(new[] { "a", "b" });
 
             var newFiles = m.GetNewFiles(oldList, newList1);
             Assert.True(newFiles.Count() == 1);
@@ -111,7 +109,7 @@ namespace DirectoryWatcher.Tests
             Assert.True(changed.Count(s => s.Key == "b") == 0);
             Assert.True(changed.Count(s => s.Key == "c") == 0);
 
-            
+
             newList1["a"] = 2;
             newList1["b"] = 3;
             changed = m.GetChangedFiles(oldList, newList1);

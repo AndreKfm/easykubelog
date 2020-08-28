@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Xunit;
+﻿using Xunit;
 
 namespace LogEntries.Test
 {
@@ -41,7 +38,7 @@ namespace LogEntries.Test
             Assert.Equal(default, parsed4);
         }
 
-        [Fact] 
+        [Fact]
         public void AutoDetectLogFormat()
         {
             var dockerParser = LogParserAutoDetect.GetAutoParser(LogFormatDocker);

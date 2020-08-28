@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace FileToolsClasses
 {
@@ -25,12 +23,12 @@ namespace FileToolsClasses
 
     public enum ReadLine
     {
-        BufferSufficient, 
+        BufferSufficient,
         ReadLineContentExceedsSize // Will be returned if the internal buffer was too small to read all data
     }
     public interface IFile
     {
-        (string line, ReadLine sizeExceeded) 
+        (string line, ReadLine sizeExceeded)
             ReadLineFromCurrentPositionToEnd(long maxStringSize = 6000); // Read all data as string from current position to the last occurence
                                                                          // of '\n'. If '\n' is not found the whole string will be returned if maxStringSize
                                                                          // has been reached - otherwise an empty string will be returned and more data

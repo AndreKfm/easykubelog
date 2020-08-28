@@ -37,13 +37,13 @@ namespace FileSystemWatcher_TestOnly
                                 Output("!! Cancelled !!");
                                 return;
                             }
-                            else 
+                            else
                             {
                                 Output("## NOT Cancelled ##");
                                 return;
                             }
                         }
-                        catch(Exception)
+                        catch (Exception)
                         {
                             Output("Exception");
                         }
@@ -98,13 +98,13 @@ namespace FileSystemWatcher_TestOnly
             });
 
             FileDirectoryWatcher w = new FileDirectoryWatcher(new FileDirectoryWatcherSettings(directory));
-            w.Open(new FilterAndCallbackArgument(String.Empty, 
+            w.Open(new FilterAndCallbackArgument(String.Empty,
                 (object sender, WatcherCallbackArgs args) =>
                 {
                     Console.WriteLine($"{args.ChangeType} {args.FileName}");
                 }
                 ));
-            
+
 
             //FileSystemWatcher watcher = new FileSystemWatcher(@"C:\test\deleteme\xwatchertest", "*.txt");
 

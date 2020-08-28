@@ -1,11 +1,9 @@
-﻿using System;
+﻿using DirectoryWatcher;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
-using DirectoryWatcher;
 using Xunit;
 
 namespace ManualFileSystemWatcherConsole
@@ -93,7 +91,7 @@ namespace ManualFileSystemWatcherConsole
             Console.WriteLine($"Scan directory: {dir}");
             //SimpleTestCreateNewFile s = new SimpleTestCreateNewFile(); s.TestNewFiles(); return;
 
-            ManualScanPhysicalFileSystemWatcherSettings settings = 
+            ManualScanPhysicalFileSystemWatcherSettings settings =
                 new ManualScanPhysicalFileSystemWatcherSettings { ScanDirectory = dir, ScanSpeedInSeconds = 1 };
             ManualScanPhysicalFileSystemWatcher w = new ManualScanPhysicalFileSystemWatcher(settings);
             w.Open(new FilterAndCallbackArgument(String.Empty, CallbackChanges));

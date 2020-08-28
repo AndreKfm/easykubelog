@@ -1,12 +1,9 @@
-﻿using System;
+﻿using FileToolsClasses;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
-using FileToolsClasses;
 using Xunit;
 
 namespace FileToolsTest

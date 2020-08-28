@@ -3,7 +3,6 @@ using Moq;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Xml.Serialization;
 using Xunit;
 
 namespace WatcherFileListClasses.Test
@@ -34,7 +33,7 @@ namespace WatcherFileListClasses.Test
         [Fact]
         public void FileList_StartWatching_ThenDispose()
         {
-            var callback = new Action<FileListType>((FileListType list) => {});
+            var callback = new Action<FileListType>((FileListType list) => { });
             WatcherFileList w = new WatcherFileList(new FileDirectoryWatcherSettings());
             w.Start(_ => callback(_));
             w.Dispose();

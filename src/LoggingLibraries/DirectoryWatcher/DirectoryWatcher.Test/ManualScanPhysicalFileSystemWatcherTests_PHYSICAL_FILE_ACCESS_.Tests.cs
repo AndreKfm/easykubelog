@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Reflection.Metadata.Ecma335;
 using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace DirectoryWatcher.Tests
@@ -80,7 +78,7 @@ namespace DirectoryWatcher.Tests
         [Fact]
         void TestNewFiles()
         {
-            CreateFileHelper(null, (scanDirectory) => File.Open(TempFileName(scanDirectory, "NewFile1.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite|FileShare.Delete), IFileSystemWatcherChangeType.Created); ;
+            CreateFileHelper(null, (scanDirectory) => File.Open(TempFileName(scanDirectory, "NewFile1.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete), IFileSystemWatcherChangeType.Created); ;
         }
         FileStream OpenFile(string name)
         {
@@ -93,12 +91,12 @@ namespace DirectoryWatcher.Tests
 
             CreateFileHelper(
                 (scanDirectory) => OpenFile(TempFileName(scanDirectory, "NewFile1.txt")),
-                (scanDirectory) => 
-                { 
-                    var file = OpenFile(TempFileName(scanDirectory, "NewFile1.txt")); 
-                    file.WriteByte(65); 
-                    file.Close(); 
-                    return null; 
+                (scanDirectory) =>
+                {
+                    var file = OpenFile(TempFileName(scanDirectory, "NewFile1.txt"));
+                    file.WriteByte(65);
+                    file.Close();
+                    return null;
                 }, IFileSystemWatcherChangeType.Changed); ;
         }
 

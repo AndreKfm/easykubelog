@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DirectoryWatcher
 {
@@ -30,7 +28,7 @@ namespace DirectoryWatcher
 
         public readonly string FileFilter = String.Empty;                   // Specifies the files to watch = String.Empty = all files
         public readonly Action<object, WatcherCallbackArgs> ActionChanges;  // Callback to call on specified changes
-        public readonly Action<object>                      ActionScanning; // If set will be called each time a scan is executed
+        public readonly Action<object> ActionScanning; // If set will be called each time a scan is executed
     }
 
     public class WatcherCallbackArgs

@@ -1,5 +1,3 @@
-using LogEntries;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using Xunit;
@@ -18,7 +16,7 @@ namespace LogEntries.Test
         [Fact]
         public void TestDeserialization()
         {
-            IParser defaultParser = null; 
+            IParser defaultParser = null;
             var lines = InputLines.Split('\n');
             List<KubernetesLogEntry> list = new List<KubernetesLogEntry>();
             foreach (var line in lines)
@@ -75,7 +73,7 @@ namespace LogEntries.Test
         [Fact]
         public void DeserializeContainerNameFromKubernetesLogFromContainerLog()
         {
-            IParser defaultParser = null; 
+            IParser defaultParser = null;
             string name = "kube-apiserver-myserver-2_kube-system_kube-apiserver-1827c8c0196e15c01ed339eac252aa483212dfd1b25ce44d2fca974a954c196b.log";
             string log = @"{ ""log"":"""",""stream"":"""",""time"":""0001-01-01T00:00:00+00:00""}"; // Dummy not needed directly
             var k = KubernetesLogEntry.Parse(ref defaultParser, log, name);

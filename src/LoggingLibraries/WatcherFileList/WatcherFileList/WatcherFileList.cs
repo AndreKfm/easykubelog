@@ -1,16 +1,13 @@
-﻿using System;
+﻿using DirectoryWatcher;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using DirectoryWatcher;
-using Microsoft.Extensions.Options;
 
 namespace WatcherFileListClasses
 {
-    using FileListType = ReadOnlyCollection<FileEntry>;
-
     public class FileEntry
     {
         public string FileName { get; set; }
@@ -18,7 +15,7 @@ namespace WatcherFileListClasses
     }
 
 
-    public class ThrottleCalls :  IDisposable 
+    public class ThrottleCalls : IDisposable
     {
         public ThrottleCalls(Action callbackInit, int throttlingInMilliseconds)
         {
@@ -31,10 +28,10 @@ namespace WatcherFileListClasses
             if (_throttlingInMilliseconds <= 0 || stopwatch == null || stopwatch.ElapsedMilliseconds > _throttlingInMilliseconds)
             {
                 // Initially calldirectly or if stopwatch is elapsed
-                if (_throttlingInMilliseconds > 0) 
+                if (_throttlingInMilliseconds > 0)
                     stopwatch = Stopwatch.StartNew();
                 _callback();
-                return; 
+                return;
             }
 
 
@@ -134,7 +131,7 @@ namespace WatcherFileListClasses
                 _throttleCalls?.Dispose();
                 _watcher?.Dispose();
                 _watcher = null;
-                _currentList = new List<FileEntry>();                
+                _currentList = new List<FileEntry>();
             }
         }
 
@@ -145,7 +142,7 @@ namespace WatcherFileListClasses
                 bool found = false;
                 for (int i = 0; i < _currentList.Count; ++i)
                 {
-                    
+
                     if (_currentList[i].FileName == args.FileName)
                     {
                         _currentList[i].LastChanges |= args.ChangeType;
@@ -156,7 +153,7 @@ namespace WatcherFileListClasses
 
                 if (!found)
                 {
-                    _currentList.Add(new FileEntry {FileName = args.FileName, LastChanges = args.ChangeType });
+                    _currentList.Add(new FileEntry { FileName = args.FileName, LastChanges = args.ChangeType });
                 }
 
                 _throttleCalls.Call();

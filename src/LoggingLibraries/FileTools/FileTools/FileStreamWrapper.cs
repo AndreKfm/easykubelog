@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
-using System.Net.Http.Headers;
-using System.Text;
 
 namespace FileToolsClasses
 {
@@ -118,7 +114,7 @@ namespace FileToolsClasses
             string result = String.Empty;
             byte[] buf = new byte[1];
             int index = 0;
-            var pos = _stream.Position; 
+            var pos = _stream.Position;
             for (; ; )
             {
                 if (_stream.Read(buf) != 1)

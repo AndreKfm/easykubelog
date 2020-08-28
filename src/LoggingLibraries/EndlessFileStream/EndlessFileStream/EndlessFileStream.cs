@@ -4,10 +4,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -318,7 +316,7 @@ namespace EndlessFileStreamClasses
 
         public EndlessFileStreamIO(string baseDirectory,
                                    long maxLogFileSizeInMBytes = 1024,
-                                   long maxLogFileSizeInKByte = 0, 
+                                   long maxLogFileSizeInKByte = 0,
                                    int splitIntoCountFiles = 4,
                                    IEndlessFileStreamFileList fileList = null,
                                    IEndlessFileStreamFileListOperations fileOperations = null,
@@ -331,7 +329,7 @@ namespace EndlessFileStreamClasses
                 if (!Directory.Exists(_baseDirectory))
                     Directory.CreateDirectory(_baseDirectory);
             }
-            catch(Exception)
+            catch (Exception)
             {
 
             }
@@ -405,7 +403,7 @@ namespace EndlessFileStreamClasses
             Writer().WriteLine(line /** Default Encoding.UTF8 */);
             await Writer().FlushAsync();
         }
-            
+
         public IEnumerable<(string filename, string content)> ReadFromFileStream(int maxLines)
 
         {
@@ -493,7 +491,7 @@ namespace EndlessFileStreamClasses
 
     public class EndlessFileStreamSettings
     {
-        
+
         public string BaseDirectory { get; set; }
         public long MaxLogFileSizeInMByte { get; set; } = 1024;
         public int NumberOfLogFilesToUseForCentralDatabase { get; set; } = 4;
@@ -505,7 +503,7 @@ namespace EndlessFileStreamClasses
         IEndlessFileStreamWriter _writer;
         IEndlessFileStreamReader _reader;
         IEndlessFileStreamIO _io;
-        EndlessFileStreamSettings _settings; 
+        EndlessFileStreamSettings _settings;
 
         public EndlessFileStream(EndlessFileStreamSettings settings,
                                  IEndlessFileStreamWriter writer = null,
@@ -513,7 +511,7 @@ namespace EndlessFileStreamClasses
                                  IEndlessFileStreamIO io = null)
         {
             _settings = settings;
-            _io = io ?? new EndlessFileStreamIO(settings.BaseDirectory, 
+            _io = io ?? new EndlessFileStreamIO(settings.BaseDirectory,
                                                 settings.MaxLogFileSizeInMByte,
                                                 settings.MaxLogFileSizeInKByte,
                                                 settings.NumberOfLogFilesToUseForCentralDatabase,
@@ -562,7 +560,7 @@ namespace EndlessFileStreamClasses
 
 
 
-            ConcurrentQueue<(long ticks, IEnumerator<(string filename, string content)> iterator, KubernetesLogEntry k)> queue = 
+            ConcurrentQueue<(long ticks, IEnumerator<(string filename, string content)> iterator, KubernetesLogEntry k)> queue =
                 new ConcurrentQueue<(long ticks, IEnumerator<(string filename, string content)> iterator, KubernetesLogEntry k)>();
             for (; ; )
             {
@@ -637,8 +635,8 @@ namespace EndlessFileStreamClasses
             using EndlessFileStream file = new EndlessFileStream(settings);
             foreach (var s in EnumerateSortedByDateTime(listEnumerator))
             {
-                s.Write((string line) => 
-                { 
+                s.Write((string line) =>
+                {
                     file.Writer.WriteToFileStream(line).Wait(); // It's ok right now here to block 
                     file.Writer.Flush();
                     return Task.CompletedTask;
@@ -655,7 +653,7 @@ namespace EndlessFileStreamClasses
             }
         }
 
-        void  InternalOpenFiles(string baseDirectory, List<IEnumerable<(string filename, string content)>> streams)
+        void InternalOpenFiles(string baseDirectory, List<IEnumerable<(string filename, string content)>> streams)
         {
             AddFilesInDirectory(baseDirectory, streams);
             var dirs = Directory.GetDirectories(baseDirectory);

@@ -35,7 +35,7 @@ namespace EndlessFileStreamClasses.Test
         {
             Count = count;
             _randDir = new RandomDirectory();
-             Endless = new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = _randDir.DirectoryPath, MaxLogFileSizeInMByte = logSizeMBytes, MaxLogFileSizeInKByte = 1 });
+            Endless = new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = _randDir.DirectoryPath, MaxLogFileSizeInMByte = logSizeMBytes, MaxLogFileSizeInKByte = 1 });
 
             for (int l = 0; l < count; ++l)
             {
@@ -104,7 +104,7 @@ namespace EndlessFileStreamClasses.Test
             foreach (var line in entry)
             {
                 if (++i > 100) break;
-                Assert.True(Int32.Parse(line.content)>1000);
+                Assert.True(Int32.Parse(line.content) > 1000);
             }
         }
     }

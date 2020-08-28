@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using C5;
+using LogEntries;
+using System;
 using System.Globalization;
 using System.Linq;
-using System.Security.Cryptography;
-using C5;
-using LogEntries;
 
 namespace EasyLogService.Services.CentralLogService
 {

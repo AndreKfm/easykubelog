@@ -1,9 +1,6 @@
 ﻿using System;
 using System.IO;
 
-using System.Collections.Generic;
-using System.Text;
-
 namespace DirectoryWatcher
 {
     public class PhysicalFileSystemWatcherWrapperSettings
@@ -21,10 +18,10 @@ namespace DirectoryWatcher
     public class PhysicalFileSystemWatcherWrapper : IFileSystemWatcher
     {
         FileSystemWatcher _watcher;
-        PhysicalFileSystemWatcherWrapperSettings _settings; 
+        PhysicalFileSystemWatcherWrapperSettings _settings;
         public PhysicalFileSystemWatcherWrapper(PhysicalFileSystemWatcherWrapperSettings settings)
         {
-            _settings = settings; 
+            _settings = settings;
         }
 
         public void Dispose()

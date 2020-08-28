@@ -1,9 +1,5 @@
 ﻿using System;
-using System.ComponentModel;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -24,7 +20,7 @@ namespace LogEntries
     }
 
 
-    
+
     public interface IParser
     {
         DockerLog ParseLine(string line, string optionalContainerName = default);
@@ -47,7 +43,7 @@ namespace LogEntries
         static public string NormalizeContainerName(string containerName)
         {
             if ((containerName != null))
-            { 
+            {
                 int index = containerName.LastIndexOf('.');
                 if (index > 0)
                 {
@@ -77,12 +73,12 @@ namespace LogEntries
             var stream = line.Substring(indexDateTimeEnd + 1, indexStream - indexDateTimeEnd - 1);
             var log = line.Substring(indexLog + 1);
 
-            return new DockerLog 
-            { 
-                Time = dateTime, 
-                Stream = stream, 
-                Line = log, 
-                Container = DockerLog.NormalizeContainerName(optionalContainerName == default ? String.Empty : optionalContainerName) 
+            return new DockerLog
+            {
+                Time = dateTime,
+                Stream = stream,
+                Line = log,
+                Container = DockerLog.NormalizeContainerName(optionalContainerName == default ? String.Empty : optionalContainerName)
             };
         }
     }
@@ -142,11 +138,11 @@ namespace LogEntries
         {
             if (parser != null && parser.ParseLine(line).Equals(default(DockerLog)) == false)
             {
-                parserOut = parser; 
+                parserOut = parser;
                 return true;
             }
             parserOut = null;
-            return false;            
+            return false;
         }
 
         public static IParser GetAutoParser(string line)
@@ -256,7 +252,7 @@ namespace LogEntries
                 {
                     KubernetesLogEntry k = new KubernetesLogEntry();
                     if (logParser == null)
-                       logParser = LogParserAutoDetect.GetAutoParser(line);
+                        logParser = LogParserAutoDetect.GetAutoParser(line);
                     if (logParser == null)
                         return default;
                     k.log = logParser.ParseLine(line, optionalContainerName);
@@ -281,14 +277,14 @@ namespace LogEntries
             return containerName;
 
         }
-        
+
 
         public void SetContainerName(string container)
         {
             log.Container = DockerLog.NormalizeContainerName(container);
         }
 
-        public bool IsDefault() { return log.Line == default &&  log.Time == default; } // It's enough to check for these 2 entries - then by definition == default
+        public bool IsDefault() { return log.Line == default && log.Time == default; } // It's enough to check for these 2 entries - then by definition == default
 
         DockerLog log;
 

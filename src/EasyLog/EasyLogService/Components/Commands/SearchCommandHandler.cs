@@ -13,7 +13,7 @@ namespace EasyLogService.Commands
         void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed);
     }
 
-    
+
     // Handler for search handler
     internal class SearchCommandHandler : ISearchCommand
     {
@@ -33,7 +33,7 @@ namespace EasyLogService.Commands
         }
     }
 
-    public class SearchRequest 
+    public class SearchRequest
     {
         readonly public string Query;
         readonly public int MaxResults;
