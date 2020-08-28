@@ -2,6 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Company />
+    <Authors>Andre Michael Kaufmann</Authors>
+    <Version>0.0.9</Version>
+    <Description>Simple log aggreating and viewing service for containers</Description>
+    <Copyright>Copyright (c) Andre Michael Kaufmann</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/AndreKfm/easylog</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AndreKfm/easylog</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +25,21 @@
   <ItemGroup>
     <ProjectReference Include="..\..\LoggingLibraries\EndlessFileStream\EndlessFileStream\EndlessFileStream.csproj" />
     <ProjectReference Include="..\..\LoggingLibraries\WatcherFileList\WatcherFileList\WatcherFileLists.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 
