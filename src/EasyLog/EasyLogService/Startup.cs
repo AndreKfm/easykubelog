@@ -91,9 +91,10 @@ namespace EasyLogService
 
 
             services.AddControllers();
+            services.AddOptions();
+
             services.Configure<AutoCurrentFileListSettings>(Configuration.GetSection("AutoCurrentFileListSettings"));
             services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
-            services.AddOptions();
 
             services.Configure<CentralLogServiceCacheSettings>(Configuration.GetSection("CentralLogServiceCacheSettings"));
             services.Configure<FileDirectoryWatcherSettings>(Configuration.GetSection("FileDirectoryWatcherSettings"));
@@ -131,7 +132,6 @@ namespace EasyLogService
         }
 
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
