@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher", "..\LoggingLibraries\DirectoryWatcher\DirectoryWatcher\DirectoryWatcher.csproj", "{0BB230A0-E6D9-4C85-BAC6-864A6F4389F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher", "LoggingLibraries\DirectoryWatcher\DirectoryWatcher\DirectoryWatcher.csproj", "{0BB230A0-E6D9-4C85-BAC6-864A6F4389F0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher.Tests", "..\LoggingLibraries\DirectoryWatcher\DirectoryWatcher.Test\DirectoryWatcher.Tests.csproj", "{D0F45582-5615-4ADB-8847-6049628D18B0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher.Tests", "LoggingLibraries\DirectoryWatcher\DirectoryWatcher.Test\DirectoryWatcher.Tests.csproj", "{D0F45582-5615-4ADB-8847-6049628D18B0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatcherFileLists", "..\LoggingLibraries\WatcherFileList\WatcherFileList\WatcherFileLists.csproj", "{1A4D2EFA-DD92-4423-86F3-F54F87D9566B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatcherFileLists", "LoggingLibraries\WatcherFileList\WatcherFileList\WatcherFileLists.csproj", "{1A4D2EFA-DD92-4423-86F3-F54F87D9566B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatcherFileLists.Test", "..\LoggingLibraries\WatcherFileList\WatcherFileList.Test\WatcherFileLists.Test.csproj", "{ECB4C9A1-D3D9-4825-8A07-0FFC33AA9C9C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatcherFileLists.Test", "LoggingLibraries\WatcherFileList\WatcherFileList.Test\WatcherFileLists.Test.csproj", "{ECB4C9A1-D3D9-4825-8A07-0FFC33AA9C9C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatcherFileList.Console", "..\LoggingLibraries\WatcherFileList\WatcherFileList_TestOnly\WatcherFileList.Console.csproj", "{28EEC84F-4C6D-4423-B978-122E8E731FB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WatcherFileList.Console", "LoggingLibraries\WatcherFileList\WatcherFileList_TestOnly\WatcherFileList.Console.csproj", "{28EEC84F-4C6D-4423-B978-122E8E731FB2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ConsoleTestApps", "ConsoleTestApps", "{9AC1FD91-034B-49F1-947B-CF52C5F826CC}"
 EndProject
@@ -25,9 +25,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LogSimulator", "LogSimulato
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogSimulator.Console", "LogSimulator.Console\LogSimulator.Console.csproj", "{BE808EED-C802-4F7E-B12B-6D05E011E42F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogEntries", "..\LoggingLibraries\LogEntries\LogEntries\LogEntries.csproj", "{E4BAFF94-2EBF-4331-9389-E8DB5B0DBEA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogEntries", "LoggingLibraries\LogEntries\LogEntries\LogEntries.csproj", "{E4BAFF94-2EBF-4331-9389-E8DB5B0DBEA9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogEntries.Test", "..\LoggingLibraries\LogEntries\LogEntries.Test\LogEntries.Test.csproj", "{C4DF0561-6999-4DFD-85B8-D2FF237C4BA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogEntries.Test", "LoggingLibraries\LogEntries\LogEntries.Test\LogEntries.Test.csproj", "{C4DF0561-6999-4DFD-85B8-D2FF237C4BA3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DirectoryWatcher", "DirectoryWatcher", "{DDFF96AD-5C71-45B5-B9A9-37E08330B581}"
 EndProject
@@ -37,21 +37,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LogEntries", "LogEntries", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WatcherFileList", "WatcherFileList", "{544989DF-310B-48E6-8643-AC76BB22F665}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EndlessFileStream.Console", "..\LoggingLibraries\EndlessFileStream\EndlessFileStream.Console\EndlessFileStream.Console.csproj", "{3DDBE528-E683-40B5-9DD0-50050C64ED0A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EndlessFileStream.Console", "LoggingLibraries\EndlessFileStream\EndlessFileStream.Console\EndlessFileStream.Console.csproj", "{3DDBE528-E683-40B5-9DD0-50050C64ED0A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystemWatcher.Console", "..\LoggingLibraries\WatcherFileList\WatcherFileSystemWatcher_TestOnly\FileSystemWatcher.Console.csproj", "{183FF5A8-0F0E-4F21-90FA-B4DD2F8E03DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystemWatcher.Console", "LoggingLibraries\WatcherFileList\WatcherFileSystemWatcher_TestOnly\FileSystemWatcher.Console.csproj", "{183FF5A8-0F0E-4F21-90FA-B4DD2F8E03DF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EndlessFileStream", "..\LoggingLibraries\EndlessFileStream\EndlessFileStream\EndlessFileStream.csproj", "{7BAF8825-7F43-4DC0-B667-C18E289C58CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EndlessFileStream", "LoggingLibraries\EndlessFileStream\EndlessFileStream\EndlessFileStream.csproj", "{7BAF8825-7F43-4DC0-B667-C18E289C58CD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManualFileSystemWatcher.Console", "..\LoggingLibraries\DirectoryWatcher\ManualFileSystemWatcher.Console\ManualFileSystemWatcher.Console.csproj", "{2C2AD434-40EC-4F85-9B1E-0D5E54B95F86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManualFileSystemWatcher.Console", "LoggingLibraries\DirectoryWatcher\ManualFileSystemWatcher.Console\ManualFileSystemWatcher.Console.csproj", "{2C2AD434-40EC-4F85-9B1E-0D5E54B95F86}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FileTools", "FileTools", "{0E0187AF-8401-40BB-982A-B43646A06271}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileTools", "..\LoggingLibraries\FileTools\FileTools\FileTools.csproj", "{688E4FBB-1D18-4487-B405-01B335415EA0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileTools", "LoggingLibraries\FileTools\FileTools\FileTools.csproj", "{688E4FBB-1D18-4487-B405-01B335415EA0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileTools.Test", "..\LoggingLibraries\FileTools\FileTools.Test\FileTools.Test.csproj", "{B29A7024-6DEC-4225-BBD2-8A8FA4943828}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileTools.Test", "LoggingLibraries\FileTools\FileTools.Test\FileTools.Test.csproj", "{B29A7024-6DEC-4225-BBD2-8A8FA4943828}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EndlessFileStream.Test", "..\LoggingLibraries\EndlessFileStream\EndlessFileStream.Test\EndlessFileStream.Test.csproj", "{988091BF-5C37-44EE-A6AF-68CF54176838}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EndlessFileStream.Test", "LoggingLibraries\EndlessFileStream\EndlessFileStream.Test\EndlessFileStream.Test.csproj", "{988091BF-5C37-44EE-A6AF-68CF54176838}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
