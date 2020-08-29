@@ -6,7 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-
+using System.Transactions;
 
 namespace DirectoryWatcher
 {
@@ -232,30 +232,36 @@ namespace DirectoryWatcher
         CancellationTokenSource _tokenSource;
         private async Task PeriodicallyScanDirectory(CancellationToken token, FilterAndCallbackArgument callbackAndFilter)
         {
-            int scanMs = _settings.ScanSpeedInSeconds * 1000;
-            if (scanMs == 0)
-                scanMs = 100;
-            string scanDir = _settings.ScanDirectory;
-            var current = _scanDirectory.Scan(scanDir);
-            while (token.IsCancellationRequested == false)
+            try
             {
-                try
+                int scanMs = _settings.ScanSpeedInSeconds * 1000;
+                if (scanMs == 0)
+                    scanMs = 100;
+                string scanDir = _settings.ScanDirectory;
+                var current = _scanDirectory.Scan(scanDir);
+                while (token.IsCancellationRequested == false)
                 {
-                    await Task.Delay(scanMs, token);
-                    if (token.IsCancellationRequested)
-                        break;
-                    if (callbackAndFilter.ActionScanning != null)
-                        callbackAndFilter.ActionScanning(this);
-                    Trace.TraceInformation($"Scanning now directory: {_settings.ScanDirectory}");
-                    var fileListNew = _scanDirectory.Scan(scanDir);
-                    ReportChanges(current, fileListNew, token, callbackAndFilter);
-                    current = fileListNew;
+                    try
+                    {
+                        await Task.Delay(scanMs, token);
+                        if (token.IsCancellationRequested)
+                            break;
+                        if (callbackAndFilter.ActionScanning != null)
+                            callbackAndFilter.ActionScanning(this);
+                        Trace.TraceInformation($"Scanning now directory: {_settings.ScanDirectory}");
+                        var fileListNew = _scanDirectory.Scan(scanDir);
+                        ReportChanges(current, fileListNew, token, callbackAndFilter);
+                        current = fileListNew;
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.TraceError($"Failed to scan directory: exception [{e.Message}]");
+                    }
                 }
-                catch (Exception e)
-                {
-                    Trace.TraceError($"Failed to scan directory: exception [{e.Message}]");
-                }
-
+            }
+            catch(Exception e)
+            {
+                Trace.TraceError($"Failed to open scan directory: exception [{e.Message}]");
             }
         }
 
@@ -296,12 +302,19 @@ namespace DirectoryWatcher
 
         private void Stop()
         {
-            if (_tokenSource != null && _tokenSource.IsCancellationRequested == false)
-                Trace.TraceInformation($"Stop scanning directory: {_settings.ScanDirectory}");
-            _tokenSource?.Cancel();
-            _currentFileSystemWatcher?.Wait();
-            _currentFileSystemWatcher = null;
-            _tokenSource = null;
+            try
+            {
+                if (_tokenSource != null && _tokenSource.IsCancellationRequested == false)
+                    Trace.TraceInformation($"Stop scanning directory: {_settings.ScanDirectory}");
+                try { _tokenSource?.Cancel(); } catch(Exception) { }
+                _currentFileSystemWatcher?.Wait();
+                _currentFileSystemWatcher = null;
+                _tokenSource = null;
+            }
+            catch(Exception e)
+            {
+                Trace.TraceError($"Exception stopping file watcher {e.Message}");
+            }
         }
 
         public bool Open(FilterAndCallbackArgument callbackAndFilter)

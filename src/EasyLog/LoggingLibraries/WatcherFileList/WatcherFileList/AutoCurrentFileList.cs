@@ -244,7 +244,11 @@ namespace WatcherFileListClasses
                     }
                 }
             }
-            catch (Exception e) { Trace.TraceError($"Error reading channel in AutoCurrentFileList.ReadChannel: [{e.Message}]"); }
+            catch (Exception e) 
+            {
+                
+                Trace.TraceError($"Error reading channel in AutoCurrentFileList.ReadChannel: [{e.GetType()}] [{e.Message}]"); 
+            }
         }
 
         private IFile AddFile(FileTask op)

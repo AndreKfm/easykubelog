@@ -23,4 +23,4 @@ COPY --from=publish /app/publish .
 ENV ASPNETCORE_URLS https://+:5001
 #ENV ASPNETCORE_URLS http://+:5000
 #RUN chmod +x EasyLogService
-ENTRYPOINT ["/app/EasyLogService", "Kestrel:Certificates:Default:Path=/app/Cert/localhost.pfx", "Kestrel:Certificates:Default:Password=easylogservicepassword"]
+ENTRYPOINT ["./EasyLogService", "Kestrel:Certificates:Default:Path=/app/Cert/localhost.pfx", "Kestrel:Certificates:Default:Password=easylogservicepassword"]

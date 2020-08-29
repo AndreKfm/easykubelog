@@ -485,7 +485,7 @@ namespace EndlessFileStreamClasses
 
         public void Flush()
         {
-            _fileIO.Flush();
+            _fileIO.Flush().Wait(); ;
         }
     }
 

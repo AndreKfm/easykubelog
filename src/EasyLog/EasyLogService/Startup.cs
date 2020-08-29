@@ -5,6 +5,7 @@ using EasyLogService.Tool.Simulator;
 using LogEntries;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,6 +20,10 @@ using WatcherFileListClasses;
 
 namespace EasyLogService
 {
+    public class TraceLogging
+    {
+        public bool EnableConsoleTracing { get; set; }
+    }
 
     public interface ICentralLogServiceWatcher
     {
@@ -72,6 +77,7 @@ namespace EasyLogService
 
 
 
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -79,19 +85,33 @@ namespace EasyLogService
             Configuration = configuration;
         }
 
+
+
+
+
         public IConfiguration Configuration { get; }
+
+        private void CheckConsoleTracing()
+        {
+            // Check if console tracing is enabled and add trace listener if set
+            // Will be used only in debuggin scenarios, where more detailed output is needed
+            if (Configuration.GetSection("Logging").Get<TraceLogging>().EnableConsoleTracing == true)
+            {
+                var consoleTracer = new ConsoleTraceListener(true);
+                Trace.Listeners.Add(consoleTracer);
+                consoleTracer.Name = "EasyLogService";
+            }
+        }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var consoleTracer = new ConsoleTraceListener(true);
-            Trace.Listeners.Add(consoleTracer);
-            consoleTracer.Name = "EasyLogService";
 
-
+            CheckConsoleTracing();
 
             services.AddControllers();
             services.AddOptions();
+
 
             services.Configure<AutoCurrentFileListSettings>(Configuration.GetSection("AutoCurrentFileListSettings"));
             services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
