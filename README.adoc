@@ -58,7 +58,7 @@ Easy logging for Kubernetes
 * Import / Export
 * Track last read position - starts always to read from end of logs
 * Query log history (of containers) not copied to central log
-* Documentation on configuration options
+* Further documentation 
 
 == Some notes
 
