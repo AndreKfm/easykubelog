@@ -47,6 +47,8 @@ Easy logging for Kubernetes
 * Demonset - to install on each node - no central yet
 * Docker image and yaml for easy Kubernetes installation 
 * Auto detect log format (Docker / CRI)
+* Simple installation
+* No changes in container source code needed
 
 == What's missing
 
@@ -56,6 +58,7 @@ Easy logging for Kubernetes
 * Import / Export
 * Track last read position - starts always to read from end of logs
 * Query log history (of containers) not copied to central log
+* Documentation on configuration options
 
 == Some notes
 
