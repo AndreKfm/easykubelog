@@ -10,7 +10,7 @@ endif::[]
 
 Easy logging for Kubernetes
 
-[TIP]
+[WARNING]
 *!! Pre-Alpha version so don't use in production !!*
 
 
