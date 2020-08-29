@@ -62,8 +62,8 @@ Easy logging for Kubernetes
 
 == Some notes
 
-EasyLog was written to be easy to use and do nothing more than 
-what it should do track the logs of a Kubernetes cluster, aggregate them 
+EasyLog was written to be easy to use and to do nothing more than 
+what it should do - track the logs of a Kubernetes cluster, aggregate them 
 and enable simple search over that log files. 
 
 Some features are missing and will be added soon. 
