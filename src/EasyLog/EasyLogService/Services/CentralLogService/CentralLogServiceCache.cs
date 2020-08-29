@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using EndlessFileStreamClasses;
+﻿using EndlessFileStreamClasses;
 using LogEntries;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace EasyLogService.Services.CentralLogService
 {
@@ -15,41 +16,40 @@ namespace EasyLogService.Services.CentralLogService
     {
         public string CentralMasterLogDirectory { get; set; }
         public long MaxLogFileSizeInMByte { get; set; } = 1024;
+        public bool FlushWrite { get; set; } = true;
     }
 
 
     public class CentralLogServiceCache : ICentralLogServiceCache
     {
         readonly Dictionary<string, int> _fileIndexList = new Dictionary<string, int>();
-        int _currentFileIndex = 0;
         readonly ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> _logCache;
         readonly ILogger<CentralLogServiceCache> _logger;
+        int _currentFileIndex = 0;
         IParser _defaultParser = null;
+        CentralLogServiceCacheSettings _settings;
 
-        public CentralLogServiceCache(IOptions<CentralLogServiceCacheSettings> settings, 
-                                      IConfiguration config, 
-                                      ILogger<CentralLogServiceCache> logger, 
-                                      ICache<(DateTimeOffset, int fileIndex), 
+        public CentralLogServiceCache(IOptions<CentralLogServiceCacheSettings> settings,
+                                      IConfiguration config,
+                                      ILogger<CentralLogServiceCache> logger,
+                                      ICache<(DateTimeOffset, int fileIndex),
                                       KubernetesLogEntry> cache = null)
         {
-            //_logCache = cache ?? new MemoryCacheTreeDictionary(maxLines);
-            //_logCache = cache ?? new FileCache(@"c:\test\central_test.log", maxLines);
+            _settings = settings.Value;
 
-            EndlessFileStreamSettings endlessSettings = 
-                new EndlessFileStreamSettings 
-                { 
-                    BaseDirectory = settings.Value.CentralMasterLogDirectory, 
-                    MaxLogFileSizeInMByte = settings.Value.MaxLogFileSizeInMByte 
+            EndlessFileStreamSettings endlessSettings =
+                new EndlessFileStreamSettings
+                {
+                    BaseDirectory = settings.Value.CentralMasterLogDirectory,
+                    MaxLogFileSizeInMByte = settings.Value.MaxLogFileSizeInMByte
                 };
 
             var endlessStream = new EndlessFileStreamClasses.EndlessFileStream(endlessSettings);
             _logCache = cache ?? new EndlessFileStreamCache(endlessStream);
-            //_logCache = cache ?? new FileCache(@"c:\test\central.log", maxLines);
             _logger = logger;
         }
 
 
-        //readonly TreeDictionary<(DateTimeOffset time, int fileIndex), KubernetesLogEntry> _logCache = new TreeDictionary<(DateTimeOffset time, int fileIndex), KubernetesLogEntry>();
         public void AddEntry(LogEntry entry)
         {
             if (entry.FileName.StartsWith("kube-system"))
@@ -58,20 +58,31 @@ namespace EasyLogService.Services.CentralLogService
                 return;
             }
             var lines = entry.Lines.Split('\n');
-            foreach (string line in lines)
+
+            foreach (string line in lines.Where(s => s.Length > 0))
             {
-                if (line.Length > 0)
+                var newEntry = KubernetesLogEntry.Parse(ref _defaultParser, line);
+                if (newEntry != null && !newEntry.IsDefault())
                 {
-                    var newEntry = KubernetesLogEntry.Parse(ref _defaultParser, line);
-                    if (newEntry != null && !newEntry.IsDefault())
+                    newEntry.SetContainerName(entry.FileName);
+                    lock (_logCache)
                     {
-                        newEntry.SetContainerName(entry.FileName);
-                        lock (_logCache)
-                        {
-                            InternalAddNewLogEntry(entry, newEntry);
-                        }
+                        InternalAddNewLogEntry(entry, newEntry);
                     }
                 }
+            }
+
+            Flush();
+        }
+
+        private void Flush()
+        {
+            if (_settings.FlushWrite == false)
+                return;
+
+            lock (_logCache)
+            {
+                _logCache.Flush();
             }
         }
 
@@ -96,9 +107,8 @@ namespace EasyLogService.Services.CentralLogService
 
         private void HandleAddEntryErrors(KubernetesLogEntry newEntry)
         {
-            // Sometimes - for what reason ever there are multiple entries in log files 
-            // so convert this message into an internal exception error and pass the original log entry 
-            // in the error message itself
+            // Just in case that equal entries would have been written to the log file
+            // handle them separately and write a log error message instead
 
             const int MaxStringLength = 200;
             var line = newEntry.Line;
@@ -111,7 +121,7 @@ namespace EasyLogService.Services.CentralLogService
                 Stream = "EASYLOG"
             };
 
-            var dummyEntry = new KubernetesLogEntry { SetLog = log};
+            var dummyEntry = new KubernetesLogEntry { SetLog = log };
 
             _logger.LogError($"Could not write log entry: {dummyEntry.Time} : { logLine }");
 

@@ -11,14 +11,30 @@
   "profiles": {
     "EasyLogService": {
       "commandName": "Project",
-      //"commandLineArgs": "WatchDirectory=C:\\test\\logs EasyLogCentralLogDir=C:\\test\\endless",
-      "commandLineArgs": "FileDirectoryWatcherSettings:ScanDirectory=C:\\temp\\var\\log\\pods CentralLogServiceCacheSettings:CentralMasterLogDirectory=C:\\test\\endless",
+      "commandLineArgs": "FileDirectoryWatcherSettings:ScanDirectory=C:\\temp\\var\\log\\pods CentralLogServiceCacheSettings:CentralMasterLogDirectory=C:\\test\\endless ",
       "launchBrowser": true,
-      "launchUrl": "/",
+      "launchUrl": "https://localhost:5001",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
+      "useSSL": true,
       "applicationUrl": "https://localhost:5001"
+    },
+    "WSL 2": {
+      "commandName": "WSL2",
+      "launchBrowser": true,
+      "launchUrl": "https://localhost:5001/",
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "https://localhost:5001",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchBrowser": true,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/",
+      "publishAllPorts": true,
+      "useSSL": true
     }
   }
 }

@@ -1,11 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography.X509Certificates;
 
 namespace EasyLogService
 {
@@ -18,14 +16,17 @@ namespace EasyLogService
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureLogging(logging =>
+                .ConfigureLogging((hostingContext, logging) =>
                 {
-                    //logging.ClearProviders();
+                    logging.ClearProviders();
+                    logging.AddConfiguration((IConfiguration)hostingContext.Configuration.GetSection("Logging"));
                     logging.AddConsole();
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
                 });
+
+
     }
 }

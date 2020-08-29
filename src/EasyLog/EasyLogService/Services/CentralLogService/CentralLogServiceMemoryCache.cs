@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using C5;
+using LogEntries;
+using System;
 using System.Globalization;
 using System.Linq;
-using System.Security.Cryptography;
-using C5;
-using LogEntries;
 
 namespace EasyLogService.Services.CentralLogService
 {
@@ -28,6 +26,12 @@ namespace EasyLogService.Services.CentralLogService
                 _logCache.Add(key, value);
             }
         }
+
+        public void Flush()
+        {
+            // Not really needed - memory needs no flush from applications
+        }
+
 
         public void Dispose()
         {
@@ -74,5 +78,6 @@ namespace EasyLogService.Services.CentralLogService
             if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, from, to);
             return QueryCaseSensitive(simpleQuery, maxResults, from, to);
         }
+
     }
 }

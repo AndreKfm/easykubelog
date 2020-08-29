@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace LogSimulator
 {
@@ -9,12 +8,12 @@ namespace LogSimulator
         static void Main(string[] args)
         {
 
-            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\logtest";
-            int countFiles = 1; 
+            string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\\temp\\var\\log\\pods";
+            int countFiles = 1;
             if (args.Length > 1)
             {
                 if (Int32.TryParse(args[1], out int files))
-                    countFiles = files; 
+                    countFiles = files;
             }
 
 

@@ -1,13 +1,11 @@
 ﻿using EndlessFileStreamClasses;
+using FileToolsClasses;
 using LogEntries;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
 
 namespace EasyLogService.Services.CentralLogService
 {
@@ -19,7 +17,8 @@ namespace EasyLogService.Services.CentralLogService
         readonly string _fileName;
         FileStream _file;
         StreamReader _stream;
-        IParser _defaultParser = null; 
+        StreamWriter _streamWriter;
+        IParser _defaultParser = null;
 
 
         public FileCache(string fileName)
@@ -27,17 +26,18 @@ namespace EasyLogService.Services.CentralLogService
             _fileName = fileName;
             _file = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
             _stream = new StreamReader(_file);
+            _streamWriter = new StreamWriter(_file);
         }
 
 
         public void Add((DateTimeOffset, int fileIndex) key, KubernetesLogEntry value)
         {
+            _streamWriter.Write(value);
+        }
 
-            //if (lines > _maxLines)
-            //{
-
-            //}
-            //_logCache.Add(key, value);
+        public void Flush()
+        {
+            _streamWriter.Flush();
         }
 
         public void Dispose()
@@ -102,14 +102,16 @@ namespace EasyLogService.Services.CentralLogService
 
     public class EndlessFileStreamCache : ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry>
     {
-        
+
         EndlessFileStream _stream;
-        IParser _defaultParser; 
+        IParser _defaultParser;
 
+        FileStreamDirection _direction;
 
-        public EndlessFileStreamCache(EndlessFileStream stream)
+        public EndlessFileStreamCache(EndlessFileStream stream, FileStreamDirection direction = FileStreamDirection.Backwards)
         {
             _stream = stream;
+            _direction = direction;
         }
 
 
@@ -127,7 +129,7 @@ namespace EasyLogService.Services.CentralLogService
 
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            var result = _stream.Reader.ReadEntries(int.MaxValue).
+            var result = _stream.Reader.ReadEntries(_direction, int.MaxValue).
                 Where(x => x.content.Contains(simpleQuery)).
                 Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
                 Where(x => CheckInBetween(x, from, to)).
@@ -136,11 +138,11 @@ namespace EasyLogService.Services.CentralLogService
 
             return result.ToArray();
         }
-        
+
 
         private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            var result = _stream.Reader.ReadEntries(int.MaxValue).
+            var result = _stream.Reader.ReadEntries(_direction, int.MaxValue).
               Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.content, simpleQuery, CompareOptions.IgnoreCase) >= 0).
               Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
               Where(x => CheckInBetween(x, from, to)).
@@ -158,6 +160,12 @@ namespace EasyLogService.Services.CentralLogService
         {
             value.Write(_stream.Writer.WriteToFileStream);
         }
+
+        public void Flush()
+        {
+            _stream?.Writer?.Flush();
+        }
+
     }
 
 }

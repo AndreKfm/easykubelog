@@ -1,27 +1,29 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using EasyLogService.Services;
+using DirectoryWatcher;
+using EasyLogService.Commands;
+using EasyLogService.Services.CentralLogService;
+using EasyLogService.Tool.Simulator;
+using LogEntries;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using WatcherFileListClasses;
-using EasyLogService.Commands;
-using System.IO;
-using System.Linq;
-using EasyLogService.Tool.Simulator;
-using EasyLogService.Services.CentralLogService;
 using Microsoft.Extensions.Logging;
-using LogEntries;
 using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using DirectoryWatcher;
+using System.Threading;
+using System.Threading.Tasks;
+using WatcherFileListClasses;
 
 namespace EasyLogService
 {
+    public class TraceLogging
+    {
+        public bool EnableConsoleTracing { get; set; }
+    }
 
     public interface ICentralLogServiceWatcher
     {
@@ -43,7 +45,7 @@ namespace EasyLogService
         {
             _watchCurrentFileList = watchCurrentFileList;
             _centralLogService = centralLogService;
-            _directory =  config["WatchDirectory"];
+            _directory = config["WatchDirectory"];
         }
 
         public void Start()
@@ -68,10 +70,11 @@ namespace EasyLogService
         private void HandleWrittenLogs(NewOutput newOutput, CancellationToken token)
         {
             // Wait for new entries written to any log file and pass it to the central log service
-            Trace.TraceInformation($"CentralLogService add log entry: [{newOutput.FileName}] - [{newOutput.Lines}]");
+            //Trace.TraceInformation($"CentralLogService add log entry: [{newOutput.FileName}] - [{newOutput.Lines}]");
             _centralLogService.AddLogEntry(new LogEntry(newOutput.FileName, newOutput.Lines));
         }
     }
+
 
 
 
@@ -82,21 +85,36 @@ namespace EasyLogService
             Configuration = configuration;
         }
 
+
+
+
+
         public IConfiguration Configuration { get; }
+
+        private void CheckConsoleTracing()
+        {
+            // Check if console tracing is enabled and add trace listener if set
+            // Will be used only in debuggin scenarios, where more detailed output is needed
+            if (Configuration.GetSection("Logging").Get<TraceLogging>().EnableConsoleTracing == true)
+            {
+                var consoleTracer = new ConsoleTraceListener(true);
+                Trace.Listeners.Add(consoleTracer);
+                consoleTracer.Name = "EasyLogService";
+            }
+        }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var consoleTracer = new ConsoleTraceListener(true);
-            Trace.Listeners.Add(consoleTracer);
-            consoleTracer.Name = "EasyLogService";
 
-
+            CheckConsoleTracing();
 
             services.AddControllers();
+            services.AddOptions();
+
+
             services.Configure<AutoCurrentFileListSettings>(Configuration.GetSection("AutoCurrentFileListSettings"));
             services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
-            services.AddOptions();
 
             services.Configure<CentralLogServiceCacheSettings>(Configuration.GetSection("CentralLogServiceCacheSettings"));
             services.Configure<FileDirectoryWatcherSettings>(Configuration.GetSection("FileDirectoryWatcherSettings"));
@@ -134,7 +152,6 @@ namespace EasyLogService
         }
 
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -142,11 +159,9 @@ namespace EasyLogService
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
-
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -155,8 +170,6 @@ namespace EasyLogService
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/Main");
             });
-
-            //app.AddComponent<App>("app");
 
             // Call ConfigureOwnServices with variable number of arguments automatically resolved by DI
             StartupHelper.RetrieveServicesAndCallMethod(this, "ConfigureOwnServices", app.ApplicationServices);

@@ -1,5 +1,6 @@
 ﻿using EasyLogService.Services.CentralLogService;
 using LogEntries;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 
@@ -13,13 +14,16 @@ namespace EasyLogService.Commands
         void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed);
     }
 
-    
+
     // Handler for search handler
     internal class SearchCommandHandler : ISearchCommand
     {
         readonly ICentralLogServiceQuery _cacheQuery;
-        public SearchCommandHandler(ICentralLogServiceCache cache)
+        ILogger<SearchCommandHandler> _logger;
+
+        public SearchCommandHandler(ICentralLogServiceCache cache, ILogger<SearchCommandHandler> logger)
         {
+            _logger = logger;
             _cacheQuery = cache;
         }
         public void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed)
@@ -29,11 +33,11 @@ namespace EasyLogService.Commands
             var result = _cacheQuery.Query(request.Query, request.MaxResults, request.From, request.To);
 
             completed(result);
-            Console.WriteLine($"Queried:{request.Query} - result length: {result.Length} needed: {w.ElapsedMilliseconds} ms");
+            _logger.LogInformation($"Queried:{request.Query} - result length: {result.Length} needed: {w.ElapsedMilliseconds} ms");
         }
     }
 
-    public class SearchRequest 
+    public class SearchRequest
     {
         readonly public string Query;
         readonly public int MaxResults;

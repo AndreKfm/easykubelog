@@ -1,8 +1,7 @@
-﻿using System.Threading.Tasks;
-using EasyLogService.Services.CentralLogService;
+﻿using EasyLogService.Services.CentralLogService;
 using LogEntries;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace EasyLogService.Controllers
 {
@@ -19,7 +18,7 @@ namespace EasyLogService.Controllers
             _centralLog = centralLog;
         }
 
-        [HttpPost] 
+        [HttpPost]
         public async Task<ActionResult> AddKubernetesJsonLogEntry([FromBody] LogEntry entryToAdd)
         {
             await _centralLog.AddLogEntry(entryToAdd);

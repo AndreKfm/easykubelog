@@ -80,23 +80,29 @@ namespace EasyLogService.Services.CentralLogService
                         break;
 
                     var newEntry = await _logEntryChannel.Reader.ReadAsync();
-                    Trace.TraceInformation($"CentralLogService add log entry to cache: [{newEntry.FileName}] - [{newEntry.Lines}]");
+
+                    if (token.IsCancellationRequested)
+                        break;
+
+                    //Trace.TraceInformation($"CentralLogService add log entry to cache: [{newEntry.FileName}] - [{newEntry.Lines}]");
                     _cache.AddEntry(newEntry);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    Trace.TraceError($"WaitForNewEntriesAndWrite - Exception: {e.Message}"); 
+                    Trace.TraceError($"WaitForNewEntriesAndWrite - Exception: {e.Message}");
                 }
             }
         }
 
-        public async Task<bool> AddLogEntry(LogEntry newEntry)
+        public async ValueTask<bool> AddLogEntry(LogEntry newEntry)
         {
             try
             {
-                return await Task.FromResult(_logEntryChannel.Writer.TryWrite(newEntry));
+                if (_source.Token.IsCancellationRequested)
+                    return false;
+                return _logEntryChannel.Writer.TryWrite(newEntry);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Trace.TraceError($"AddLogEntry - Exception: {e.Message}");
             }
@@ -106,6 +112,7 @@ namespace EasyLogService.Services.CentralLogService
         public void Dispose()
         {
             _logEntryChannel.Writer.Complete();
+            Stop();
             _logEntryChannel = null;
         }
 
