@@ -11,7 +11,7 @@ endif::[]
 Easy logging for Kubernetes
 
 [WARNING]
-*!! Pre-Alpha version so don't use in production !!*
+[RED]*!! Pre-Alpha version so don't use in production !!*
 
 
 
@@ -57,7 +57,17 @@ Easy logging for Kubernetes
 * Track last read position - starts always to read from end of logs
 * Query log history (of containers) not copied to central log
 
+== Some notes
 
+EasyLog was written to be easy to use and do nothing more than 
+what it should do track the logs of a Kubernetes cluster, aggregate them 
+and enable simple search over that log files. 
+
+Some features are missing and will be added soon. 
+I try to answer questions, also to check pull requests - but please
+give me time for answering and checking.
+
+Bug reports are always welcome, same as feature requests and other suggestions.
 
 
 
