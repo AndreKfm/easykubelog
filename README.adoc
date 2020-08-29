@@ -5,26 +5,24 @@ Easy logging for Kubernetes
 [TIP]
 *!! Pre-Alpha version so don't use in production !!*
 
+
+
+
 [#Quickstart]
+[indent=2]
 == Quickstart
 
-====
 *Start on single node Kubernetes clusters*
 
-__kubectl apply -f EasyLogService.yaml__
-====
+  kubectl apply -f EasyLogService.yaml
 
-====
-*Start instance on each node with Daemonset for multi node clusters*
+**Start instance on each node with Daemonset for multi node clusters**
 
-__kubectl apply -f DaemonSetEasyLogService.yaml__
-====
+  kubectl apply -f DaemonSetEasyLogService.yaml
 
-====
 *Connect to EasyLog*
 
-https://nodeurl:30880
-====
+  https://nodeurl:30880
 
 
 == Features of alpha version
