@@ -1,1 +1,0 @@
-#EasyLog# is a simple log service, mainly used in Kubernetes environment. 
