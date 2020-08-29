@@ -1,0 +1,58 @@
+= EasyLog
+
+Easy logging for Kubernetes
+
+[TIP]
+*!! Pre-Alpha version so don't use in production !!*
+
+[#Quickstart]
+== Quickstart
+
+====
+*Start on single node Kubernetes clusters*
+
+__kubectl apply -f EasyLogService.yaml__
+====
+
+====
+*Start instance on each node with Daemonset for multi node clusters*
+
+__kubectl apply -f DaemonSetEasyLogService.yaml__
+====
+
+====
+*Connect to EasyLog*
+
+https://nodeurl:30880
+====
+
+
+== Features of alpha version
+
+* Tracking logs of each node
+* Copy logs to a rotating internal log, configurable size
+* Doesn't block other containers
+* Search in content of copied logs
+* Search by date / time
+* Display container names, date time, log content 
+* Https - internal certificate used for encryption only out of the box
+* Small image size (Alpine)
+* Source code MIT License
+* Demonset - to install on each node - no central yet
+* Docker image and yaml for easy Kubernetes installation 
+* Auto detect log format (Docker / CRI)
+
+== What's missing
+
+* Central logging
+* Central query
+* Filter on container names
+* Import / Export
+* Track last read position - starts always to read from end of logs
+* Query log history (of containers) not copied to central log
+
+
+
+
+
+
