@@ -23,5 +23,33 @@ Code and documentation copyright 2011-2020 the
 [Bootstrap Authors] (https://github.com/twbs/bootstrap/graphs/contributors) and 
 [Twitter, Inc.] (https://twitter.com) Code released under the 
 [MIT License]
-(https://github.com/twbs/bootstrap/blob/main/LICENSE). 
+MIT: (https://github.com/twbs/bootstrap/blob/main/LICENSE). 
 Docs released under [Creative Commons](https://creativecommons.org/licenses/by/3.0/).
+
+XUnit
+-----
+MIT License: 
+https://github.com/ploeh/ZeroToNine/blob/master/LICENCE
+
+
+ C5
+----
+MIT License: https://github.com/sestoft/C5/blob/master/LICENSE.txt
+
+
+
+Moq4
+----
+[BSD 3-Clause License]
+Copyright (c) 2007, Clarius Consulting, Manas Technology Solutions, InSTEDD,
+and Contributors. All rights reserved.
+
+BSD License: https://github.com/moq/moq4/blob/master/License.txt
+
+
+Xamarin / XUnit
+---------------
+Copyright 2014 Outercurve Foundation
+
+Apache 2.0 License: https://github.com/xamarin/xunit/blob/master/license.txt
+
