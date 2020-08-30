@@ -20,7 +20,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS https://+:5001
-ENTRYPOINT ["./EasyKubeLogService", "Kestrel:Certificates:Default:Path=/app/Cert/localhost.pfx", "Kestrel:Certificates:Default:Password=easylogservicepassword"]
+ENTRYPOINT ["./EasyKubeLogService", "Kestrel:Certificates:Default:Path=/app/Cert/localhost.pfx", "Kestrel:Certificates:Default:Password=easykubelogservicepassword"]
 
 
 #FROM alpine:3.9.4 AS base
