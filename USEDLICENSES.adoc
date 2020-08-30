@@ -8,6 +8,13 @@ endif::[]
 
 = Used Licenses
 
+== .NET Core
+
+Using .NET Core development environment and packages
+Copyright (c) .NET Foundation and Contributors
+[MIT License]
+https://github.com/dotnet/core/blob/master/LICENSE.TXT
+
 == Bootstrap
 
 Using partially https://getbootstrap.com/ released under MIT license.
