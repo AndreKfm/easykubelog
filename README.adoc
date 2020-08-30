@@ -77,5 +77,9 @@ give me time for answering and checking.
 Bug reports are always welcome, same as feature requests and other suggestions.
 
 
+== Copyright and License
 
+Code and documentation copyright Andre Michael Kaufmann, code and docker image released under MIT license. See LICENSE.TXT
+
+Used licenses see USEDLICENSES.adoc
 
