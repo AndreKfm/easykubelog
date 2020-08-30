@@ -1,1 +1,2 @@
+# Just an example - Generate cert is not available
 GenerateCert.ps1 -password (ConvertTo-SecureString easylogservicepassword -AsPlainText -Force) EasyLogCert 9999 easylogservice.com.yyy
