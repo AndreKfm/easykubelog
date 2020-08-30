@@ -6,9 +6,9 @@ ifdef::env-github[]
 :warning-caption: :warning:
 endif::[]
 
-= EasyLog
+= Easy Kube Log
 
-Easy log view for Kubernetes
+Log viewer for Kubernetes - simple to install and use
 
 [WARNING]
 [RED]*!! Pre-Alpha version so don't use in production !!*
@@ -16,6 +16,7 @@ Easy log view for Kubernetes
 The main idea about another log service was to have something small, which does it's job without
 complex parametrization and simple installation
 
+image:./EasyKubeLogScreenshot.png[]
 
 
 [#Quickstart]
@@ -24,13 +25,13 @@ complex parametrization and simple installation
 
 *Start on single node Kubernetes clusters*
 
-  kubectl apply -f EasyLogService.yaml
+  kubectl apply -f EasyLogKubeService.yaml
 
 **Start instance on each node with Daemonset for multi node clusters**
 
-  kubectl apply -f DaemonSetEasyLogService.yaml
+  kubectl apply -f DaemonSetEasyKubeLogService.yaml
 
-*Connect to EasyLog*
+*Connect to Easy Kube Log*
 
   https://nodeurl:30880
 
@@ -39,8 +40,8 @@ complex parametrization and simple installation
 
 [source,options="nowrap, small"]
 ----
-  kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easylog/master/src/Deployment/EasyLogService.yaml
-  kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easylog/master/src/Deployment/DaemonSetEasyLogService.yaml
+  kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easykubelog/master/src/Deployment/EasyKubeLogService.yaml
+  kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easykubelog/master/src/Deployment/DaemonSetEasyKubeLogService.yaml
 ----
 
 == Features of alpha version 0.0.9
