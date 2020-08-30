@@ -8,11 +8,13 @@ endif::[]
 
 = EasyLog
 
-Easy logging for Kubernetes
+Easy log view for Kubernetes
 
 [WARNING]
 [RED]*!! Pre-Alpha version so don't use in production !!*
 
+The main idea about another log service was to have something small, which does it's job without
+complex parametrization and simple installation
 
 
 

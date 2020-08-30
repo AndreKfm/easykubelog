@@ -53,6 +53,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileTools.Test", "LoggingLi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EndlessFileStream.Test", "LoggingLibraries\EndlessFileStream\EndlessFileStream.Test\EndlessFileStream.Test.csproj", "{988091BF-5C37-44EE-A6AF-68CF54176838}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deployment", "Deployment", "{84981295-5A7D-4A9C-8D4A-8B46675933E3}"
+	ProjectSection(SolutionItems) = preProject
+		..\Deployment\DaemonSetEasyLogService.yaml = ..\Deployment\DaemonSetEasyLogService.yaml
+		..\Deployment\EasyLogService.yaml = ..\Deployment\EasyLogService.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -151,6 +157,7 @@ Global
 		{688E4FBB-1D18-4487-B405-01B335415EA0} = {0E0187AF-8401-40BB-982A-B43646A06271}
 		{B29A7024-6DEC-4225-BBD2-8A8FA4943828} = {0E0187AF-8401-40BB-982A-B43646A06271}
 		{988091BF-5C37-44EE-A6AF-68CF54176838} = {46258E0F-867E-4FAA-8859-9E35E3AC790E}
+		{84981295-5A7D-4A9C-8D4A-8B46675933E3} = {E07F46A2-C8A9-4A87-9016-7475A595508F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9D1BF3C4-FFEE-43FF-8016-7458E4F2617E}
