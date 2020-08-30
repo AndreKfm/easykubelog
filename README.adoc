@@ -43,9 +43,8 @@ complex parametrization and simple installation
   kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easylog/master/src/Deployment/DaemonSetEasyLogService.yaml
 ----
 
+== Features of alpha version 0.0.9
 
-
-== Features of alpha version
 
 * Tracking logs of each node
 * Copy logs to a rotating internal log, configurable size
