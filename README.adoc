@@ -35,6 +35,16 @@ complex parametrization and simple installation
   https://nodeurl:30880
 
 
+**Direct links - no source code needed **
+
+[source,options="nowrap, small"]
+----
+  kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easylog/master/src/Deployment/EasyLogService.yaml
+  kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easylog/master/src/Deployment/DaemonSetEasyLogService.yaml
+----
+
+
+
 == Features of alpha version
 
 * Tracking logs of each node
