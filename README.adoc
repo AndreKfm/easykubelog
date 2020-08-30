@@ -59,6 +59,8 @@ Easy logging for Kubernetes
 * Track last read position - starts always to read from end of logs
 * Query log history (of containers) not copied to central log
 * Further documentation 
+* User management 
+* Authentication / Authorization
 
 == Some notes
 
