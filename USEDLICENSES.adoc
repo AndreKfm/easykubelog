@@ -1,0 +1,27 @@
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+= Used Licenses
+
+== .NET Core
+
+Using .NET Core development environment and packages
+Copyright (c) .NET Foundation and Contributors
+[MIT License]
+https://github.com/dotnet/core/blob/master/LICENSE.TXT
+
+== Bootstrap
+
+Using partially https://getbootstrap.com/ released under MIT license.
+
+Code and documentation copyright 2011-2020 the 
+[Bootstrap Authors] (https://github.com/twbs/bootstrap/graphs/contributors) and 
+[Twitter, Inc.] (https://twitter.com) Code released under the 
+[MIT License]
+(https://github.com/twbs/bootstrap/blob/main/LICENSE). 
+Docs released under [Creative Commons](https://creativecommons.org/licenses/by/3.0/).
