@@ -25,11 +25,11 @@ image:./EasyKubeLogScreenshot.png[]
 
 *Start on single node Kubernetes clusters*
 
-  kubectl apply -f EasyLogService.yaml
+  kubectl apply -f EasyLogKubeService.yaml
 
 **Start instance on each node with Daemonset for multi node clusters**
 
-  kubectl apply -f DaemonSetEasyLogService.yaml
+  kubectl apply -f DaemonSetEasyKubeLogService.yaml
 
 *Connect to Easy Kube Log*
 
@@ -40,8 +40,8 @@ image:./EasyKubeLogScreenshot.png[]
 
 [source,options="nowrap, small"]
 ----
-  kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easylog/master/src/Deployment/EasyLogService.yaml
-  kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easylog/master/src/Deployment/DaemonSetEasyLogService.yaml
+  kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easykubelog/master/src/Deployment/EasyKubeLogService.yaml
+  kubectl apply -f https://raw.githubusercontent.com/AndreKfm/easykubelog/master/src/Deployment/DaemonSetEasyKubeLogService.yaml
 ----
 
 == Features of alpha version 0.0.9
