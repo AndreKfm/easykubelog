@@ -14,6 +14,7 @@
     <UserSecretsId>b6454788-69b5-4606-bdf6-b368f64fcb51</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <OutputType>Exe</OutputType>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>

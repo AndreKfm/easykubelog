@@ -27,7 +27,7 @@ namespace DirectoryWatcher
         }
 
         public readonly string FileFilter = String.Empty;                   // Specifies the files to watch = String.Empty = all files
-        public readonly Action<object, WatcherCallbackArgs> ActionChanges;  // Callback to call on specified changes
+        public readonly Action<string, WatcherCallbackArgs> ActionChanges;  // Callback to call on specified changes
         public readonly Action<object> ActionScanning; // If set will be called each time a scan is executed
     }
 

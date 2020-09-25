@@ -12,7 +12,9 @@ RUN dotnet restore "EasyKubeLogService/EasyKubeLogService.csproj"
 COPY . .
 WORKDIR "/src/EasyKubeLogService"
 RUN dotnet build "EasyKubeLogService.csproj" -c Release -o /app/build &&\
-    dotnet publish "EasyKubeLogService.csproj" -c Release -o /app/publish
+    dotnet publish "EasyKubeLogService.csproj" -c Release -o /app/publish    
+    #dotnet publish "EasyKubeLogService.csproj" -c Release -r:linux-musl-x64 -p:PublishReadyToRun=true -o /app/publish
+    #dotnet publish "EasyKubeLogService.csproj" -c Release -r:linux-musl-x64 -p:PublishReadyToRun=true -p:PublishTrimmed=true -o /app/publish
     #dotnet publish "EasyKubeLogService.csproj" -c Release -r:linux-x64 --self-contained -p:PublishTrimmed=true -o /app/publish
 
 
