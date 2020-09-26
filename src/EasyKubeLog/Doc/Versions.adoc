@@ -1,0 +1,13 @@
+= Version History of EasyKubeLog
+
+
+== 0.0.10 
+
+- Refactorings - code has been refactored removing code smells, syntax problems etc.
+
+== 0.0.9
+
+First working Version
+
+- Per node logging possible
+- Aggregates all logs during runtime - logs till next restart are not logged

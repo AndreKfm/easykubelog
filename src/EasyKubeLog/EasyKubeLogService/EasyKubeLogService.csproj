@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Company />
     <Authors>Andre Michael Kaufmann</Authors>
-    <Version>0.0.9</Version>
+    <Version>0.0.10</Version>
     <Description>Simple log aggreating and viewing service for containers</Description>
     <Copyright>Copyright (c) Andre Michael Kaufmann</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
