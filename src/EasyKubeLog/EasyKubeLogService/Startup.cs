@@ -1,5 +1,5 @@
 using DirectoryWatcher;
-using EasyKubeLogService.Commands;
+using EasyKubeLogService.Components.Commands;
 using EasyKubeLogService.Services.CentralLogService;
 using EasyKubeLogService.Tool.Simulator;
 using LogEntries;
@@ -27,24 +27,24 @@ namespace EasyKubeLogService
     public interface ICentralLogServiceWatcher
     {
         public void Start();
+
+        // ReSharper disable once UnusedMemberInSuper.Global
         public void Stop();
     }
 
     /// <summary>
-    /// Configurations: 
+    /// Configurations:
     ///    WatchDirectory
     /// </summary>
     public class CentralLogServiceWatcher : ICentralLogServiceWatcher
     {
-        readonly IAutoCurrentFileList _watchCurrentFileList;
-        readonly ICentralLogService _centralLogService;
-        readonly string _directory;
+        private readonly IAutoCurrentFileList _watchCurrentFileList;
+        private readonly ICentralLogService _centralLogService;
 
-        public CentralLogServiceWatcher(IConfiguration config, IAutoCurrentFileList watchCurrentFileList, ICentralLogService centralLogService)
+        public CentralLogServiceWatcher(IAutoCurrentFileList watchCurrentFileList, ICentralLogService centralLogService)
         {
             _watchCurrentFileList = watchCurrentFileList;
             _centralLogService = centralLogService;
-            _directory = config["WatchDirectory"];
         }
 
         public void Start()
@@ -63,8 +63,7 @@ namespace EasyKubeLogService
             _current = null;
         }
 
-        Task _current;
-
+        private Task _current;
 
         private void HandleWrittenLogs(NewOutput newOutput, CancellationToken token)
         {
@@ -74,9 +73,6 @@ namespace EasyKubeLogService
         }
     }
 
-
-
-
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -84,17 +80,13 @@ namespace EasyKubeLogService
             Configuration = configuration;
         }
 
-
-
-
-
         public IConfiguration Configuration { get; }
 
         private void CheckConsoleTracing()
         {
             // Check if console tracing is enabled and add trace listener if set
             // Will be used only in debuggin scenarios, where more detailed output is needed
-            if (Configuration.GetSection("Logging").Get<TraceLogging>().EnableConsoleTracing == true)
+            if (Configuration.GetSection("Logging").Get<TraceLogging>().EnableConsoleTracing)
             {
                 var consoleTracer = new ConsoleTraceListener(true);
                 Trace.Listeners.Add(consoleTracer);
@@ -104,12 +96,10 @@ namespace EasyKubeLogService
 
         public void ConfigureServices(IServiceCollection services)
         {
-
             CheckConsoleTracing();
 
             services.AddControllers();
             services.AddOptions();
-
 
             services.Configure<AutoCurrentFileListSettings>(Configuration.GetSection("AutoCurrentFileListSettings"));
             services.AddSingleton<IAutoCurrentFileList, AutoCurrentFileList>();
@@ -120,7 +110,7 @@ namespace EasyKubeLogService
             {
                 var logger = x.GetService<ILogger<CentralLogServiceCache>>();
                 var settings = x.GetService<IOptions<CentralLogServiceCacheSettings>>();
-                return new CentralLogServiceCache(settings, Configuration, logger);
+                return new CentralLogServiceCache(settings, logger);
             });
 
             services.AddSingleton<ICentralLogService, CentralLogService>();
@@ -129,13 +119,11 @@ namespace EasyKubeLogService
 
             services.AddSingleton<LogSimulatorReadAllContent>();
 
-
-
             services.AddRazorPages();
             services.AddServerSideBlazor();
-
         }
 
+        // ReSharper disable once UnusedMember.Global
         public void ConfigureOwnServices(ICentralLogServiceWatcher centralWatcher, LogSimulatorReadAllContent logSimulator, ICentralLogServiceCache cache)
         {
             centralWatcher.Start();
@@ -148,7 +136,6 @@ namespace EasyKubeLogService
                 logSimulator.InitialRead(directory, cache, maxLines);
             }
         }
-
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
@@ -174,22 +161,24 @@ namespace EasyKubeLogService
         }
     }
 
-    class StartupHelper
+    internal class StartupHelper
     {
         public static void RetrieveServicesAndCallMethod(object callObject, string methodName, IServiceProvider serviceProvider)
         {
             var method = callObject.GetType().GetMethod(methodName);
-            var paramArray = method.GetParameters();
-            List<object> services = new List<object>();
-            foreach (var p in paramArray)
+            if (method is { })
             {
-                var paramType = p.ParameterType;
-                var service = serviceProvider.GetService(paramType);
-                services.Add(service);
+                var paramArray = method.GetParameters();
+                List<object> services = new List<object>();
+                foreach (var p in paramArray)
+                {
+                    var paramType = p.ParameterType;
+                    var service = serviceProvider.GetService(paramType);
+                    services.Add(service);
+                }
+
+                method.Invoke(callObject, services.ToArray());
             }
-
-            method.Invoke(callObject, services.ToArray());
-
         }
     }
 }

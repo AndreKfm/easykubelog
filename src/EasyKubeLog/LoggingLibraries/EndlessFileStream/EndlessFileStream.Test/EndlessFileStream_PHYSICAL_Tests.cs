@@ -1,6 +1,7 @@
 using FileToolsClasses;
 using System;
 using System.IO;
+using EndlessFileStream;
 using Xunit;
 
 namespace EndlessFileStreamClasses.Test
@@ -8,11 +9,11 @@ namespace EndlessFileStreamClasses.Test
 
     internal class RandomDirectory : IDisposable
     {
-        public string DirectoryPath { get; private set; }
+        public string DirectoryPath { get; }
         public RandomDirectory()
         {
             DirectoryPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            if (Directory.Exists(DirectoryPath) == true)
+            if (Directory.Exists(DirectoryPath))
                 Directory.Delete(DirectoryPath, true);
             Directory.CreateDirectory(DirectoryPath);
         }
@@ -29,13 +30,13 @@ namespace EndlessFileStreamClasses.Test
     {
         RandomDirectory _randDir;
 
-        public EndlessFileStream Endless { get; private set; }
-        public int Count { get; private set; }
+        public EndlessFileStream.EndlessFileStream Endless { get; private set; }
+        public int Count { get; }
         public WriteEntries(int count, int logSizeMBytes)
         {
             Count = count;
             _randDir = new RandomDirectory();
-            Endless = new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = _randDir.DirectoryPath, MaxLogFileSizeInMByte = logSizeMBytes, MaxLogFileSizeInKByte = 1 });
+            Endless = new EndlessFileStream.EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = _randDir.DirectoryPath, MaxLogFileSizeInMByte = logSizeMBytes, MaxLogFileSizeInKByte = 1 });
 
             for (int l = 0; l < count; ++l)
             {
@@ -51,7 +52,7 @@ namespace EndlessFileStreamClasses.Test
         }
     }
 
-    public class EndlessFileStream_PHYSICAL_Tests
+    public class EndlessFileStreamPhysicalTests
     {
         [Fact]
         public void WriteForward_ReadForwardAndCompare()

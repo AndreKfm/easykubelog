@@ -1,6 +1,5 @@
-﻿using EndlessFileStreamClasses;
+﻿using EndlessFileStream;
 using LogEntries;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -10,8 +9,6 @@ using System.Linq;
 
 namespace EasyKubeLogService.Services.CentralLogService
 {
-
-
     public class CentralLogServiceCacheSettings
     {
         public string CentralMasterLogDirectory { get; set; }
@@ -19,18 +16,16 @@ namespace EasyKubeLogService.Services.CentralLogService
         public bool FlushWrite { get; set; } = true;
     }
 
-
     public class CentralLogServiceCache : ICentralLogServiceCache
     {
-        readonly Dictionary<string, int> _fileIndexList = new Dictionary<string, int>();
-        readonly ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> _logCache;
-        readonly ILogger<CentralLogServiceCache> _logger;
-        int _currentFileIndex = 0;
-        IParser _defaultParser = null;
-        CentralLogServiceCacheSettings _settings;
+        private readonly Dictionary<string, int> _fileIndexList = new Dictionary<string, int>();
+        private readonly ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry> _logCache;
+        private readonly ILogger<CentralLogServiceCache> _logger;
+        private int _currentFileIndex;
+        private IParser _defaultParser;
+        private readonly CentralLogServiceCacheSettings _settings;
 
         public CentralLogServiceCache(IOptions<CentralLogServiceCacheSettings> settings,
-                                      IConfiguration config,
                                       ILogger<CentralLogServiceCache> logger,
                                       ICache<(DateTimeOffset, int fileIndex),
                                       KubernetesLogEntry> cache = null)
@@ -44,11 +39,10 @@ namespace EasyKubeLogService.Services.CentralLogService
                     MaxLogFileSizeInMByte = settings.Value.MaxLogFileSizeInMByte
                 };
 
-            var endlessStream = new EndlessFileStreamClasses.EndlessFileStream(endlessSettings);
+            var endlessStream = new EndlessFileStream.EndlessFileStream(endlessSettings);
             _logCache = cache ?? new EndlessFileStreamCache(endlessStream);
             _logger = logger;
         }
-
 
         public void AddEntry(LogEntry entry)
         {
@@ -110,12 +104,13 @@ namespace EasyKubeLogService.Services.CentralLogService
             // Just in case that equal entries would have been written to the log file
             // handle them separately and write a log error message instead
 
-            const int MaxStringLength = 200;
+            const int maxStringLength = 200;
             var line = newEntry.Line;
-            var logLine = line.Length > MaxStringLength ? line.Substring(0, MaxStringLength) + "..." : line;
+            var logLine = line.Length > maxStringLength ? line.Substring(0, maxStringLength) + "..." : line;
 
             var log = new DockerLog
             {
+                // ReSharper disable StringLiteralTypo
                 Line = $"EASYLOGERROR: Exception - entry with the same time added already - original text: {logLine}",
                 Time = newEntry.Time,
                 Stream = "EASYLOG"
@@ -145,7 +140,10 @@ namespace EasyKubeLogService.Services.CentralLogService
 
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-            return _logCache.Query(simpleQuery, maxResults, CacheQueryMode.CaseInsensitive, from, to);
+            lock (_logCache)
+            {
+                return _logCache.Query(simpleQuery, maxResults, CacheQueryMode.CaseInsensitive, from, to);
+            }
         }
 
         public void Dispose()

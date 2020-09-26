@@ -36,8 +36,8 @@ namespace WatcherFileListClasses.Test
             public string CurrentOutput { get; set; } = String.Empty;
         }
 
-        IOptions<AutoCurrentFileListSettings> _settingsAutoCurrentFileList = Options.Create(new AutoCurrentFileListSettings { FilterDirectoriesForwardFilesOnly = false });
-        IOptions<FileDirectoryWatcherSettings> _settingsFileWatcher = Options.Create(new FileDirectoryWatcherSettings { ScanDirectory = Path.GetTempPath(), UseManualScan = false });
+        private readonly IOptions<AutoCurrentFileListSettings> _settingsAutoCurrentFileList = Options.Create(new AutoCurrentFileListSettings { FilterDirectoriesForwardFilesOnly = false });
+        private readonly IOptions<FileDirectoryWatcherSettings> _settingsFileWatcher = Options.Create(new FileDirectoryWatcherSettings { ScanDirectory = Path.GetTempPath(), UseManualScan = false });
 
 
         [Fact]
@@ -51,37 +51,35 @@ namespace WatcherFileListClasses.Test
 
 
             Action<object, WatcherCallbackArgs> actionFileChanges = null;
-            Action<object> actionScanning = null;
 
             void FilterCallback(FilterAndCallbackArgument callback)
             {
                 actionFileChanges = callback.ActionChanges;
-                actionScanning = callback.ActionScanning;
             }
 
-            var mwatcher = new Mock<IFileSystemWatcher>();
-            mwatcher.Setup((x) => x.Open(It.IsAny<FilterAndCallbackArgument>())).Callback((Action<FilterAndCallbackArgument>)FilterCallback).Returns(true);
+            var watcher = new Mock<IFileSystemWatcher>();
+            watcher.Setup((x) => x.Open(It.IsAny<FilterAndCallbackArgument>())).Callback((Action<FilterAndCallbackArgument>)FilterCallback).Returns(true);
 
-            autoCurrentFileList.Start(mwatcher.Object);
+            autoCurrentFileList.Start(watcher.Object);
             string mustBeThis = "must be this";
             string lastOutput = String.Empty;
             string lastFileName = String.Empty;
             AutoResetEvent waitForInput = new AutoResetEvent(false);
-            var task = autoCurrentFileList.BlockingReadAsyncNewOutput((output, token) =>
+            autoCurrentFileList.BlockingReadAsyncNewOutput((output, token) =>
             {
                 lastOutput = output.Lines;
                 lastFileName = output.FileName;
                 waitForInput.Set();
-            });
+            }).Wait();
             wrapper.CurrentOutput = mustBeThis;
-            actionFileChanges(null, new WatcherCallbackArgs("file1.txt", IFileSystemWatcherChangeType.Changed));
+            actionFileChanges(null, new WatcherCallbackArgs("file1.txt", FileSystemWatcherChangeType.Changed));
             Assert.True(waitForInput.WaitOne(100));
             Assert.True(lastOutput == mustBeThis);
             Assert.True(lastFileName == "file1.txt");
 
             string mustBeThis2 = "### !CHANGED! öäüÖÄÜ ###";
             wrapper.CurrentOutput = mustBeThis2;
-            actionFileChanges(null, new WatcherCallbackArgs("file2.txt", IFileSystemWatcherChangeType.Changed));
+            actionFileChanges(null, new WatcherCallbackArgs("file2.txt", FileSystemWatcherChangeType.Changed));
             Assert.True(waitForInput.WaitOne(100));
             Assert.True(lastOutput == mustBeThis2);
             Assert.True(lastFileName == "file2.txt");

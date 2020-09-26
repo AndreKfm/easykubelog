@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 namespace LogEntries
 {
 
+    // ReSharper disable once UnusedMember.Global
     public class LogSamples
     {
+        // ReSharper disable once UnusedMember.Global
         public const string ContainerDSample = @"2020-08-09T16:19:52.5938217Z stdout F root@loga1:/# echo loga#24
 2020-08-09T16:19:52.5938818Z stdout F loga#24
 2020-08-09T16:19:54.009581Z stdout F root@loga1:/# echo loga#25
@@ -40,7 +42,7 @@ namespace LogEntries
         [JsonPropertyName("time")]
         public DateTimeOffset Time { get; set; }  // Date time when log entry was written on client side - use string to preserve ticks
 
-        static public string NormalizeContainerName(string containerName)
+        public static string NormalizeContainerName(string containerName)
         {
             if ((containerName != null))
             {
@@ -58,10 +60,6 @@ namespace LogEntries
 
     public class LogParserContainerd : IParser
     {
-        public LogParserContainerd()
-        {
-        }
-
         public DockerLog ParseLine(string line, string optionalContainerName = default)
         {
             // 2020-08-09T16:19:56.1457454Z stdout F loga#27";
@@ -78,7 +76,7 @@ namespace LogEntries
                 Time = dateTime,
                 Stream = stream,
                 Line = log,
-                Container = DockerLog.NormalizeContainerName(optionalContainerName == default ? String.Empty : optionalContainerName)
+                Container = DockerLog.NormalizeContainerName(optionalContainerName ?? String.Empty)
             };
         }
     }
@@ -100,10 +98,6 @@ namespace LogEntries
 
     public class LogParserDocker : IParser
     {
-        public LogParserDocker()
-        {
-        }
-
         private static JsonSerializerOptions InitOptions()
         {
             JsonSerializerOptions options = new JsonSerializerOptions();
@@ -195,7 +189,7 @@ namespace LogEntries
             var podId = array[2];
             var containerName = array[1];
             var nm = array[0];
-            int indexOfPathEnd = podId.IndexOfAny(pathChars);
+            int indexOfPathEnd = podId.IndexOfAny(PathChars);
             if (indexOfPathEnd > 0)
             {
                 podId = array[2].Substring(0, indexOfPathEnd);
@@ -203,13 +197,16 @@ namespace LogEntries
             return (containerName, nm, podId);
         }
 
-        static private readonly char[] pathChars = new char[] { '\\', '/' };
+        private static readonly char[] PathChars = new char[] { '\\', '/' };
 
     }
 
     // Log entry in Kubernetes format - reads itself with Json deserializer from a log entry (commonly a single line) 
     public class KubernetesLogEntry
     {
+        private DockerLog _log;
+
+        // ReSharper disable once UnusedMember.Local
         private static JsonSerializerOptions InitOptions()
         {
             JsonSerializerOptions options = new JsonSerializerOptions();
@@ -222,7 +219,7 @@ namespace LogEntries
         {
             try
             {
-                string line = JsonSerializer.Serialize<DockerLog>(log);
+                string line = JsonSerializer.Serialize(_log);
                 writer(line).Wait();
             }
             catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Write.Action: {e.Message}"); }
@@ -231,31 +228,28 @@ namespace LogEntries
         {
             try
             {
-                string line = JsonSerializer.Serialize<DockerLog>(log);
+                string line = JsonSerializer.Serialize(_log);
                 writer.WriteLine(line);
             }
             catch (Exception e) { Console.Error.WriteLine($"Exception in KubernetesLogEntry.Write: {e.Message}"); }
         }
 
-        private static readonly JsonSerializerOptions Options = InitOptions();
-
-        private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { log = default(DockerLog) };
+        private static readonly KubernetesLogEntry Default = new KubernetesLogEntry { _log = default };
 
         /// <summary>
         /// Parsing from POD logs
         /// </summary>
-        static public KubernetesLogEntry Parse(ref IParser logParser, string line, string optionalContainerName = null)
+        public static KubernetesLogEntry Parse(ref IParser logParser, string line, string optionalContainerName = null)
         {
             try
             {
                 if (line.Length > 0)
                 {
                     KubernetesLogEntry k = new KubernetesLogEntry();
-                    if (logParser == null)
-                        logParser = LogParserAutoDetect.GetAutoParser(line);
+                    logParser ??= LogParserAutoDetect.GetAutoParser(line);
                     if (logParser == null)
                         return default;
-                    k.log = logParser.ParseLine(line, optionalContainerName);
+                    k._log = logParser.ParseLine(line, optionalContainerName);
                     return k;
                 }
             }
@@ -263,6 +257,7 @@ namespace LogEntries
             return Default;
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static string StripContainerName(string containerName)
         {
             if ((containerName != null))
@@ -281,24 +276,27 @@ namespace LogEntries
 
         public void SetContainerName(string container)
         {
-            log.Container = DockerLog.NormalizeContainerName(container);
+            _log.Container = DockerLog.NormalizeContainerName(container);
         }
 
-        public bool IsDefault() { return log.Line == default && log.Time == default; } // It's enough to check for these 2 entries - then by definition == default
+        public bool IsDefault() { return _log.Line == default && _log.Time == default; } // It's enough to check for these 2 entries - then by definition == default
 
-        DockerLog log;
 
-        public void ReplaceLine(string line) { log.Line = line; }
+        public void ReplaceLine(string line) { _log.Line = line; }
 
-        public DockerLog SetLog { set { log = default; } }
+        public DockerLog SetLog { set
+        {
+            _log = value;
+            _log = default;
+        } }
 
-        public string Container { get { return log.Container; } } // Container name
+        public string Container => _log.Container; // Container name
 
-        public string Line { get { return log.Line; } } // Log lines to add
+        public string Line => _log.Line; // Log lines to add
 
-        public string Stream { get { return log.Stream; } } // Type of log
+        public string Stream => _log.Stream; // Type of log
 
-        public DateTimeOffset Time { get { return log.Time; } }  // Date time when log entry was written on client side - use string to preserve ticks
+        public DateTimeOffset Time => _log.Time; // Date time when log entry was written on client side - use string to preserve ticks
 
 
     }

@@ -18,14 +18,12 @@ namespace WatcherFileListClasses.Test
         }
 
         //const string directoryToWatch = @"C:\test\deleteme\xwatchertest";
-        const string directoryToWatch = @"IGNORE_FOR_TESTS";
-
 
 
         [Fact]
         public void FileList_StartWatching()
         {
-            var callback = new Action<FileListType>((FileListType list) => { });
+            var callback = new Action<FileListType>(list => { });
             WatcherFileList w = new WatcherFileList(new FileDirectoryWatcherSettings());
             w.Start(_ => callback(_));
         }
@@ -33,7 +31,7 @@ namespace WatcherFileListClasses.Test
         [Fact]
         public void FileList_StartWatching_ThenDispose()
         {
-            var callback = new Action<FileListType>((FileListType list) => { });
+            var callback = new Action<FileListType>(list => { });
             WatcherFileList w = new WatcherFileList(new FileDirectoryWatcherSettings());
             w.Start(_ => callback(_));
             w.Dispose();
@@ -44,14 +42,14 @@ namespace WatcherFileListClasses.Test
         public void FileList_StartWatching_ChangeFilesCheckState()
         {
             FilterAndCallbackArgument local = null;
-            var a = new Action<FilterAndCallbackArgument>((FilterAndCallbackArgument arg) =>
+            var a = new Action<FilterAndCallbackArgument>(arg =>
             {
                 local = arg;
             });
 
             FileEntry lastEntry = new FileEntry();
 
-            var lc = new Action<FileListType>((FileListType list) =>
+            var lc = new Action<FileListType>(list =>
             {
                 foreach (var e in list)
                 {
@@ -62,26 +60,30 @@ namespace WatcherFileListClasses.Test
 
 
             Mock<IFileSystemWatcher> m = new Mock<IFileSystemWatcher>();
-            var f = new FilterAndCallbackArgument("*.txt");
-            m.Setup(x => x.Open(It.IsAny<FilterAndCallbackArgument>())).Callback<FilterAndCallbackArgument>((FilterAndCallbackArgument arg) => a(arg)).Returns(true);
-            WatcherFileList w = new WatcherFileList(new FileDirectoryWatcherSettings(), m.Object, 0 /** NO throttling !!! */);
+            m.Setup(x => x.Open(It.IsAny<FilterAndCallbackArgument>())).Callback((FilterAndCallbackArgument arg) =>
+            {
+                if (arg == null) throw new ArgumentNullException(nameof(arg));
+                a(arg);
+            }).Returns(true);
+            WatcherFileList w = new WatcherFileList(new FileDirectoryWatcherSettings(), m.Object);
             w.Start(_ => lc(_));
 
-            CheckHelper(local, "f1.txt", ref lastEntry, IFileSystemWatcherChangeType.Created);
-            CheckHelper(local, "f2.txt", ref lastEntry, IFileSystemWatcherChangeType.Changed);
-            CheckHelper(local, "f3.txt", ref lastEntry, IFileSystemWatcherChangeType.Deleted);
-            CheckHelper(local, "f4.txt", ref lastEntry, IFileSystemWatcherChangeType.Dispose);
-            CheckHelper(local, "f5.txt", ref lastEntry, IFileSystemWatcherChangeType.Error);
-            CheckHelper(local, "f6.txt", ref lastEntry, IFileSystemWatcherChangeType.Rename);
-            CheckHelper(local, "f7.txt", ref lastEntry, IFileSystemWatcherChangeType.All); // Shouldn't occur in productive environments
+            CheckHelper(local, "f1.txt", ref lastEntry, FileSystemWatcherChangeType.Created);
+            CheckHelper(local, "f2.txt", ref lastEntry, FileSystemWatcherChangeType.Changed);
+            CheckHelper(local, "f3.txt", ref lastEntry, FileSystemWatcherChangeType.Deleted);
+            CheckHelper(local, "f4.txt", ref lastEntry, FileSystemWatcherChangeType.Dispose);
+            CheckHelper(local, "f5.txt", ref lastEntry, FileSystemWatcherChangeType.Error);
+            CheckHelper(local, "f6.txt", ref lastEntry, FileSystemWatcherChangeType.Rename);
+            CheckHelper(local, "f7.txt", ref lastEntry, FileSystemWatcherChangeType.All); // Shouldn't occur in productive environments
 
             w.Dispose();
         }
 
-        void CheckHelper(FilterAndCallbackArgument local, string fileName, ref FileEntry lastEntry, IFileSystemWatcherChangeType ft)
+        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
+        void CheckHelper(FilterAndCallbackArgument local, string fileName, ref FileEntry lastEntry, FileSystemWatcherChangeType ft)
         {
             local.ActionChanges(this, new WatcherCallbackArgs(fileName, ft));
-            Assert.True(lastEntry.FileName == fileName && lastEntry.LastChanges == ft);
+            Assert.True(lastEntry?.FileName == fileName && lastEntry?.LastChanges == ft);
         }
     }
 }

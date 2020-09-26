@@ -55,51 +55,42 @@ namespace WatcherFileListClasses.Test
         }
 
 
-
-
-
-        public interface ITest
-        {
-            public int MyProperty { get; set; }
-        }
-
-
         public class FileStreamHelper
         {
-            Mock<IFileStream> m;
+            private readonly Mock<IFileStream> _m;
 
             public IFileStream Object()
             {
-                return m.Object;
+                return _m.Object;
             }
 
             public FileStreamHelper()
             {
                 ReturnString = String.Empty;
-                m = new Mock<IFileStream>();
-                m.SetupGet(x => x.Position).Returns(() => { return position; });
+                _m = new Mock<IFileStream>();
+                _m.SetupGet(x => x.Position).Returns(() => _position);
 
 
 
-                m.SetupGet(x => x.Length).Returns(() => { return fileSize; });
-                m.Setup(x => x.Seek(It.IsAny<long>(), It.IsAny<SeekOrigin>())).Callback((long pos, SeekOrigin origin) =>
+                _m.SetupGet(x => x.Length).Returns(() => _fileSize);
+                _m.Setup(x => x.Seek(It.IsAny<long>(), It.IsAny<SeekOrigin>())).Callback((long pos, SeekOrigin origin) =>
                 {
-                    position = Seek(pos, origin, ref position, fileSize);
-                }).Returns(() => { return position; });
+                    _position = Seek(pos, origin, ref _position, _fileSize);
+                }).Returns(() => _position);
 
 
 
-                m.Setup(x => x.Read(It.IsAny<byte[]>())).Callback((byte[] buffer) =>
+                _m.Setup(x => x.Read(It.IsAny<byte[]>())).Callback((byte[] buffer) =>
                 {
-                    bytesRead = Read(buffer);
+                    _bytesRead = Read(buffer);
                     //position = position + bytesRead;
-                }).Returns(() => { return bytesRead; });
-                FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", m.Object);
+                }).Returns(() => _bytesRead);
 
             }
 
             long Seek(long pos, SeekOrigin origin, ref long position, long fileSize)
             {
+                if (position <= 0) throw new ArgumentOutOfRangeException(nameof(position));
                 switch (origin)
                 {
                     case SeekOrigin.Begin:
@@ -122,32 +113,33 @@ namespace WatcherFileListClasses.Test
             }
 
 
-            string returnString;
+            private string _returnString;
             public string ReturnString
             {
-                get { return returnString; }
-                set { returnString = value; if (fileSize < returnString.Length) fileSize = returnString.Length; }
+                get => _returnString;
+                set { _returnString = value; if (_fileSize < _returnString.Length) _fileSize = _returnString.Length; }
             }
-            int bytesRead = 0;
-            long fileSize = 1024;
-            long position = 0;
+
+            private int _bytesRead;
+            private long _fileSize = 1024;
+            private long _position;
             int Read(byte[] buffer)
             {
-                var bytes = UTF8Encoding.UTF8.GetBytes(ReturnString);
+                var bytes = Encoding.UTF8.GetBytes(ReturnString);
                 //if (buffer.Length < bytes.Length)
                 //    return 0;
 
-                if (bytes.Length < (buffer.Length + position))
+                if (bytes.Length < (buffer.Length + _position))
                     return 0;
 
                 for (int i = 0; i < buffer.Length; ++i)
                 {
-                    buffer[i] = bytes[i + position];
+                    buffer[i] = bytes[i + _position];
                 }
 
-                bytesRead = buffer.Length;
-                position += bytesRead;
-                return bytesRead;
+                _bytesRead = buffer.Length;
+                _position += _bytesRead;
+                return _bytesRead;
             }
 
             public void WriteReadCheck(string input, string expected, int maxSize = 16384)
@@ -168,8 +160,7 @@ namespace WatcherFileListClasses.Test
         {
             FileStreamHelper f = new FileStreamHelper();
 
-            var fileStream = f.Object();
-            FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
+            f.Object();
 
             string input = "hello world\r\n";
             f.WriteReadCheck(input, input);
@@ -183,9 +174,9 @@ namespace WatcherFileListClasses.Test
         {
             FileStreamHelper f = new FileStreamHelper();
 
-            var fileStream = f.Object();
-            FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
+            f.Object();
 
+            // ReSharper disable once StringLiteralTypo
             string input = "hello worldöäüÖÄÜß你好，世界\r\n";
             f.WriteReadCheck(input, input);
             f.WriteReadCheck("\r\n", "\r\n");
@@ -210,8 +201,7 @@ namespace WatcherFileListClasses.Test
         {
             FileStreamHelper f = new FileStreamHelper();
 
-            var fileStream = f.Object();
-            FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
+            f.Object();
 
             string returnStringX = "h1\r\n";
             string input = "\r\nh1\r\nhello world\r\n";
@@ -226,8 +216,7 @@ namespace WatcherFileListClasses.Test
         {
             FileStreamHelper f = new FileStreamHelper();
 
-            var fileStream = f.Object();
-            FileReadOnlyWrapper w = new FileReadOnlyWrapper("dummy.txt", fileStream);
+            f.Object();
 
             string bigInput = new String((char)65, 65536);
             bigInput += Environment.NewLine;

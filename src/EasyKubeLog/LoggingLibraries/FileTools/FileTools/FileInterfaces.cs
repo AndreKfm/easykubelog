@@ -29,7 +29,7 @@ namespace FileToolsClasses
     public interface IFile
     {
         (string line, ReadLine sizeExceeded)
-            ReadLineFromCurrentPositionToEnd(long maxStringSize = 6000); // Read all data as string from current position to the last occurence
+            ReadLineFromCurrentPositionToEnd(long maxStringSize = 6000); // Read all data as string from current position to the last occurrence
                                                                          // of '\n'. If '\n' is not found the whole string will be returned if maxStringSize
                                                                          // has been reached - otherwise an empty string will be returned and more data
                                                                          // on the next call if '\n' is found
@@ -42,7 +42,6 @@ namespace FileToolsClasses
         int Read(Span<byte> buffer);
         int Read(byte[] buffer); // Mainly for unit test since [Span] is not "mock friendly"
 
-        IFileStreamReader GetStreamReader();
         bool SeekLastLineFromCurrentAndPositionOnStartOfIt();
 
     }

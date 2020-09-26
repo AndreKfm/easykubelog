@@ -7,9 +7,8 @@ namespace FileToolsClasses
 
     public class FileStreamWrapper : IFileStream, IFileStreamWriter
     {
-        FileStream _stream;
-        FileStreamReader _reader;
-        FileSeeker _seeker = new FileSeeker();
+        private FileStream _stream;
+        private readonly FileSeeker _seeker = new FileSeeker();
 
         public FileStreamWrapper(string path, FileMode mode, FileAccess access, FileShare share)
         {
@@ -47,14 +46,9 @@ namespace FileToolsClasses
         }
 
 
-        bool SetPositionRelative(long offset)
-        {
-            var current = _stream.Position;
-            var newPos = _stream.Seek(offset, SeekOrigin.Current);
-            var current2 = _stream.Position;
-            return (newPos - current) == offset; // We assume that we won't position more than Int32.Max
-        }
+        // ReSharper disable once ArrangeTypeMemberModifiers
 
+        // ReSharper disable once UnusedMember.Local
         void SetPosition(long position)
         {
             _stream.Seek(position, SeekOrigin.Begin);
@@ -65,13 +59,6 @@ namespace FileToolsClasses
             return _seeker.SeekLastLineFromCurrentAndPositionOnStartOfIt(this);
         }
 
-        public IFileStreamReader GetStreamReader()
-        {
-            if (_reader == null)
-                _reader = new FileStreamReader(_stream);
-            return _reader;
-        }
-
         public void Write(Span<byte> buffer)
         {
             _stream.Write(buffer);
@@ -80,15 +67,15 @@ namespace FileToolsClasses
 
     public class FileReadOnlyWrapper : IFile
     {
-        long _currentPosition = 0;
-        readonly string _fileName;
-        IFileStream _stream;
+        private long _currentPosition;
+        private readonly string _fileName;
+        private IFileStream _stream;
 
-        byte[] _localBuffer; // We hold the buffer in a local variable for reuse - since we don't
-                             // want to have the GC to do that much
+        private byte[] _localBuffer; // We hold the buffer in a local variable for reuse - since we don't
+                                     // want to have the GC to do that much
 
-        int _reallocCounter = 0;
-        int ReallocAfterXCountsLowerThan50Percent = 20; // If a smaller buffer would have reallocated for 20 times - then assume
+        private int _reallocateCounter;
+        private readonly int _reallocateAfterXCountsLowerThan50Percent = 20; // If a smaller buffer would have reallocated for 20 times - then assume
                                                         // we have allocated a really big one and free it again
 
         public FileReadOnlyWrapper(string fileName, IFileStream stream = null)
@@ -111,7 +98,6 @@ namespace FileToolsClasses
             if (_stream == null)
                 return String.Empty;
 
-            string result = String.Empty;
             byte[] buf = new byte[1];
             int index = 0;
             var pos = _stream.Position;
@@ -139,10 +125,7 @@ namespace FileToolsClasses
             var result = InternalReadLineFromCurrentPositionToEnd(maxStringSize);
             if (String.IsNullOrEmpty(result.line))
             {
-                if (_stream != null)
-                {
-                    _stream.Seek(_currentPosition, SeekOrigin.Begin);
-                }
+                _stream?.Seek(_currentPosition, SeekOrigin.Begin);
             }
             return result;
         }
@@ -193,8 +176,8 @@ namespace FileToolsClasses
 
                 CheckIfBufferNeedsReallocation(toRead);
 
-                Span<byte> buffer = _localBuffer.AsSpan<byte>().Slice(0, (int)toRead);
-                var read = _stream.Read(buffer);
+                Span<byte> buffer = _localBuffer.AsSpan().Slice(0, (int)toRead);
+                _stream.Read(buffer);
 
                 var lastIndex = buffer.LastIndexOf((byte)'\n');
 
@@ -230,7 +213,7 @@ namespace FileToolsClasses
                     _currentPosition = 0;
                 }
 
-                buffer = _localBuffer.AsSpan<byte>().Slice(0, lastIndex);
+                buffer = _localBuffer.AsSpan().Slice(0, lastIndex);
             }
             else
                 _currentPosition = _stream.Position;
@@ -241,17 +224,17 @@ namespace FileToolsClasses
             if ((_localBuffer == null) || (_localBuffer.Length < toRead))
             {
                 _localBuffer = new byte[toRead];
-                _reallocCounter = 0;
+                _reallocateCounter = 0;
             }
             else
             {
                 // Following lines shall prevent a really big buffer of memory to be held forever if not needed
                 if (_localBuffer.Length > (toRead * 2))
-                    ++_reallocCounter;
-                else _reallocCounter = 0;
-                if (_reallocCounter > ReallocAfterXCountsLowerThan50Percent)
+                    ++_reallocateCounter;
+                else _reallocateCounter = 0;
+                if (_reallocateCounter > _reallocateAfterXCountsLowerThan50Percent)
                 {
-                    _reallocCounter = 0;
+                    _reallocateCounter = 0;
                     _localBuffer = new byte[toRead];
                 }
             }

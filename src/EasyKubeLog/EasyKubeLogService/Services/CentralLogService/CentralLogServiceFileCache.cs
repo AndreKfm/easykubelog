@@ -1,5 +1,4 @@
-﻿using EndlessFileStreamClasses;
-using FileToolsClasses;
+﻿using FileToolsClasses;
 using LogEntries;
 using System;
 using System.Collections.Generic;
@@ -9,17 +8,14 @@ using System.Linq;
 
 namespace EasyKubeLogService.Services.CentralLogService
 {
-
-
+    // ReSharper disable once UnusedMember.Global
     public class FileCache : ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry>
     {
-
-        readonly string _fileName;
-        FileStream _file;
-        StreamReader _stream;
-        StreamWriter _streamWriter;
-        IParser _defaultParser = null;
-
+        private readonly string _fileName;
+        private readonly StreamWriter _streamWriter;
+        private FileStream _file;
+        private StreamReader _stream;
+        private IParser _defaultParser;
 
         public FileCache(string fileName)
         {
@@ -28,7 +24,6 @@ namespace EasyKubeLogService.Services.CentralLogService
             _stream = new StreamReader(_file);
             _streamWriter = new StreamWriter(_file);
         }
-
 
         public void Add((DateTimeOffset, int fileIndex) key, KubernetesLogEntry value)
         {
@@ -46,7 +41,7 @@ namespace EasyKubeLogService.Services.CentralLogService
             _file?.Dispose(); _file = null;
         }
 
-        IEnumerable<KubernetesLogEntry> EnumerateStreamLines(StreamReader localStream)
+        private IEnumerable<KubernetesLogEntry> EnumerateStreamLines(StreamReader localStream)
         {
             //lock (_lockObject)
             {
@@ -67,10 +62,8 @@ namespace EasyKubeLogService.Services.CentralLogService
             return (from == default || from <= time) && (to == default || to >= time);
         }
 
-
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
-
             using FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
             using StreamReader localStream = new StreamReader(file);
             var result = EnumerateStreamLines(localStream).
@@ -80,7 +73,6 @@ namespace EasyKubeLogService.Services.CentralLogService
                 OrderByDescending(x => x.Time);
             return result.ToArray();
         }
-
 
         private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
@@ -93,6 +85,7 @@ namespace EasyKubeLogService.Services.CentralLogService
                 OrderByDescending(x => x.Time);
             return result.ToArray();
         }
+
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to)
         {
             if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, from, to);
@@ -102,24 +95,21 @@ namespace EasyKubeLogService.Services.CentralLogService
 
     public class EndlessFileStreamCache : ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry>
     {
+        private EndlessFileStream.EndlessFileStream _stream;
+        private IParser _defaultParser;
 
-        EndlessFileStream _stream;
-        IParser _defaultParser;
+        private readonly FileStreamDirection _direction;
 
-        FileStreamDirection _direction;
-
-        public EndlessFileStreamCache(EndlessFileStream stream, FileStreamDirection direction = FileStreamDirection.Backwards)
+        public EndlessFileStreamCache(EndlessFileStream.EndlessFileStream stream, FileStreamDirection direction = FileStreamDirection.Backwards)
         {
             _stream = stream;
             _direction = direction;
         }
 
-
         public void Dispose()
         {
             _stream?.Dispose(); _stream = null;
         }
-
 
         private bool CheckInBetween(KubernetesLogEntry k, DateTimeOffset from, DateTimeOffset to)
         {
@@ -130,7 +120,7 @@ namespace EasyKubeLogService.Services.CentralLogService
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
             var result = _stream.Reader.ReadEntries(_direction, int.MaxValue).
-                Where(x => x.content.Contains(simpleQuery)).
+                Where(x => x.content != null && x.content.Contains(simpleQuery)).
                 Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
                 Where(x => CheckInBetween(x, from, to)).
                 Take(maxResults).
@@ -139,17 +129,17 @@ namespace EasyKubeLogService.Services.CentralLogService
             return result.ToArray();
         }
 
-
         private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
             var result = _stream.Reader.ReadEntries(_direction, int.MaxValue).
-              Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.content, simpleQuery, CompareOptions.IgnoreCase) >= 0).
+              Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.content ?? string.Empty, simpleQuery, CompareOptions.IgnoreCase) >= 0).
               Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
               Where(x => CheckInBetween(x, from, to)).
               Take(maxResults).
               OrderByDescending(x => x.Time);
             return result.ToArray();
         }
+
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to)
         {
             if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, from, to);
@@ -165,7 +155,5 @@ namespace EasyKubeLogService.Services.CentralLogService
         {
             _stream?.Writer?.Flush();
         }
-
     }
-
 }

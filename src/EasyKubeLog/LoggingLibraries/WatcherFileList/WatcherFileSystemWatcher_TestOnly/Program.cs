@@ -1,17 +1,19 @@
-﻿using DirectoryWatcher;
-using System;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using DirectoryWatcher;
+// ReSharper disable All
 
-namespace FileSystemWatcher_TestOnly
+namespace FileSystemWatcher.Console
 {
     class Program
     {
 
         static void Output(string output)
         {
-            Console.WriteLine(output);
+            System.Console.WriteLine(output);
         }
 
         static void TestThrottling()
@@ -24,24 +26,16 @@ namespace FileSystemWatcher_TestOnly
             for (; ; )
             {
                 var token = source.Token;
-                if (slim.WaitAsync(0).Result == true)
+                if (slim.WaitAsync(0, token).Result)
                 {
+                    var token1 = token;
                     Task t = Task.Run(async () =>
                     {
                         try
                         {
                             Output("From inside slim");
-                            await Task.Delay(2000, token);
-                            if (token.IsCancellationRequested)
-                            {
-                                Output("!! Cancelled !!");
-                                return;
-                            }
-                            else
-                            {
-                                Output("## NOT Cancelled ##");
-                                return;
-                            }
+                            await Task.Delay(2000, token1);
+                            Output(token1.IsCancellationRequested ? "!! Cancelled !!" : "## NOT Cancelled ##");
                         }
                         catch (Exception)
                         {
@@ -56,7 +50,7 @@ namespace FileSystemWatcher_TestOnly
                 }
 
                 Output("From outside");
-                Task.Delay(400).Wait();
+                Task.Delay(400, token).Wait(token);
                 if (++ticker > 3)
                 {
                     source.Cancel();
@@ -66,7 +60,7 @@ namespace FileSystemWatcher_TestOnly
 
             Output("END");
 
-            Console.ReadLine();
+            System.Console.ReadLine();
 
         }
 
@@ -80,7 +74,11 @@ namespace FileSystemWatcher_TestOnly
             //string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : @"C:\test\deleteme\xwatchertest";
             string directory = (args.Length > 0 && args[0] != String.Empty) ? args[0] : dir;
 
-            Console.WriteLine($"Watching now directory: {directory}");
+            System.Console.WriteLine($"Watching now directory: {directory}");
+
+            Stopwatch watch = Stopwatch.StartNew();
+            int maxExecutionTimeMinutes = 15;
+            System.Console.WriteLine($"Running now for {maxExecutionTimeMinutes}");
 
             Task.Run(() =>
             {
@@ -91,17 +89,19 @@ namespace FileSystemWatcher_TestOnly
                     Task.Delay(1000).Wait();
                     File.WriteAllText($"{ldir}linkhard.txt", $"hello{++n}");
                     File.WriteAllText($"{ldir}linksoft.txt", $"hello{++n}");
-                    Console.Write('.');
+                    System.Console.Write('.');
                     //File.WriteAllText($"{dir}linkhard.txt", $"hello{++n}");
+                    if (watch.Elapsed.Minutes > maxExecutionTimeMinutes)
+                        break;
                 }
 
             });
 
             FileDirectoryWatcher w = new FileDirectoryWatcher(new FileDirectoryWatcherSettings(directory));
             w.Open(new FilterAndCallbackArgument(String.Empty,
-                (object sender, WatcherCallbackArgs args) =>
+                (sender, watcherCallbackArgs) =>
                 {
-                    Console.WriteLine($"{args.ChangeType} {args.FileName}");
+                    System.Console.WriteLine($"{watcherCallbackArgs.ChangeType} {watcherCallbackArgs.FileName}");
                 }
                 ));
 
@@ -121,23 +121,23 @@ namespace FileSystemWatcher_TestOnly
 
             //watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName | NotifyFilters.DirectoryName;
             //watcher.EnableRaisingEvents = true; // Must be set always
-            Console.ReadLine();
+            System.Console.ReadLine();
 
         }
 
         private static void Watcher_Disposed(object sender, EventArgs e)
         {
-            Console.WriteLine($"Watcher disposed: {e}");
+            System.Console.WriteLine($"Watcher disposed: {e}");
         }
 
         private static void Watcher_Error(object sender, ErrorEventArgs e)
         {
-            Console.WriteLine($"Watcher error: {e.GetException()} : {e}");
+            System.Console.WriteLine($"Watcher error: {e.GetException()} : {e}");
         }
 
         private static void Watcher_Callback(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine($"Watcher callback: {e.FullPath} : {e.ChangeType} : {e.Name}");
+            System.Console.WriteLine($"Watcher callback: {e.FullPath} : {e.ChangeType} : {e.Name}");
         }
     }
 }

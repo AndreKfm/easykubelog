@@ -49,15 +49,15 @@ namespace WatcherFileListClasses
 
     public class AutoCurrentFileList : IAutoCurrentFileList
     {
-        WatcherFileList _watcher;
-        WatcherCurrentFileList fileList;
-        readonly IGetFile _getFile;
-        Task _current;
-        AutoCurrentFileListSettings _settings;
-        FileDirectoryWatcherSettings _settingsFileWatcher;
-        const int MaxFileChanges = 16384;
-        Channel<FileTask> _channel;
-        Channel<NewOutput> _channelNewOutput;
+        private readonly AutoCurrentFileListSettings _settings;
+        private WatcherFileList _watcher;
+        private WatcherCurrentFileList _fileList;
+        private readonly IGetFile _getFile;
+        private Task _current;
+        private readonly FileDirectoryWatcherSettings _settingsFileWatcher;
+        private const int MaxFileChanges = 16384;
+        private Channel<FileTask> _channel;
+        private Channel<NewOutput> _channelNewOutput;
 
 
         public AutoCurrentFileList(IOptions<FileDirectoryWatcherSettings> settingsFileWatcher, IOptions<AutoCurrentFileListSettings> settings = null, IGetFile openFile = null)
@@ -69,7 +69,7 @@ namespace WatcherFileListClasses
 
             if (String.IsNullOrEmpty(_settingsFileWatcher.ScanDirectory))
             {
-                Trace.TraceError("AutoCurrentFileList settings files wather is not set - not base directory available - use temp path");
+                Trace.TraceError("AutoCurrentFileList settings files watcher is not set - no base directory available - use temp path");
                 _settingsFileWatcher.ScanDirectory = Path.GetTempPath();
             }
         }
@@ -82,24 +82,20 @@ namespace WatcherFileListClasses
             _channel?.Writer.Complete();
             _channelNewOutput?.Writer.Complete();
             _current?.Wait();
-            return;
         }
 
         public void Start(IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
         {
             Stop();
             _watcher = new WatcherFileList(_settingsFileWatcher, watcherInterface, updateRatioInMilliseconds);
-            _source = new CancellationTokenSource(); ;
-            fileList = new WatcherCurrentFileList();
+            _source = new CancellationTokenSource();
+            _fileList = new WatcherCurrentFileList();
 
             _channel = Channel.CreateBounded<FileTask>(MaxFileChanges);
             _channelNewOutput = Channel.CreateBounded<NewOutput>(MaxFileChanges);
 
             _current = Task.Run(async () => await this.ReadChannel(_source.Token));
-            _watcher.Start((list) =>
-            {
-                HandleFileChanges(list);
-            });
+            _watcher.Start(HandleFileChanges);
         }
 
         public enum FileTaskEnum
@@ -149,8 +145,7 @@ namespace WatcherFileListClasses
             }
             else
             {
-                if (_lastError != String.Empty)
-                    _lastError = String.Empty;
+                _lastError = String.Empty;
             }
         }
 
@@ -159,11 +154,11 @@ namespace WatcherFileListClasses
             foreach (var entry in changes)
             {
                 var c = entry.LastChanges;
-                if (c.HasFlag(IFileSystemWatcherChangeType.Created)) WriteToChannel(entry, FileTaskEnum.Add);
-                if (c.HasFlag(IFileSystemWatcherChangeType.Changed)) WriteToChannel(entry, FileTaskEnum.Update);
-                if (c.HasFlag(IFileSystemWatcherChangeType.Rename)) WriteToChannel(entry, FileTaskEnum.Remove);
-                if (c.HasFlag(IFileSystemWatcherChangeType.Error)) WriteToChannel(entry, FileTaskEnum.Remove);
-                if (c.HasFlag(IFileSystemWatcherChangeType.Deleted)) WriteToChannel(entry, FileTaskEnum.Remove);
+                if (c.HasFlag(FileSystemWatcherChangeType.Created)) WriteToChannel(entry, FileTaskEnum.Add);
+                if (c.HasFlag(FileSystemWatcherChangeType.Changed)) WriteToChannel(entry, FileTaskEnum.Update);
+                if (c.HasFlag(FileSystemWatcherChangeType.Rename)) WriteToChannel(entry, FileTaskEnum.Remove);
+                if (c.HasFlag(FileSystemWatcherChangeType.Error)) WriteToChannel(entry, FileTaskEnum.Remove);
+                if (c.HasFlag(FileSystemWatcherChangeType.Deleted)) WriteToChannel(entry, FileTaskEnum.Remove);
             }
         }
 
@@ -172,10 +167,6 @@ namespace WatcherFileListClasses
             return await _channelNewOutput.Reader.ReadAsync(_source.Token);
         }
 
-        public enum ReadAsyncOperation
-        {
-            StopRead, ContinueRead
-        }
         public async Task BlockingReadAsyncNewOutput(Action<NewOutput, CancellationToken> callback) // Stop() will abort read
         {
             var token = _source.Token;
@@ -207,21 +198,13 @@ namespace WatcherFileListClasses
                             }
                         case FileTaskEnum.Remove:
                             {
-                                fileList.RemoveFile(op.FileName);
+                                _fileList.RemoveFile(op.FileName);
                                 break;
                             }
                         case FileTaskEnum.Update:
                             {
-                                var list = fileList.GetList();
-                                IFile file = null;
-                                if (!list.TryGetValue(op.FileName, out CurrentFileEntry value))
-                                {
-                                    file = AddFile(op);
-                                }
-                                else
-                                {
-                                    file = value.CurrentFile;
-                                }
+                                var list = _fileList.GetList();
+                                var file = !list.TryGetValue(op.FileName, out CurrentFileEntry value) ? AddFile(op) : value.CurrentFile;
 
                                 int maxLoop = 1000; // Just to play it safe if something severly gone wrong -> thousand read calls should be enough 
 
@@ -229,7 +212,7 @@ namespace WatcherFileListClasses
                                 {
 
                                     (string content, ReadLine sizeExceeded)
-                                        = file.ReadLineFromCurrentPositionToEnd(_settingsFileWatcher.MaxContentLenghtToForwardForEachScanInBytes);
+                                        = file.ReadLineFromCurrentPositionToEnd(_settingsFileWatcher.MaxContentLengthToForwardForEachScanInBytes);
                                     if (!_channelNewOutput.Writer.TryWrite(new NewOutput(content, op.FileName, op.LastError)))
                                     {
                                         Error($"AutoCurrentFileList.ReadChannel - error: write to callback for new outputs failed: {op.FileName}:prev error:{op.LastError}:{content}");
@@ -254,7 +237,7 @@ namespace WatcherFileListClasses
         private IFile AddFile(FileTask op)
         {
             var fileStream = _getFile.GetFile(Path.Combine(_settingsFileWatcher.ScanDirectory, op.FileName));
-            fileList.AddFile(new CurrentFileEntry(op.FileName, fileStream));
+            _fileList.AddFile(new CurrentFileEntry(op.FileName, fileStream));
             return fileStream;
         }
 

@@ -9,10 +9,10 @@ namespace LogSimulator
 {
     class SimulateLogFile : IDisposable
     {
-        private static int LogFileCounter = 0;
+        private static int _logFileCounter;
         public SimulateLogFile(string directory)
         {
-            _fileName = Path.Combine(directory, $"log{Interlocked.Increment(ref LogFileCounter)}");
+            _fileName = Path.Combine(directory, $"log{Interlocked.Increment(ref _logFileCounter)}");
         }
 
         public void Start(int delayInMilliseconds = 0)
@@ -20,7 +20,7 @@ namespace LogSimulator
             _tokenSource?.Cancel();
             _current?.Wait();
             _tokenSource = new CancellationTokenSource();
-            _current = Task.Factory.StartNew(() => CreateLogentries(_tokenSource.Token, delayInMilliseconds), TaskCreationOptions.LongRunning);
+            _current = Task.Factory.StartNew(() => CreateLogEntries(_tokenSource.Token, delayInMilliseconds), TaskCreationOptions.LongRunning);
         }
         public void Stop()
         {
@@ -30,7 +30,7 @@ namespace LogSimulator
             _tokenSource = null;
         }
 
-        Random _rand = new Random();
+        protected readonly Random _rand = new Random();
         private string CreateRandomString(int len)
         {
             var builder = new StringBuilder(len);
@@ -41,7 +41,7 @@ namespace LogSimulator
             return builder.ToString();
         }
 
-        private void CreateLogentries(CancellationToken token, int delayInMilliseconds = 0)
+        private void CreateLogEntries(CancellationToken token, int delayInMilliseconds = 0)
         {
             int secondOffset = 0;
             int index = 0;
@@ -71,14 +71,14 @@ namespace LogSimulator
                 {
                     var needed = w.ElapsedMilliseconds;
                     w.Restart();
-                    System.Console.WriteLine($"[{index}] Written content to file {_fileName} {logContent}");
+                    Console.WriteLine($"[{index}] Written content to file {_fileName} {logContent}");
                     Console.WriteLine($"# Bytes / second { (1000.0 * (double)data) / needed}");
                     data = 0;
                 }
                 if (fi.Length > MaxFileSize)
                     File.Delete(_fileName);
                 if (delayInMilliseconds > 0)
-                    Task.Delay(delayInMilliseconds).Wait();
+                    Task.Delay(delayInMilliseconds, token).Wait(token);
             }
         }
 
@@ -89,7 +89,7 @@ namespace LogSimulator
         }
 
         const long MaxFileSize = 1024 * 1024 * 10; // Max file size, if larger the file will be deleted
-        CancellationTokenSource _tokenSource = null;
+        CancellationTokenSource _tokenSource;
         Task _current;
         string _fileName;
     }

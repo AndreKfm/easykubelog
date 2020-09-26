@@ -10,7 +10,7 @@ namespace DirectoryWatcher
         public string ScanDirectory { get; set; }
 
         public bool UseManualScan { get; set; } = false; // By default use physical scanning
-        public int MaxContentLenghtToForwardForEachScanInBytes { get; set; } = 65536;
+        public int MaxContentLengthToForwardForEachScanInBytes { get; set; } = 65536;
         public int ScanIntervalInSeconds { get; set; } = 10; // Will be used only if UseManualScan is set - specifies how often the manual scanner
                                                              // scans the specified [ScanDirectory] directory
     }
@@ -18,8 +18,8 @@ namespace DirectoryWatcher
 
     public class FileDirectoryWatcher : IDisposable
     {
-        FileDirectoryWatcherSettings _settings;
-        IFileSystemWatcher _watcher;
+        private readonly FileDirectoryWatcherSettings _settings;
+        private IFileSystemWatcher _watcher;
 
         public FileDirectoryWatcher(FileDirectoryWatcherSettings settings, IFileSystemWatcher watcher = null)
         {
@@ -29,7 +29,7 @@ namespace DirectoryWatcher
 
         private IFileSystemWatcher CreateWatcher()
         {
-            if (_settings.UseManualScan == true)
+            if (_settings.UseManualScan)
                 return new ManualScanPhysicalFileSystemWatcher(new ManualScanPhysicalFileSystemWatcherSettings { ScanSpeedInSeconds = _settings.ScanIntervalInSeconds, ScanDirectory = _settings.ScanDirectory });
             else
                 return new PhysicalFileSystemWatcherWrapper(new PhysicalFileSystemWatcherWrapperSettings { ScanDirectory = _settings.ScanDirectory });

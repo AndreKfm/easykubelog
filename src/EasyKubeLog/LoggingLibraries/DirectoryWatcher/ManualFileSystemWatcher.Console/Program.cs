@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Xunit;
+// ReSharper disable All
 
 namespace ManualFileSystemWatcherConsole
 {
@@ -45,12 +46,12 @@ namespace ManualFileSystemWatcherConsole
 
             ManualResetEvent changeDetected = new ManualResetEvent(false);
             ManualResetEvent scanInitialized = new ManualResetEvent(false);
-            m.Open(new FilterAndCallbackArgument(String.Empty, (object o, WatcherCallbackArgs args) =>
+            m.Open(new FilterAndCallbackArgument(String.Empty, (o, args) =>
             {
                 //if (args.ChangeType == IFileSystemWatcherChangeType.Created)
                 changeDetected.Set();
             },
-            (object o) =>
+            o =>
             {
                 scanInitialized.Set();
             }));
@@ -85,7 +86,7 @@ namespace ManualFileSystemWatcherConsole
             consoleTracer.Name = "ManualFileSystemWatcherTrace";
             var dir = @"c:\test\manual";
 
-            if (args.Count() > 0)
+            if (args.Any())
                 dir = args[0];
 
             Console.WriteLine($"Scan directory: {dir}");

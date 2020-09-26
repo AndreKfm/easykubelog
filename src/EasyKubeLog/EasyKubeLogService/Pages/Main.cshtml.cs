@@ -4,9 +4,5 @@ namespace EasyKubeLogService.Pages
 {
     public class MainModel : PageModel
     {
-        public void OnGet()
-        {
-
-        }
     }
 }

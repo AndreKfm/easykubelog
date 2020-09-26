@@ -5,6 +5,8 @@
     Layout = null;
 }
 
+@* ReSharper disable UnknownCssClass *@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,11 +18,10 @@
         <link href="css/site.css" rel="stylesheet" />*@
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link href="css/site.css" rel="stylesheet" />
-
 </head>
 <body style="height: 100%; overflow: hidden">
     <app>
-        <component type="typeof(EasyKubeLogService.App)" render-mode="ServerPrerendered" />
+        <component type="typeof(App)" render-mode="ServerPrerendered" />
     </app>
 
     <div id="blazor-error-ui">
@@ -34,6 +35,7 @@
         <a class="dismiss">🗙</a>
     </div>
 
+    @* ReSharper disable once Html.PathError *@
     <script src="_framework/blazor.server.js"></script>
 </body>
 </html>

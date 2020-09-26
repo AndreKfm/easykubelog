@@ -5,7 +5,7 @@ namespace DirectoryWatcher.Tests
 {
     public class FileDirectoryWatcherTests
     {
-        FileDirectoryWatcherSettings _settings = new FileDirectoryWatcherSettings("/test.txt");
+        private readonly FileDirectoryWatcherSettings _settings = new FileDirectoryWatcherSettings("/test.txt");
 
         [Fact]
         public void CreateFileDirectoryWatcher()
@@ -13,8 +13,7 @@ namespace DirectoryWatcher.Tests
             Mock<IFileSystemWatcher> watcher = new Mock<IFileSystemWatcher>();
             var settings = new FileDirectoryWatcherSettings();
             _ = new FileDirectoryWatcher(settings);
-            _ = new FileDirectoryWatcher(settings, null);
-            _ = new FileDirectoryWatcher(settings, watcher.Object); ;
+            _ = new FileDirectoryWatcher(settings, watcher.Object); 
         }
 
         [Fact]

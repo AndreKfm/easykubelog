@@ -11,7 +11,7 @@ namespace WatcherFileListClasses
     public class FileEntry
     {
         public string FileName { get; set; }
-        public IFileSystemWatcherChangeType LastChanges { get; set; }
+        public FileSystemWatcherChangeType LastChanges { get; set; }
     }
 
 
@@ -25,11 +25,11 @@ namespace WatcherFileListClasses
 
         public void Call()
         {
-            if (_throttlingInMilliseconds <= 0 || stopwatch == null || stopwatch.ElapsedMilliseconds > _throttlingInMilliseconds)
+            if (_throttlingInMilliseconds <= 0 || _stopwatch == null || _stopwatch.ElapsedMilliseconds > _throttlingInMilliseconds)
             {
                 // Initially calldirectly or if stopwatch is elapsed
                 if (_throttlingInMilliseconds > 0)
-                    stopwatch = Stopwatch.StartNew();
+                    _stopwatch = Stopwatch.StartNew();
                 _callback();
                 return;
             }
@@ -38,26 +38,20 @@ namespace WatcherFileListClasses
             // Check if semaphore is held -> if so currently a task is running
             if (_sem.WaitAsync(0).Result == false)
             {
-                var token = source.Token;
+                var token = _source.Token;
                 Task.Run(async () =>
                 {
                     try
                     {
-                        int delay = (int)(_throttlingInMilliseconds - stopwatch.ElapsedMilliseconds);
+                        int delay = (int)(_throttlingInMilliseconds - _stopwatch.ElapsedMilliseconds);
                         if (delay < 0) delay = 0;
                         await Task.Delay(delay, token);
                     }
                     finally
                     {
-                        stopwatch = Stopwatch.StartNew();
+                        _stopwatch = Stopwatch.StartNew();
                         _sem.Release();
-                        try
-                        {
-                            _callback();
-                        }
-                        finally
-                        {
-                        }
+                        _callback();
                     }
                 }, token);
             }
@@ -65,29 +59,29 @@ namespace WatcherFileListClasses
 
         public void Dispose()
         {
-            source.Cancel();
+            _source.Cancel();
         }
 
-        readonly SemaphoreSlim _sem = new SemaphoreSlim(0);
-        readonly CancellationTokenSource source = new CancellationTokenSource();
+        private readonly SemaphoreSlim _sem = new SemaphoreSlim(0);
+        private readonly CancellationTokenSource _source = new CancellationTokenSource();
 
-        Stopwatch stopwatch = null;
-        readonly int _throttlingInMilliseconds;
-        readonly Action _callback;
+        Stopwatch _stopwatch;
+        private readonly int _throttlingInMilliseconds;
+        private readonly Action _callback;
     }
 
 
 
     public class WatcherFileList : IDisposable
     {
-        FileDirectoryWatcherSettings _fileDirectoryWatcherSettings;
-        readonly object syncListAccess = new object();
-        readonly IFileSystemWatcher _watcherInterface;
-        readonly int _updateRatioInMilliseconds;
-        Action<ReadOnlyCollection<FileEntry>> _fileListChangeCallback;
-        ThrottleCalls _throttleCalls;
-        List<FileEntry> _currentList;
-        FileDirectoryWatcher _watcher;
+        private readonly FileDirectoryWatcherSettings _fileDirectoryWatcherSettings;
+        private readonly object _syncListAccess = new object();
+        private readonly IFileSystemWatcher _watcherInterface;
+        private readonly int _updateRatioInMilliseconds;
+        private Action<ReadOnlyCollection<FileEntry>> _fileListChangeCallback;
+        private ThrottleCalls _throttleCalls;
+        private List<FileEntry> _currentList;
+        private FileDirectoryWatcher _watcher;
 
 
         public WatcherFileList(FileDirectoryWatcherSettings settings = null, IFileSystemWatcher watcherInterface = null, int updateRatioInMilliseconds = 0)
@@ -115,8 +109,8 @@ namespace WatcherFileListClasses
 
         void CallAfterChange()
         {
-            ReadOnlyCollection<FileEntry> list = null;
-            lock (syncListAccess)
+            ReadOnlyCollection<FileEntry> list;
+            lock (_syncListAccess)
             {
                 list = _currentList.AsReadOnly();
                 _currentList = new List<FileEntry>(); // Event if we overwrite the list it's still held by readonly collection 
@@ -126,7 +120,7 @@ namespace WatcherFileListClasses
 
         void DiscardOldWatcher()
         {
-            lock (syncListAccess)
+            lock (_syncListAccess)
             {
                 _throttleCalls?.Dispose();
                 _watcher?.Dispose();
@@ -137,15 +131,14 @@ namespace WatcherFileListClasses
 
         void Callback(object sender, WatcherCallbackArgs args)
         {
-            lock (syncListAccess)
+            lock (_syncListAccess)
             {
                 bool found = false;
-                for (int i = 0; i < _currentList.Count; ++i)
+                foreach (var t in _currentList)
                 {
-
-                    if (_currentList[i].FileName == args.FileName)
+                    if (t.FileName == args.FileName)
                     {
-                        _currentList[i].LastChanges |= args.ChangeType;
+                        t.LastChanges |= args.ChangeType;
                         found = true;
                         break;
                     }

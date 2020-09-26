@@ -1,42 +1,37 @@
 ﻿<div class="input-group-prepend search-margin" style="align-items:center;">
     <div class="d-flex justify-content-center align-items-center m-2">
-         <input type="checkbox" aria-label="Date from" @bind-value="_enabledDate" class="form-check" style="transform: scale(1.6);" />
+        <input type="checkbox" aria-label="Date from" @bind-value="_enabledDate" class="form-check" style="transform: scale(1.6);" />
     </div>
     <span class="input-group-text" style="padding-left: 1.0rem;">@Name</span>
-    <input type="date" aria-label="Search date" style="@(_style)" @bind-value="_internalDate" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control" />
-    <input type="time" aria-label="Search time" style="@(_style)" @bind-value="_internalTime" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control" />
+    <input type="date" aria-label="Search date" style="@(Style)" @bind-value="InternalDate" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control" />
+    <input type="time" aria-label="Search time" style="@(Style)" @bind-value="InternalTime" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control" />
 </div>
 
 @code {
 
+ 
 
-        public SearchFieldDateTime()
-        {
-        }
+    [Parameter]
+    public string Name { get; set; }
 
-        [Parameter]
-        public string Name { get; set; }
-
-    public DateTimeOffset _internalDate { get; set; } = DateTimeOffset.Now;
-    public DateTimeOffset _internalTime { get; set; } = DateTimeOffset.Now;
-
+    public DateTimeOffset InternalDate { get; set; } = DateTimeOffset.Now;
+    public DateTimeOffset InternalTime { get; set; } = DateTimeOffset.Now;
 
     DateTimeOffset Combine(DateTimeOffset date, DateTimeOffset time)
     {
         return new DateTimeOffset(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, default/* time.Offset // Don't use date time offset right now */ );
     }
 
-    public DateTimeOffset Date =>  _enabledDate == true ? Combine(_internalDate, _internalTime) : default; // Default == disabled
+    public DateTimeOffset Date => _enabledDate ? Combine(InternalDate, InternalTime) : default; // Default == disabled
     private bool _enabledDate = false;
 
     public bool EnabledDate
     {
-        get { return _enabledDate; }
-        set { _enabledDate = value; }
+        get => _enabledDate;
+        set => _enabledDate = value;
     }
 
-    string _style => _enabledDate == true ? "" : "visibility: hidden";
-
+    string Style => _enabledDate ? "" : "visibility: hidden";
 
     public Action NewInput;
 

@@ -5,13 +5,11 @@ using System.Threading.Tasks;
 
 namespace EasyKubeLogService.Controllers
 {
-
-
     [Route("api/[controller]")]
     [ApiController]
     public class AggregateLogs : ControllerBase
     {
-        readonly ICentralLogService _centralLog;
+        private readonly ICentralLogService _centralLog;
 
         public AggregateLogs(ICentralLogService centralLog)
         {

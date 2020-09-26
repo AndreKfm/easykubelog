@@ -6,7 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Transactions;
+// ReSharper disable All
 
 namespace DirectoryWatcher
 {
@@ -27,15 +27,7 @@ namespace DirectoryWatcher
             set { _scanSpeedInSeconds = value; if (_scanSpeedInSeconds < 0) _scanSpeedInSeconds = 0; }
         }
 
-        private string _baseDirectoryToScan;
-
-        public string ScanDirectory
-        {
-            get { return _baseDirectoryToScan; }
-            set { _baseDirectoryToScan = value; }
-        }
-
-
+        public string ScanDirectory { get; set; }
     }
 
     public class ManualScanPhysicalFileSystemWatcherFileListSettings
@@ -46,21 +38,15 @@ namespace DirectoryWatcher
             {
                 // Ensure under Windows that we have always the same casing to prevent double 
                 // entries which Windows cannot differentiate, but this list would
-                _normalizeFileName = (string s) => Path.GetFileName(s).ToLower();
+                NormalizeFileName = s => Path.GetFileName(s).ToLower();
             }
             else
             {
-                _normalizeFileName = (string s) => Path.GetFileName(s);
+                NormalizeFileName = Path.GetFileName;
             }
         }
-        private Func<string, string> _normalizeFileName;
 
-        public Func<string, string> NormalizeFileName
-        {
-            get { return _normalizeFileName; }
-            set { _normalizeFileName = value; }
-        }
-
+        public Func<string, string> NormalizeFileName { get; set; }
     }
 
 
@@ -74,27 +60,31 @@ namespace DirectoryWatcher
     public class ManualScanPhysicalFileSystemWatcherFileList
     {
         // Holds file names [without (root) path] and the latest known file position
-        Dictionary<string, (DateTime lastWriteUtc, long fileLen)> files = new Dictionary<string, (DateTime lastWriteUtc, long fileLen)>();
+        private readonly Dictionary<string, (DateTime lastWriteUtc, long fileLen)> _files = new Dictionary<string, (DateTime lastWriteUtc, long fileLen)>();
 
-        Func<string, string> NormalizeFileName;
+        private readonly Func<string, string> _normalizeFileName;
 
         public ManualScanPhysicalFileSystemWatcherFileList(ManualScanPhysicalFileSystemWatcherFileListSettings settings = null)
         {
-            settings = settings ?? new ManualScanPhysicalFileSystemWatcherFileListSettings();
-            NormalizeFileName = settings.NormalizeFileName;
+            settings ??= new ManualScanPhysicalFileSystemWatcherFileListSettings();
+            _normalizeFileName = settings.NormalizeFileName;
         }
 
         public bool AddFileTruncPath(string fileName, DateTime initial = default, long fileLen = long.MinValue)
         {
             try
             {
-                fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
-                if (files.ContainsKey(fileName))
+                fileName = _normalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
+                if (_files.ContainsKey(fileName))
                     return false;
-                files.Add(fileName, (initial.ToUniversalTime(), fileLen));
+                _files.Add(fileName, (initial.ToUniversalTime(), fileLen));
                 return true;
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+                // ignored
+            }
+
             return false;
         }
 
@@ -102,35 +92,41 @@ namespace DirectoryWatcher
         {
             try
             {
-                fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
-                if (files.ContainsKey(fileName))
+                fileName = _normalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
+                if (_files.ContainsKey(fileName))
                 {
-                    files.Remove(fileName);
+                    _files.Remove(fileName);
                     return true;
                 }
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+                // ignored
+            }
 
             return false;
         }
 
         public bool SetOrAddFileInfo(string fileName, (DateTime newOffset, long fileLength) fileInfo)
         {
-            fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
+            fileName = _normalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
             try
             {
-                fileName = NormalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
-                files[fileName] = fileInfo;
+                fileName = _normalizeFileName(fileName); // Remove directory eventually -> don't change casing - Linux has case sensitive file systems
+                _files[fileName] = fileInfo;
                 return true;
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+                // ignored
+            }
 
             return false;
         }
 
         public Dictionary<string, (DateTime lastWriteUtc, long fileLength)> GetFileListCopy()
         {
-            return new Dictionary<string, (DateTime lastWriteUtc, long fileLength)>(files);
+            return new Dictionary<string, (DateTime lastWriteUtc, long fileLength)>(_files);
         }
     }
 
@@ -178,7 +174,10 @@ namespace DirectoryWatcher
                     // var lastWriteUtc = fileInfo.LastWriteTimeUtc; Not needed anymore - since not reliable with file links
                     list.Add(file, length);
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                    // ignored
+                }
             }
             return list;
         }
@@ -195,7 +194,10 @@ namespace DirectoryWatcher
                     var length = fileStream.Length; // This ensures to get the changed length from the destination file a link is pointing to
                     list.Add(file, length);
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                    // ignored
+                }
             }
             return list;
         }
@@ -211,10 +213,10 @@ namespace DirectoryWatcher
     public class ManualScanPhysicalFileSystemWatcher : IFileSystemWatcher
     {
 
-        ManualScanPhysicalFileSystemWatcherSettings _settings;
-        ManualScanDirectoryDifferences _diffs = new ManualScanDirectoryDifferences();
-        IManualScanDirectory _scanDirectory;
-        Task _currentFileSystemWatcher = null;
+        private readonly ManualScanPhysicalFileSystemWatcherSettings _settings;
+        private readonly ManualScanDirectoryDifferences _diffs = new ManualScanDirectoryDifferences();
+        private readonly IManualScanDirectory _scanDirectory;
+        private Task _currentFileSystemWatcher = null;
 
         public ManualScanPhysicalFileSystemWatcher(ManualScanPhysicalFileSystemWatcherSettings watcherSettings = null,
                                                    IManualScanDirectory scanDirectory = null)
@@ -246,8 +248,7 @@ namespace DirectoryWatcher
                         await Task.Delay(scanMs, token);
                         if (token.IsCancellationRequested)
                             break;
-                        if (callbackAndFilter.ActionScanning != null)
-                            callbackAndFilter.ActionScanning(this);
+                        callbackAndFilter.ActionScanning?.Invoke(this);
                         Trace.TraceInformation($"Scanning now directory: {_settings.ScanDirectory}");
                         var fileListNew = _scanDirectory.Scan(scanDir);
                         ReportChanges(current, fileListNew, token, callbackAndFilter);
@@ -269,33 +270,35 @@ namespace DirectoryWatcher
         {
             try
             {
-                var Report = callbackAndFilter.ActionChanges;
+                var report = callbackAndFilter.ActionChanges;
                 var changed = _diffs.GetChangedFiles(oldList, newList);
-                ReportChangeType(changed, token, Report, IFileSystemWatcherChangeType.Changed);
+                ReportChangeType(changed, token, report, FileSystemWatcherChangeType.Changed);
                 var newFiles = _diffs.GetNewFiles(oldList, newList);
-                ReportChangeType(newFiles, token, Report, IFileSystemWatcherChangeType.Created);
+                ReportChangeType(newFiles, token, report, FileSystemWatcherChangeType.Created);
                 var deletedFiles = _diffs.GetDeletedFiles(oldList, newList);
-                ReportChangeType(deletedFiles, token, Report, IFileSystemWatcherChangeType.Deleted);
+                ReportChangeType(deletedFiles, token, report, FileSystemWatcherChangeType.Deleted);
             }
             catch (OperationCanceledException)
             {
                 throw;
             }
             catch (Exception)
-            { }
+            {
+                // ignored
+            }
         }
 
         private void ReportChangeType(FileListEnum current,
                                       CancellationToken token,
-                                      Action<object, WatcherCallbackArgs> Report,
-                                      IFileSystemWatcherChangeType changeType)
+                                      Action<object, WatcherCallbackArgs> report,
+                                      FileSystemWatcherChangeType changeType)
         {
             if (token.IsCancellationRequested)
                 throw new OperationCanceledException();
             foreach (var file in current)
             {
                 Trace.TraceInformation($"Reporting changes in directory: {_settings.ScanDirectory}  file: {file} changetype: {changeType}");
-                Report(this, new WatcherCallbackArgs(file.Key, changeType));
+                report(this, new WatcherCallbackArgs(file.Key, changeType));
             }
         }
 
@@ -306,7 +309,12 @@ namespace DirectoryWatcher
             {
                 if (_tokenSource != null && _tokenSource.IsCancellationRequested == false)
                     Trace.TraceInformation($"Stop scanning directory: {_settings.ScanDirectory}");
-                try { _tokenSource?.Cancel(); } catch(Exception) { }
+                try { _tokenSource?.Cancel(); }
+                catch (Exception)
+                {
+                    // ignored
+                }
+
                 _currentFileSystemWatcher?.Wait();
                 _currentFileSystemWatcher = null;
                 _tokenSource = null;

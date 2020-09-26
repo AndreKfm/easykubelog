@@ -1,24 +1,26 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace FileToolsClasses
 {
     public interface IFileSeeker
     {
+        // ReSharper disable once UnusedMemberInSuper.Global
         string SeekLastLineFromCurrentAndPositionOnStartOfItAndReturnReadLine(IFileStream stream);
+        // ReSharper disable once UnusedMemberInSuper.Global
         bool SeekLastLineFromCurrentAndPositionOnStartOfIt(IFileStream stream);
     }
 
     public class FileSeeker : IFileSeeker
     {
-        byte[] _buffer;
-        byte[] _crlfBuffer = new byte[1];
+        private byte[] _buffer;
 
         bool SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(IFileStream stream, int steps) //, bool skipNearbyCRLF = true)
         {
             if (_buffer == null || (_buffer.Length != steps)) _buffer = new byte[steps];
-            Span<byte> buffer = _buffer.AsSpan<byte>();
+            Span<byte> buffer = _buffer.AsSpan();
             var initial = stream.Position;
 
 
@@ -36,9 +38,7 @@ namespace FileToolsClasses
                     buffer = buffer.Slice(0, toRead);
                 }
                 SetPositionRelative(stream, -toRead);
-                var currendMidPos0 = stream.Position;
                 int size = stream.Read(buffer);
-                var currentMidPos = stream.Position;
                 if (size != toRead)
                 {
                     // That shouldn't happen ???
@@ -48,10 +48,8 @@ namespace FileToolsClasses
                 int index = buffer.LastIndexOf((byte)'\n');
                 if (index >= 0)
                 {
-                    var posBefore = stream.Position;
                     var newPos = toRead - index;
                     SetPositionRelative(stream, -newPos);
-                    var pos = stream.Position;
                     return true;
                 }
                 SetPositionRelative(stream, -toRead); // Continue with next characters
@@ -62,15 +60,14 @@ namespace FileToolsClasses
 
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         bool SetPositionRelative(IFileStream stream, long offset)
         {
             var current = stream.Position;
-            var newPosAbsolute = current + offset;
 
             var newPos = stream.Seek(offset, SeekOrigin.Current);
 
 
-            var current2 = stream.Position;
             Debug.Assert((newPos - current) == offset);
             return (newPos - current) == offset; // We assume that we won't position more than Int32.Max
         }
@@ -80,6 +77,7 @@ namespace FileToolsClasses
             stream.Seek(position, SeekOrigin.Begin);
         }
 
+        [SuppressMessage("ReSharper", "BadChildStatementIndent")]
         public bool SeekLastLineFromCurrentAndPositionOnStartOfIt(IFileStream stream)
         {
             int steps = 80;
@@ -110,6 +108,7 @@ namespace FileToolsClasses
             return true;
         }
 
+        [SuppressMessage("ReSharper", "BadChildStatementIndent")]
         public string SeekLastLineFromCurrentAndPositionOnStartOfItAndReturnReadLine(IFileStream stream)
         {
             if (!SeekLastLineFromCurrentAndPositionOnStartOfIt(stream))
@@ -121,8 +120,8 @@ namespace FileToolsClasses
             for (; ; )
             {
                 int read = stream.Read(_buffer);
-                var xxxremove_me_directly = System.Text.Encoding.Default.GetString(_buffer);
-                Span<byte> buffer = _buffer.AsSpan<byte>();
+                //var xxxremove_me_directly = System.Text.Encoding.Default.GetString(_buffer);
+                Span<byte> buffer = _buffer.AsSpan();
                 var index = buffer.IndexOf((byte)'\n');
                 if (index != -1)
                 {

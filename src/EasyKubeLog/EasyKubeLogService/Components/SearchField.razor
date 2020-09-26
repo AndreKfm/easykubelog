@@ -6,19 +6,19 @@
     }
 </style>
 
+@* ReSharper disable UnknownCssClass *@
 
 <div class="input-group defpadding">
     <div class="input-group-prepend search-margin">
         @*<span class="input-group-text">Search</span>*@
         <button @onclick="ButtonSearch">Search</button>
-        <div class="d-flex justify-content-center align-items-center m-2" style="@(_style)" >
-            <div class="spinner-grow spinner-grow-sm"  role="status">
+        <div class="d-flex justify-content-center align-items-center m-2" style="@(Style)">
+            <div class="spinner-grow spinner-grow-sm" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
         </div>
         <input type="text" aria-label="Search text" @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" class="form-control" />
     </div>
-
 
     <div class="input-group-prepend search-margin">
         <span class="input-group-text">Max</span>
@@ -29,12 +29,11 @@
     <SearchFieldDateTime @ref="FromDateTime" Name="From" />
     <SearchFieldDateTime @ref="ToDateTime" Name="To" />
 
-    @*<div class="input-group-prepend search-margin" style="align-items:center;" >
-            <input type="checkbox" aria-label="Enable date from" @bind-value="_enabledDateFrom" class="form-check" style="transform: scale(2.9);"/>
+    @*<div class="input-group-prepend search-margin" style="align-items:center;">
+            <input type="checkbox" aria-label="Enable date from" @bind-value="_enabledDateFrom" class="form-check" style="transform: scale(2.9);" />
             <span class="input-group-text" style="padding-left: 1.0rem;">From</span>
             <input type="datetime-local" aria-label="Search date from" style="@(_style)" @bind-value="DateFrom" disabled="@(!EnabledDateFrom)" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control" />
         </div>*@
-
 </div>
 
 @using Microsoft.Extensions.Configuration;
@@ -45,41 +44,42 @@
 
     const int MaxElementsHighest = 2000;
 
-    SearchFieldDateTime fromDateTime;
-    SearchFieldDateTime toDateTime;
+    private SearchFieldDateTime _fromDateTime;
+    private SearchFieldDateTime _toDateTime;
+    // ReSharper disable once UnusedMember.Local
+    private SearchFieldDateTime FromDateTime { get => _fromDateTime;
+        set { _fromDateTime = value; _fromDateTime.NewInput = NewInput; } }
+    // ReSharper disable once UnusedMember.Local
+    private SearchFieldDateTime ToDateTime { get => _toDateTime;
+        set { _toDateTime = value; _toDateTime.NewInput = NewInput; } }
 
-    SearchFieldDateTime FromDateTime { get { return fromDateTime; } set { fromDateTime = value; fromDateTime.NewInput = () => NewInput(); } }
-    SearchFieldDateTime ToDateTime { get { return toDateTime; } set { toDateTime = value; toDateTime.NewInput = () => NewInput(); } }
-
+    // ReSharper disable once FieldCanBeMadeReadOnly.Local
     private string _text = String.Empty;
     private int _maxElements = 100;
 
-    private bool _searching = false;
-    string _style => _searching == true ? "" : "visibility: hidden";
+    private bool _searching;
+    string Style => _searching ? "" : "visibility: hidden";
+
+    const int DefaultDelay = 1000;
+    Task _delayTask = Task.CompletedTask;
+    System.Threading.CancellationTokenSource _tokenSource;
 
     public int MaxElements
     {
-        get { return _maxElements; }
-        set { _maxElements = value < MaxElementsHighest ? value : MaxElementsHighest; }
+        get => _maxElements;
+        set => _maxElements = value < MaxElementsHighest ? value : MaxElementsHighest;
     }
-
 
     public void DisplaySpinningSearch(bool state)
     {
         _searching = state;
-        base.InvokeAsync(StateHasChanged);
-    }
-
-
-    public SearchField()
-    {
+        InvokeAsync(StateHasChanged);
     }
 
     protected override void OnInitialized()
     {
         _maxElements = _configuration.GetValue<int>("MaxLogQueryResultLines");
     }
-
 
     string _lastQuery = String.Empty;
 
@@ -93,28 +93,22 @@
     {
         lock (_lastQuery)
         {
-            string currentQuery = _text + _maxElements.ToString() + fromDateTime.Date.ToString() + toDateTime.Date.ToString();
+            string currentQuery = _text + _maxElements.ToString() + _fromDateTime.Date.ToString() + _toDateTime.Date.ToString();
             if (currentQuery == _lastQuery)
                 return;
             _lastQuery = currentQuery;
         }
-        OnSearchQueryChange(_text, _maxElements, fromDateTime.Date, toDateTime.Date);
+        OnSearchQueryChange(_text, _maxElements, _fromDateTime.Date, _toDateTime.Date);
         StateHasChanged();
     }
-
-
-    const int DefaultDelay = 1000;
-    Task delayTask = Task.CompletedTask;
-    System.Threading.CancellationTokenSource _tokenSource;
-
 
     void AbortInCaseOfRunning()
     {
         _tokenSource?.Cancel();
-        delayTask?.Wait();
+        _delayTask?.Wait();
         _tokenSource?.Dispose();
         _tokenSource = null;
-        delayTask = null;
+        _delayTask = null;
     }
 
     // Method will be called on each keystroke but it won't call immediately
@@ -123,21 +117,22 @@
     {
         AbortInCaseOfRunning();
         _tokenSource = new System.Threading.CancellationTokenSource();
-        delayTask =
+        _delayTask =
         Task.Run(async () =>
         {
             try
             {
                 var token = _tokenSource.Token;
                 await Task.Delay(DefaultDelay, token);
-                await base.InvokeAsync(NewInput);
+                await InvokeAsync(NewInput);
             }
             catch (Exception)
-            { }
+            {
+            // ignored
+        }
         }, _tokenSource.Token);
 
     }
-
 
     public Action<string, int, DateTimeOffset, DateTimeOffset> OnSearchQueryChange;
 }

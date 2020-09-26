@@ -10,28 +10,24 @@ namespace EasyKubeLogService.Tool.Simulator
 {
     public class LogSimulatorReadAllContent : IDisposable
     {
-        public LogSimulatorReadAllContent()
-        {
-
-        }
-
-        private bool readDone = false;
-        private readonly Task current = Task.CompletedTask;
-        private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
+        private bool _readDone;
+        private readonly Task _current = Task.CompletedTask;
+        private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
 
         public void InitialRead(string directory, ICentralLogServiceCache cache, int maxLinesToRead = 1000)
         {
-            if (readDone)
+            if (_readDone)
                 return;
 
-            current.ContinueWith((task) =>
+            _current.ContinueWith((task) =>
             {
-                var token = tokenSource.Token;
+                var token = _tokenSource.Token;
                 if (token.IsCancellationRequested)
                     return;
 
                 var files = Directory.GetFiles(directory);
 
+                // ReSharper disable once LocalizableElement
                 Console.WriteLine($"Read simulation files from [{directory}]");
                 Parallel.ForEach(files, (file) =>
                 {
@@ -48,20 +44,20 @@ namespace EasyKubeLogService.Tool.Simulator
                         }
                     }
                     else foreach (var line in lines)
-                        {
-                            if (token.IsCancellationRequested)
-                                return;
-                            cache.AddEntry(new LogEntry(file, line));
-                        }
+                    {
+                        if (token.IsCancellationRequested)
+                            return;
+                        cache.AddEntry(new LogEntry(file, line));
+                    }
                 });
 
-                readDone = true;
+                _readDone = true;
             });
         }
 
         public void Dispose()
         {
-            tokenSource.Cancel();
+            _tokenSource.Cancel();
         }
     }
 }

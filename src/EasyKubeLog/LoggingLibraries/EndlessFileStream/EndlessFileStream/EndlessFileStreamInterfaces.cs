@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace EndlessFileStreamClasses
+namespace EndlessFileStream
 {
     using FileListType = ImmutableSortedDictionary<long, EndlessStreamFileListEntry>;
 

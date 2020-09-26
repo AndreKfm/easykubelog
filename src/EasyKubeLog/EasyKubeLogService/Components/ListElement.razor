@@ -1,8 +1,11 @@
-﻿
-<style>
-    .loglist:nth-of-type(odd) { background-color: rgba(221, 221, 221, 0.2); }
+﻿<style>
+    .loglist:nth-of-type(odd) {
+        background-color: #dddddd;
+        background-color: rgba(221, 221, 221, 0.2);
+    }
 </style>
 
+@* ReSharper disable UnknownCssClass *@
 <div class="loglist defpadding" style="width: auto; overflow: hidden">
     <div class="listelement ml-2 defpadding" style="width: auto; float: left; color:blue ">@ContentDateTime</div>
     <div class="listelement ml-3 defpadding" style="width: 15%; float: left;">@ContentLogContainer</div>
@@ -10,11 +13,7 @@
     <div name="contentlogtype" class="listelement ml-2 defpadding mr-2" style="width:auto; float: left; color:@ContentLogTypeColor">@ContentLogType</div>
 </div>
 
-@using LogEntries;
-
 @code {
-
-
 
     [Parameter]
     public DateTime ContentDateTime { get; set; }
@@ -34,7 +33,8 @@
         {
             switch (ContentLogType)
             {
-                case "stderr" : return "red";
+                case "stderr": return "red";
+    // ReSharper disable StringLiteralTypo
                 case "EASYLOG": return "darkred";
                 default: return "green";
             }

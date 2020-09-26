@@ -18,7 +18,7 @@ namespace DirectoryWatcher
     public class PhysicalFileSystemWatcherWrapper : IFileSystemWatcher
     {
         FileSystemWatcher _watcher;
-        PhysicalFileSystemWatcherWrapperSettings _settings;
+        readonly PhysicalFileSystemWatcherWrapperSettings _settings;
         public PhysicalFileSystemWatcherWrapper(PhysicalFileSystemWatcherWrapperSettings settings)
         {
             _settings = settings;
@@ -28,6 +28,7 @@ namespace DirectoryWatcher
         {
             DisableWatcher();
             SetCallback(null);
+            Close();
         }
 
         /// <summary>
@@ -65,10 +66,10 @@ namespace DirectoryWatcher
             if (_watcher == null) return;
             _watcher.EnableRaisingEvents = false;
             _watcher.Changed -= WatcherChanged;
-            _watcher.Created -= WatcherCreated; ;
+            _watcher.Created -= WatcherCreated;
             _watcher.Deleted -= WatcherDeleted;
             _watcher.Disposed -= WatcherDisposed;
-            _watcher.Renamed -= WatcherRenamed; ;
+            _watcher.Renamed -= WatcherRenamed;
             _watcher.Error -= WatcherError;
 
         }
@@ -93,32 +94,32 @@ namespace DirectoryWatcher
         private void WatcherDisposed(object sender, EventArgs e)
         {
             // Pass information in FileSystemEventArgs to keep interface simple
-            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(String.Empty, IFileSystemWatcherChangeType.Dispose));
+            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(String.Empty, FileSystemWatcherChangeType.Dispose));
         }
 
         private void WatcherError(object sender, ErrorEventArgs e)
         {
             // Pass information in FileSystemEventArgs to keep interface simple
-            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.GetException().ToString(), IFileSystemWatcherChangeType.Error));
+            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.GetException().ToString(), FileSystemWatcherChangeType.Error));
         }
 
         private void WatcherDeleted(object sender, FileSystemEventArgs e)
         {
-            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, IFileSystemWatcherChangeType.Deleted));
+            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, FileSystemWatcherChangeType.Deleted));
         }
 
         private void WatcherChanged(object sender, FileSystemEventArgs e)
         {
-            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, IFileSystemWatcherChangeType.Changed));
+            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, FileSystemWatcherChangeType.Changed));
         }
         private void WatcherCreated(object sender, FileSystemEventArgs e)
         {
-            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, IFileSystemWatcherChangeType.Created));
+            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, FileSystemWatcherChangeType.Created));
         }
 
         private void WatcherRenamed(object sender, RenamedEventArgs e)
         {
-            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, IFileSystemWatcherChangeType.Rename));
+            _callbackFileSystemChanged?.Invoke(this, new WatcherCallbackArgs(e.Name, FileSystemWatcherChangeType.Rename));
         }
 
 
@@ -128,13 +129,15 @@ namespace DirectoryWatcher
             {
 
                 DisableWatcher();
-                string fileFilter = callbackAndFilter != null ? callbackAndFilter.FileFilter : String.Empty;
 
                 // Let's better pass only one argument in case that implementation in FileSystemWatcher is different
-                _watcher = new FileSystemWatcher(_settings.ScanDirectory);
+                _watcher = new FileSystemWatcher(_settings.ScanDirectory)
+                {
+                    NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.FileName | NotifyFilters.LastWrite |
+                                   NotifyFilters.CreationTime | NotifyFilters.Attributes | NotifyFilters.Size
+                };
                 //new FileSystemWatcher(directoryPath, fileFilter);
 
-                _watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime | NotifyFilters.Attributes | NotifyFilters.Size;
                 if (callbackAndFilter != null)
                     SetCallback(callbackAndFilter.ActionChanges);
                 return true;

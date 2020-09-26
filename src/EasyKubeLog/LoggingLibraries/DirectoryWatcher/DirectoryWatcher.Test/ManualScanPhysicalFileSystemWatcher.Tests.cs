@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Xunit;
+// ReSharper disable All
 
 namespace DirectoryWatcher.Tests
 {
@@ -10,6 +11,7 @@ namespace DirectoryWatcher.Tests
         [Fact]
         void CreateObject()
         {
+            // ReSharper disable once UnusedVariable
             ManualScanPhysicalFileSystemWatcherFileList manual = new ManualScanPhysicalFileSystemWatcherFileList();
         }
 
@@ -64,7 +66,7 @@ namespace DirectoryWatcher.Tests
         }
 
         [Fact]
-        void TestOSFileNameNormalization()
+        void TestOsFileNameNormalization()
         {
             ManualScanPhysicalFileSystemWatcherFileList manual = new ManualScanPhysicalFileSystemWatcherFileList();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

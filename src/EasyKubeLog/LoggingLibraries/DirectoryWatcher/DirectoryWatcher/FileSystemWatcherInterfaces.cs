@@ -3,7 +3,7 @@
 namespace DirectoryWatcher
 {
     [Flags]
-    public enum IFileSystemWatcherChangeType
+    public enum FileSystemWatcherChangeType
     {
         Created = 1,
         Rename = 2,
@@ -26,21 +26,21 @@ namespace DirectoryWatcher
             this.ActionScanning = actionScanning;
         }
 
-        public readonly string FileFilter = String.Empty;                   // Specifies the files to watch = String.Empty = all files
-        public readonly Action<string, WatcherCallbackArgs> ActionChanges;  // Callback to call on specified changes
+        public readonly string FileFilter;                   // Specifies the files to watch = String.Empty = all files
+        public readonly Action<object, WatcherCallbackArgs> ActionChanges;  // Callback to call on specified changes
         public readonly Action<object> ActionScanning; // If set will be called each time a scan is executed
     }
 
     public class WatcherCallbackArgs
     {
-        public WatcherCallbackArgs(string fileName, IFileSystemWatcherChangeType changeType)
+        public WatcherCallbackArgs(string fileName, FileSystemWatcherChangeType changeType)
         {
             FileName = fileName;
             ChangeType = changeType;
         }
-        public string FileName { get; private set; }
+        public string FileName { get; }
 
-        public IFileSystemWatcherChangeType ChangeType { get; private set; }
+        public FileSystemWatcherChangeType ChangeType { get; }
     }
 
 

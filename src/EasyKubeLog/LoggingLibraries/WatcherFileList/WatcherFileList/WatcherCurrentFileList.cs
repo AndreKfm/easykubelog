@@ -15,14 +15,14 @@ namespace WatcherFileListClasses
             FileName = fileName;
             CurrentFile = fileStream;
         }
-        public string FileName { get; private set; } // Current file name
+        public string FileName { get; } // Current file name
 
-        public IFile CurrentFile { get; private set; } // Current file name
+        public IFile CurrentFile { get; } // Current file name
     }
 
     public interface ICurrentFileList
     {
-        bool AddFile(CurrentFileEntry currentFileEntry); // Returns false if the file exists or fileName is null
+        // Returns false if the file exists or fileName is null
     }
 
 
@@ -31,27 +31,27 @@ namespace WatcherFileListClasses
 
         public bool AddFile(CurrentFileEntry currentFileEntry)
         {
-            var old = fileList;
-            fileList = fileList.Add(currentFileEntry.FileName, currentFileEntry);
-            return (old != fileList);
+            var old = _fileList;
+            _fileList = _fileList.Add(currentFileEntry.FileName, currentFileEntry);
+            return (old != _fileList);
         }
 
         public bool RemoveFile(string fileName)
         {
-            var old = fileList;
-            if (!fileList.ContainsKey(fileName))
+            var old = _fileList;
+            if (!_fileList.ContainsKey(fileName))
                 return false;
-            fileList = fileList.Remove(fileName);
-            return (old != fileList);
+            _fileList = _fileList.Remove(fileName);
+            return (old != _fileList);
         }
 
 
-        public ImmutableDictionary<string /** fileName */, CurrentFileEntry> GetList()
+        public ImmutableDictionary<string, CurrentFileEntry> GetList()
         {
-            return fileList;
+            return _fileList;
         }
 
-        ImmutableDictionary<string /** fileName */, CurrentFileEntry> fileList = ImmutableDictionary<string, CurrentFileEntry>.Empty;
+        ImmutableDictionary<string, CurrentFileEntry> _fileList = ImmutableDictionary<string, CurrentFileEntry>.Empty;
     }
 
 

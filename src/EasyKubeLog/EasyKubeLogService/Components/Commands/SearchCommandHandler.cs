@@ -4,31 +4,29 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 
-namespace EasyKubeLogService.Commands
+// ReSharper disable once IdentifierTypo
+namespace EasyKubeLogService.Components.Commands
 {
-
-
     // Interface used to send search command
     public interface ISearchCommand
     {
         void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed);
     }
 
-
     // Handler for search handler
     internal class SearchCommandHandler : ISearchCommand
     {
-        readonly ICentralLogServiceQuery _cacheQuery;
-        ILogger<SearchCommandHandler> _logger;
+        private readonly ICentralLogServiceQuery _cacheQuery;
+        private readonly ILogger<SearchCommandHandler> _logger;
 
         public SearchCommandHandler(ICentralLogServiceCache cache, ILogger<SearchCommandHandler> logger)
         {
             _logger = logger;
             _cacheQuery = cache;
         }
+
         public void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed)
         {
-
             Stopwatch w = Stopwatch.StartNew();
             var result = _cacheQuery.Query(request.Query, request.MaxResults, request.From, request.To);
 
@@ -39,10 +37,11 @@ namespace EasyKubeLogService.Commands
 
     public class SearchRequest
     {
-        readonly public string Query;
-        readonly public int MaxResults;
-        readonly public DateTimeOffset From;
-        readonly public DateTimeOffset To;
+        public readonly string Query;
+        public readonly int MaxResults;
+        public readonly DateTimeOffset From;
+        public readonly DateTimeOffset To;
+
         public SearchRequest(string query, int maxResults, DateTimeOffset from = default, DateTimeOffset to = default)
         {
             Query = query;
@@ -50,7 +49,5 @@ namespace EasyKubeLogService.Commands
             To = to;
             MaxResults = maxResults;
         }
-
     }
-
 }

@@ -6,16 +6,17 @@ using System.Linq;
 
 namespace EasyKubeLogService.Services.CentralLogService
 {
-
+    // ReSharper disable once UnusedMember.Global
     public class MemoryCacheTreeDictionary : ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry>
     {
         private readonly int _maxLines;
+
         public MemoryCacheTreeDictionary(int maxLines)
         {
             _maxLines = maxLines;
         }
 
-        readonly TreeDictionary<(DateTimeOffset, int fileIndex), KubernetesLogEntry> _logCache = new TreeDictionary<(DateTimeOffset, int fileIndex), KubernetesLogEntry>();
+        private readonly TreeDictionary<(DateTimeOffset, int fileIndex), KubernetesLogEntry> _logCache = new TreeDictionary<(DateTimeOffset, int fileIndex), KubernetesLogEntry>();
 
         public void Add((DateTimeOffset, int fileIndex) key, KubernetesLogEntry value)
         {
@@ -31,7 +32,6 @@ namespace EasyKubeLogService.Services.CentralLogService
         {
             // Not really needed - memory needs no flush from applications
         }
-
 
         public void Dispose()
         {
@@ -58,7 +58,6 @@ namespace EasyKubeLogService.Services.CentralLogService
             }
         }
 
-
         private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
         {
             lock (_logCache)
@@ -73,11 +72,11 @@ namespace EasyKubeLogService.Services.CentralLogService
                 return result.ToArray();
             }
         }
+
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to)
         {
             if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, from, to);
             return QueryCaseSensitive(simpleQuery, maxResults, from, to);
         }
-
     }
 }

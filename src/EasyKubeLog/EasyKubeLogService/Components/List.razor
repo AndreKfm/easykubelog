@@ -1,35 +1,33 @@
-﻿<div class="list">
+﻿@* ReSharper disable once UnknownCssClass *@
+<div class="list">
 
     @foreach (var e in _list)
     {
         <EasyKubeLogService.Components.ListElement ContentDateTime=@e.ContentDateTime
-                                               ContentLogOutput=@e.ContentLogOutput
-                                               ContentLogContainer=@e.ContentLogContainer
-                                               ContentLogType=@e.ContentLogType />
+                                                   ContentLogOutput=@e.ContentLogOutput
+                                                   ContentLogContainer=@e.ContentLogContainer
+                                                   ContentLogType=@e.ContentLogType />
     }
-
 </div>
-
 
 @code {
     //private int _count = 10;
-    public List<Components.ListElement> _list = new List<Components.ListElement>(100);
+    public List<ListElement> _list = new List<ListElement>(100);
 
     public void Set(List<ListElement> newList, Refresh refresh)
     {
         _list = newList;
         if (refresh == Refresh.ImmediatelyRefresh)
-            base.InvokeAsync(StateHasChanged);
+            InvokeAsync(StateHasChanged);
 
     }
-
 
     public void Add(string elementContent, Refresh refresh)
     {
 
         _list.Add(new ListElement());
         if (refresh == Refresh.ImmediatelyRefresh)
-            base.InvokeAsync(StateHasChanged);
+            InvokeAsync(StateHasChanged);
 
     }
 }

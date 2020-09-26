@@ -1,8 +1,9 @@
-﻿using EndlessFileStreamClasses;
-using FileToolsClasses;
+﻿using FileToolsClasses;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using EndlessFileStream;
+// ReSharper disable All
 
 namespace FileArrayConsole
 {
@@ -14,8 +15,12 @@ namespace FileArrayConsole
 
         static void ReadWhileWrite()
         {
-            var stream = new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\FileArray", MaxLogFileSizeInMByte = 1 });
+            var stream = new EndlessFileStream.EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\FileArray", MaxLogFileSizeInMByte = 1 });
             Task w = Task.Run(() => TestWritingAndPerformance(stream));
+
+            Stopwatch watch = Stopwatch.StartNew();
+            int maxExecutionTimeMinutes = 15;
+            Console.WriteLine($"Running now for {maxExecutionTimeMinutes}");
 
             for (; ; )
             {
@@ -32,19 +37,24 @@ namespace FileArrayConsole
                     Console.Error.WriteLine($"Exception while reading endless stream: {e.Message}");
                 }
 
-                Task.Delay(1000).Wait();
+                if (watch.Elapsed.Minutes > maxExecutionTimeMinutes)
+                    break;
             }
 
 
+            // ReSharper disable once FunctionNeverReturns
         }
 
 
-        static void TestWritingAndPerformance(EndlessFileStream fileStream = null)
+        static void TestWritingAndPerformance(EndlessFileStream.EndlessFileStream fileStream = null)
         {
-            var list = fileStream ?? new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\FileArray", MaxLogFileSizeInMByte = 1 });
+            var list = fileStream ?? new EndlessFileStream.EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\FileArray", MaxLogFileSizeInMByte = 1 });
             long size = 0;
             Stopwatch w = Stopwatch.StartNew();
             int index = 0;
+
+            int maxExecutionTimeMinutes = 15; 
+            Console.WriteLine($"Running now for {maxExecutionTimeMinutes}");
             for (; ; )
             {
                 string entry = Guid.NewGuid().ToString() + ":" + (++index).ToString();
@@ -57,6 +67,9 @@ namespace FileArrayConsole
                     w = Stopwatch.StartNew();
                     size = 0;
                 }
+
+                if (w.Elapsed.Minutes > maxExecutionTimeMinutes)
+                    break;
             }
         }
         static void Main(string[] args)
@@ -68,8 +81,10 @@ namespace FileArrayConsole
             //EndlessFileStreamBuilder b = new EndlessFileStreamBuilder(); b.GenerateEndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\endless" }, @"C:\temp\var\log\pods");
             EndlessFileStreamBuilder b = new EndlessFileStreamBuilder(); b.GenerateEndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\endless" }, @"c:\test\logs");
 
+            // ReSharper disable once RedundantJumpStatement
             return;
-            EndlessFileStream e = new EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\endless", MaxLogFileSizeInMByte = 1024 });
+/*
+            EndlessFileStream.EndlessFileStream e = new EndlessFileStream.EndlessFileStream(new EndlessFileStreamSettings { BaseDirectory = @"C:\test\endless", MaxLogFileSizeInMByte = 1024 });
             var stream = e.Reader.ReadEntries(FileStreamDirection.Forward, int.MaxValue);
             string search = "gonzo";
             Stopwatch w = Stopwatch.StartNew();
@@ -104,6 +119,7 @@ namespace FileArrayConsole
 
             //TestWritingAndPerformance();
             ReadWhileWrite();
+*/
         }
     }
 }

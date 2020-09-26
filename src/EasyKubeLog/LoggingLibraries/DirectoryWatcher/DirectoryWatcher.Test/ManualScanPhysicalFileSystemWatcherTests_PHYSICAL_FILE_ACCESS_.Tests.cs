@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using Xunit;
 
 namespace DirectoryWatcher.Tests
 {
-    public class ManualScanPhysicalFileSystemWatcherTests_PHYSICAL_FILE_ACCESS_
+    public class ManualScanPhysicalFileSystemWatcherTestsPhysicalFileAccess
     {
         [Fact]
+        [SuppressMessage("ReSharper", "UnusedVariable")]
         void CreateManualScanPhysicalFileSystemWatcherObject()
         {
             var m1 = new ManualScanPhysicalFileSystemWatcher();
@@ -26,7 +28,7 @@ namespace DirectoryWatcher.Tests
         }
         string GetAndPrepareTempDirectory()
         {
-            var temp = Path.GetTempPath();
+            Path.GetTempPath();
             var scanDirectory = DeleteAndReturnTempDirectoryName();
 
             Directory.CreateDirectory(scanDirectory);
@@ -40,23 +42,23 @@ namespace DirectoryWatcher.Tests
 
 
 
-        void CreateFileHelper(Func<string, FileStream> createFileBefore, Func<string, FileStream> createFileAfter, IFileSystemWatcherChangeType type)
+        void CreateFileHelper(Func<string, FileStream> createFileBefore, Func<string, FileStream> createFileAfter, FileSystemWatcherChangeType type)
         {
             var scanDirectory = GetAndPrepareTempDirectory();
 
-            FileStream fileBefore = createFileBefore == null ? null : createFileBefore(scanDirectory);
+            FileStream fileBefore = createFileBefore?.Invoke(scanDirectory);
 
 
             var m = new ManualScanPhysicalFileSystemWatcher(new ManualScanPhysicalFileSystemWatcherSettings { ScanDirectory = scanDirectory, ScanSpeedInSeconds = 0 });
 
             ManualResetEvent changeDetected = new ManualResetEvent(false);
             ManualResetEvent scanInitialized = new ManualResetEvent(false);
-            m.Open(new FilterAndCallbackArgument(String.Empty, (object o, WatcherCallbackArgs args) =>
+            m.Open(new FilterAndCallbackArgument(String.Empty, (o, args) =>
             {
                 if (args.ChangeType == type)
                     changeDetected.Set();
             },
-            (object o) =>
+            o =>
             {
                 scanInitialized.Set();
             }));
@@ -64,7 +66,7 @@ namespace DirectoryWatcher.Tests
             var completedScan = scanInitialized.WaitOne(500);
             Assert.True(completedScan);
 
-            FileStream file = createFileAfter == null ? null : createFileAfter(scanDirectory);
+            FileStream file = createFileAfter?.Invoke(scanDirectory);
             var completed = changeDetected.WaitOne(500);
             Assert.True(completed);
             file?.Dispose();
@@ -78,7 +80,7 @@ namespace DirectoryWatcher.Tests
         [Fact]
         void TestNewFiles()
         {
-            CreateFileHelper(null, (scanDirectory) => File.Open(TempFileName(scanDirectory, "NewFile1.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete), IFileSystemWatcherChangeType.Created); ;
+            CreateFileHelper(null, (scanDirectory) => File.Open(TempFileName(scanDirectory, "NewFile1.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete), FileSystemWatcherChangeType.Created); 
         }
         FileStream OpenFile(string name)
         {
@@ -97,7 +99,7 @@ namespace DirectoryWatcher.Tests
                     file.WriteByte(65);
                     file.Close();
                     return null;
-                }, IFileSystemWatcherChangeType.Changed); ;
+                }, FileSystemWatcherChangeType.Changed); 
         }
 
         [Fact]
@@ -105,7 +107,7 @@ namespace DirectoryWatcher.Tests
         {
             CreateFileHelper(
                 (scanDirectory) => OpenFile(TempFileName(scanDirectory, "NewFile1.txt")),
-                (scanDirectory) => { File.Delete(TempFileName(scanDirectory, "NewFile1.txt")); return null; }, IFileSystemWatcherChangeType.Deleted); ;
+                (scanDirectory) => { File.Delete(TempFileName(scanDirectory, "NewFile1.txt")); return null; }, FileSystemWatcherChangeType.Deleted); 
         }
     }
 }

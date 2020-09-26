@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Diagnostics.CodeAnalysis;
+using Xunit;
 
 namespace LogEntries.Test
 {
@@ -13,6 +14,7 @@ namespace LogEntries.Test
         const string LogFormatContainerDInvalid4 = @"2020-08-09T16:19:55.3300942Z stdoutF loga#26";
 
         [Fact]
+        [SuppressMessage("ReSharper", "StringLiteralTypo")]
         public void TestContainerdParser()
         {
             LogParserContainerd contd = new LogParserContainerd();
@@ -44,8 +46,8 @@ namespace LogEntries.Test
             var dockerParser = LogParserAutoDetect.GetAutoParser(LogFormatDocker);
             Assert.NotNull(dockerParser);
 
-            var cotainerDParser = LogParserAutoDetect.GetAutoParser(LogFormatContainerD);
-            Assert.NotNull(cotainerDParser);
+            var containerDParser = LogParserAutoDetect.GetAutoParser(LogFormatContainerD);
+            Assert.NotNull(containerDParser);
 
             var invalidParser = LogParserAutoDetect.GetAutoParser(LogFormatContainerDInvalid4);
             Assert.Null(invalidParser);

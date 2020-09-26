@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Xunit;
+// ReSharper disable All
 
 namespace LogEntries.Test
 {
@@ -44,6 +46,7 @@ namespace LogEntries.Test
         }
 
         [Fact]
+        [SuppressMessage("ReSharper", "StringLiteralTypo")]
         public void DeserializeContainerName()
         {
             //string name = "kube-apiserver-myserver-2_kube-system_kube-apiserver-1827c8c0196e15c01ed339eac252aa483212dfd1b25ce44d2fca974a954c196b";

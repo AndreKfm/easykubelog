@@ -1,7 +1,7 @@
 ﻿@page "/mainlayout"
 @inherits LayoutComponentBase
 
-
+@* ReSharper disable UnknownCssClass *@
 <div class="main">
     <div class="mt-3 ml-3 mr-3 mb-4 border rounded shadow bg-primary" name="mainHeader" style="">
         <h1 style="text-align: center">Easy Kube Log 0.0.9</h1>
@@ -10,42 +10,31 @@
         <div class="m-3">
             <EasyKubeLogService.Components.SearchField @ref="SearchField" />
         </div>
-        <div class="m-3 defpadding  ">Found: @numEntries</div>
+        <div class="m-3 defpadding  ">Found: @_numEntries</div>
         <div class="m-3 border bg-light" name="MainList" style="position:absolute; width:auto; right:0; left:0; height:auto; top:180px; bottom:0; overflow:auto; box-sizing:border-box">
             <EasyKubeLogService.Components.List @ref="_mainList" />
         </div>
     </div>
 </div>
 
-
-
-@using EasyKubeLogService.Commands;
 @using LogEntries;
-@using Microsoft.Extensions.Configuration;
 @using System.Threading;
+@using EasyKubeLogService.Components.Commands
 @inject ISearchCommand  _searchCommand;
-
 
 @code
 {
-    int numEntries = 0;
-
-
-
-
-
-    Components.SearchField _searchField;
+    int _numEntries;
+    SearchField _searchField;
 
     protected override void OnInitialized()
     {
     }
 
-    Components.SearchField SearchField
+    // ReSharper disable once UnusedMember.Local
+    SearchField SearchField
     {
-        get
-        {
-            return _searchField;
-        }
+        get => _searchField;
 
         set
         {
@@ -53,21 +42,22 @@
             InitSearchField();
         }
     }
-    EasyKubeLogService.Components.List _mainList;
+    // ReSharper disable once FieldCanBeMadeReadOnly.Local
+    private List _mainList = new List();
 
     void Completed(KubernetesLogEntry[] logEntries)
     {
-        List<EasyKubeLogService.Components.ListElement> list = new List<EasyKubeLogService.Components.ListElement>();
+        List<ListElement> list = new List<ListElement>();
 
         foreach (var queryResult in logEntries)
         {
-            var e = new EasyKubeLogService.Components.ListElement();
+            var e = new ListElement();
             e.Set(queryResult.Time, queryResult.Line, queryResult.Stream, queryResult.Container);
             list.Add(e);
         }
         _mainList.Set(list, Refresh.ImmediatelyRefresh);
-        numEntries = list.Count;
-        base.InvokeAsync(StateHasChanged);
+        _numEntries = list.Count;
+        InvokeAsync(StateHasChanged);
 
     }
 
@@ -88,22 +78,22 @@
         }
     }
 
-
-    int _spinnerCounter = 0;
+    int _spinnerCounter;
 
     void InitSearchField()
     {
         _searchField.OnSearchQueryChange = (query, max, from, to) =>
         {
             EnableSpinner();
-            Send(query, max, from, to, (result) => { DisableSpinner(); Completed(result); });
+    // ReSharper disable once RedundantVerbatimPrefix
+            Send(query, max, @from, to, (result) => { DisableSpinner(); Completed(result); });
         };
     }
 
-    bool Send(string query, int max, DateTimeOffset from, DateTimeOffset to, Action<KubernetesLogEntry[]> completed)
+    // ReSharper disable once RedundantVerbatimPrefix
+    void Send(string query, int max, DateTimeOffset @from, DateTimeOffset to, Action<KubernetesLogEntry[]> completed)
     {
-        var t = Task.Run(() => _searchCommand.Search(new SearchRequest(query, max, from, to), completed));
-        return true;
+        Task.Run(() => _searchCommand.Search(new SearchRequest(query, max, from, to), completed)).Wait();
     }
 
 }
