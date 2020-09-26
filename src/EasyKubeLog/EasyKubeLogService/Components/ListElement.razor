@@ -10,7 +10,7 @@
     <div class="listelement ml-2 defpadding" style="width: auto; float: left; color:blue ">@ContentDateTime</div>
     <div class="listelement ml-3 defpadding" style="width: 15%; float: left;">@ContentLogContainer</div>
     <div class="listelement ml-3 defpadding" style="width: 60%; float: left;">@ContentLogOutput</div>
-    <div name="contentlogtype" class="listelement ml-2 defpadding mr-2" style="width:auto; float: left; color:@ContentLogTypeColor">@ContentLogType</div>
+    <div name="contentlogType" class="listelement ml-2 defpadding mr-2" style="width:auto; float: left; color:@ContentLogTypeColor">@ContentLogType</div>
 </div>
 
 @code {
@@ -41,11 +41,11 @@
         }
     }
 
-    public void Set(DateTimeOffset time, string output, string logtype, string container)
+    public void Set(DateTimeOffset time, string output, string logType, string container)
     {
         ContentDateTime = new DateTime(time.Ticks);
         ContentLogOutput = output;
-        ContentLogType = logtype;
+        ContentLogType = logType;
 
         var cont = LogEntries.KubernetesContainerNameTools.DeserializeContainerName(container);
 
