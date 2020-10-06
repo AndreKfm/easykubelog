@@ -1,17 +1,16 @@
 ﻿<style>
     .loglist:nth-of-type(odd) {
-        background-color: rgba(110, 110, 110, 0.5);
         color: rgba(255, 255, 255, 0.6);
+        background-color: rgba(100, 100, 100, 0.1);
     }
     .loglist:nth-of-type(even) {
-        background-color: rgba(121, 121, 121, 0.5);
         color: rgba(255, 255, 255, 0.5);
     }
 </style>
 
 @* ReSharper disable UnknownCssClass *@
 <div class="loglist defpadding" style="width: auto; overflow: hidden; ">
-    <div class="listelement ml-2 defpadding" style="width: auto; float: left; color: rgba(190, 190, 255, 0.9)">
+    <div class="listelement ml-2 defpadding" style="width: auto; float: left; color: rgba(200, 200, 255, 0.9)">
         @ContentDateTime
     </div>
     <div class="listelement ml-3 defpadding" style="width: 15%; float: left;">@ContentLogContainer</div>

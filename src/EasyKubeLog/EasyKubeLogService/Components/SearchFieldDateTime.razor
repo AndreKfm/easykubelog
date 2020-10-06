@@ -1,10 +1,10 @@
 ﻿<div class="input-group-prepend search-margin" style="align-items:center;">
     <div class="d-flex justify-content-center align-items-center m-2">
-        <input type="checkbox" aria-label="Date from" @bind-value="_enabledDate" class="form-check" style="transform: scale(1.6);" />
+        <input type="checkbox" aria-label="Date from" @bind-value="_enabledDate" class="form-check button-background" style="transform: scale(1.6);" />
     </div>
-    <span class="input-group-text" style="padding-left: 1.0rem;">@Name</span>
-    <input type="date" aria-label="Search date" style="@(Style)" @bind-value="InternalDate" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control" />
-    <input type="time" aria-label="Search time" style="@(Style)" @bind-value="InternalTime" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control" />
+    <span class="input-group-text button-background mr-1" style="padding-left: 1.0rem;">@Name</span>
+    <input type="date" aria-label="Search date" style="@(Style)" @bind-value="InternalDate" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control button-background mr-1" />
+    <input type="time" aria-label="Search time" style="@(Style)" @bind-value="InternalTime" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control button-background mr-1" />
 </div>
 
 @code {

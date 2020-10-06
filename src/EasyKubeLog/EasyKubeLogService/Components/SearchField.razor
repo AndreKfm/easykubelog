@@ -1,9 +1,8 @@
 ﻿@*@page "/searchfield"*@
 
 <style>
-    .search-margin {
-        margin-right: 2.0rem;
-    }
+    .search-margin { margin-right: 2.0rem; }
+    .button-background { background: rgba(200, 200, 200, 0.9); border: 0}
 </style>
 
 @* ReSharper disable UnknownCssClass *@
@@ -11,23 +10,22 @@
 <div class="input-group defpadding">
     <div class="input-group-prepend search-margin">
         @*<span class="input-group-text">Search</span>*@
-        <button @onclick="ButtonSearch">Search</button>
+        <button class="button-background" @onclick="ButtonSearch">Search</button>
         <div class="d-flex justify-content-center align-items-center m-2" style="@(Style)">
             <div class="spinner-grow spinner-grow-sm" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
         </div>
-        <input type="text" aria-label="Search text" @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" class="form-control" />
+        <input class="form-control button-background" type="text" aria-label="Search text" @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" />
     </div>
 
     <div class="input-group-prepend search-margin">
-        <span class="input-group-text">Max</span>
-        <input type="number" aria-label="Search text" @bind-value="MaxElements" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" class="form-control"
-               style="max-width:7rem" />
+        <span class="input-group-text button-background mr-1">Max</span>
+        <input class="form-control button-background" type="number" aria-label="Search text" @bind-value="MaxElements" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" style="max-width:7rem" />
     </div>
 
-    <SearchFieldDateTime @ref="FromDateTime" Name="From" />
-    <SearchFieldDateTime @ref="ToDateTime" Name="To" />
+    <SearchFieldDateTime  @ref="FromDateTime" Name="From" />
+    <SearchFieldDateTime  @ref="ToDateTime" Name="To" />
 
     @*<div class="input-group-prepend search-margin" style="align-items:center;">
             <input type="checkbox" aria-label="Enable date from" @bind-value="_enabledDateFrom" class="form-check" style="transform: scale(2.9);" />
