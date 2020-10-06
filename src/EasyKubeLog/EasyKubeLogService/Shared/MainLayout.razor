@@ -2,16 +2,16 @@
 @inherits LayoutComponentBase
 
 @* ReSharper disable UnknownCssClass *@
-<div class="main">
-    <div class="mt-3 ml-3 mr-3 mb-4 border rounded shadow bg-primary" name="mainHeader" style="">
-        <h1 style="text-align: center">Easy Kube Log 0.0.10</h1>
+<div class="main" style="">
+    <div class="mb-3 pt-3 text-light" name="mainHeader" >
+        <h2 class="ml-3" style="text-align: left; color: rgba(200, 200, 200, 0.9)">Easy Kube Log 0.0.11</h2>
     </div>
-    <div class="" style="">
+    <div>
         <div class="m-3">
             <EasyKubeLogService.Components.SearchField @ref="SearchField" />
         </div>
-        <div class="m-3 defpadding  ">Found: @_numEntries</div>
-        <div class="m-3 border bg-light" name="MainList" style="position:absolute; width:auto; right:0; left:0; height:auto; top:180px; bottom:0; overflow:auto; box-sizing:border-box">
+        <div class="mt-3 mb-3 pl-3 " style="color: rgba(200, 200, 200, 0.9)">Found: @_numEntries</div>
+        <div name="MainList" style="position:absolute; width:auto; right:0; left:0; height:auto; top:160px; bottom:0; overflow:auto; box-sizing:border-box">
             <EasyKubeLogService.Components.List @ref="_mainList" />
         </div>
     </div>
