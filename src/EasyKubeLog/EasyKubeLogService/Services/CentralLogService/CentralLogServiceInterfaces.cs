@@ -42,6 +42,14 @@ namespace EasyKubeLogService.Services.CentralLogService
             return From == default && To == default;
         }
 
+        public bool IsInBetweenOrDefault(DateTimeOffset time)
+        {
+            return (time == default || IsDefault() == true) || (
+                   (From == default || From <= time) &&
+                   (To == default   || To >= time));
+        }
+
+
         public readonly DateTimeOffset From { get; }
         public readonly DateTimeOffset To { get; }
     }
