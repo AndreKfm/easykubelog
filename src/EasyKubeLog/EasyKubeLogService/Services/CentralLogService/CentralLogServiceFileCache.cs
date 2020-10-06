@@ -60,9 +60,10 @@ namespace EasyKubeLogService.Services.CentralLogService
 
         private bool CheckInBetween(KubernetesLogEntry k, TimeRange timeRange)
         {
-            return (timeRange.From == default || timeRange.From <= k.Time) &&
-                   (timeRange.To == default || timeRange.To >= k.Time) &&
-                   (timeRange.IsDefault() == false);
+            return (timeRange.IsDefault() == true) &&
+                   (timeRange.From == default || timeRange.From <= k.Time) &&
+                   (timeRange.To == default || timeRange.To >= k.Time);
+
         }
 
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, TimeRange timeRange)
@@ -119,9 +120,10 @@ namespace EasyKubeLogService.Services.CentralLogService
         {
             DateTimeOffset time = k.Time;
 
-            return (timeRange.From == default || timeRange.From <= time) &&
-                   (timeRange.To == default || timeRange.To >= time) && 
-                   (timeRange.IsDefault() == false);
+            return (timeRange.IsDefault() == true) && 
+                   (timeRange.From == default || timeRange.From <= time) &&
+                   (timeRange.To == default || timeRange.To >= time);
+
         }
 
         private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, TimeRange timeRange)
