@@ -138,11 +138,11 @@ namespace EasyKubeLogService.Services.CentralLogService
             }
         }
 
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
+        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, TimeRange timeRange)
         {
             lock (_logCache)
             {
-                return _logCache.Query(simpleQuery, maxResults, CacheQueryMode.CaseInsensitive, from, to);
+                return _logCache.Query(simpleQuery, maxResults, CacheQueryMode.CaseInsensitive, timeRange);
             }
         }
 

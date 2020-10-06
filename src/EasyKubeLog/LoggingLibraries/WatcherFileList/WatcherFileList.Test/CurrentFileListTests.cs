@@ -90,7 +90,7 @@ namespace WatcherFileListClasses.Test
 
             long Seek(long pos, SeekOrigin origin, ref long position, long fileSize)
             {
-                if (position <= 0) throw new ArgumentOutOfRangeException(nameof(position));
+                if (position < 0) throw new ArgumentOutOfRangeException(nameof(position));
                 switch (origin)
                 {
                     case SeekOrigin.Begin:

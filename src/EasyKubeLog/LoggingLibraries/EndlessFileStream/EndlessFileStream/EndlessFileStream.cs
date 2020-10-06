@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FileToolsClasses;
@@ -67,7 +68,6 @@ namespace EndlessFileStream
             string toBeHashed = String.Join(',', stringList.ToArray());
             return GetShaHash(toBeHashed);
         }
-
 
         public FileListType ReadListFromFile()
         {
@@ -229,7 +229,12 @@ namespace EndlessFileStream
             _maxEntries = maxEntries;
             _fileNames = fileNames ?? new EndlessFileStreamNames(baseDirectory);
             _fileOperations = fileOperations ?? new EndlessFileStreamFileOperations(_fileNames);
-            _fileList = _fileOperations.ReadListFromFile() ?? AddNewFileDeleteOldestIfNeeded();
+            _fileList = _fileOperations.ReadListFromFile();
+            if (_fileList == null)
+            {
+                _fileList = CreateNewFileList();
+                AddNewFileDeleteOldestIfNeeded();
+            }
             PurgeRedundantFiles();
         }
 
@@ -238,6 +243,11 @@ namespace EndlessFileStream
         void PurgeRedundantFiles()
         {
             _fileOperations.PurgeRedundantFiles(_fileList);
+        }
+
+        private FileListType CreateNewFileList()
+        {
+            return FileListType.Empty;
         }
 
         public FileListType AddNewFileDeleteOldestIfNeeded()

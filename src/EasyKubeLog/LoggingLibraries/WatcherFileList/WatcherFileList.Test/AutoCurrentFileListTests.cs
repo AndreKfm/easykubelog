@@ -65,12 +65,12 @@ namespace WatcherFileListClasses.Test
             string lastOutput = String.Empty;
             string lastFileName = String.Empty;
             AutoResetEvent waitForInput = new AutoResetEvent(false);
-            autoCurrentFileList.BlockingReadAsyncNewOutput((output, token) =>
+            var task = autoCurrentFileList.BlockingReadAsyncNewOutput((output, token) =>
             {
                 lastOutput = output.Lines;
                 lastFileName = output.FileName;
                 waitForInput.Set();
-            }).Wait();
+            });
             wrapper.CurrentOutput = mustBeThis;
             actionFileChanges(null, new WatcherCallbackArgs("file1.txt", FileSystemWatcherChangeType.Changed));
             Assert.True(waitForInput.WaitOne(100));

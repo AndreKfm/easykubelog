@@ -6,7 +6,7 @@ namespace EasyKubeLogService.Services.CentralLogService
 {
     public interface ICentralLogServiceQuery : IDisposable
     {
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to);
+        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, TimeRange timeRange);
     }
 
     public interface ICentralLogService : IDisposable
@@ -29,12 +29,38 @@ namespace EasyKubeLogService.Services.CentralLogService
         CaseSensitive, CaseInsensitive
     }
 
+    public readonly struct TimeRange
+    {
+        public TimeRange(DateTimeOffset from, DateTimeOffset to)
+        {
+            From = from;
+            To = to;
+        }
+
+        public bool IsDefault()
+        {
+            return From == default && To == default;
+        }
+
+        public bool IsInBetweenOrDefault(DateTimeOffset time)
+        {
+            return (time == default || IsDefault() == true) || (
+                   (From == default || From <= time) &&
+                   (To == default   || To >= time));
+        }
+
+
+        public readonly DateTimeOffset From { get; }
+        public readonly DateTimeOffset To { get; }
+    }
+
+
     public interface ICache<in TKey, in TValue> : IDisposable
     {
         void Add(TKey key, TValue value);
 
         void Flush();
 
-        KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to);
+        KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, TimeRange timeRange);
     }
 }
