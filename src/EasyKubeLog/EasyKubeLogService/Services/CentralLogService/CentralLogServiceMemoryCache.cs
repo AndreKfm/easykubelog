@@ -38,17 +38,19 @@ namespace EasyKubeLogService.Services.CentralLogService
             _logCache.Clear();
         }
 
-        private bool CheckInBetween(KubernetesLogEntry k, DateTimeOffset from, DateTimeOffset to)
+        private bool CheckInBetween(KubernetesLogEntry k, TimeRange timeRange)
         {
-            return (from == default || from <= k.Time) && (to == default || to >= k.Time);
+            return (timeRange.From == default || timeRange.From <= k.Time) &&
+                   (timeRange.To == default || timeRange.To >= k.Time) &&
+                   (timeRange.IsDefault() == false);
         }
 
-        private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
+        private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, TimeRange timeRange)
         {
             lock (_logCache)
             {
                 var result = _logCache.AsParallel().
-                    Where(x => CheckInBetween(x.Value, from, to)).
+                    Where(x => CheckInBetween(x.Value, timeRange)).
                     Where(x => x.Value.Line.Contains(simpleQuery)).
                     Take(maxResults).
                     Select(x => x.Value).
@@ -58,12 +60,12 @@ namespace EasyKubeLogService.Services.CentralLogService
             }
         }
 
-        private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
+        private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, TimeRange timeRange)
         {
             lock (_logCache)
             {
                 var result = _logCache.AsParallel().
-                    Where(x => CheckInBetween(x.Value, from, to)).
+                    Where(x => CheckInBetween(x.Value, timeRange)).
                     Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Value.Line, simpleQuery, CompareOptions.IgnoreCase) >= 0).
                     Take(maxResults).
                     Select(x => x.Value).
@@ -73,10 +75,10 @@ namespace EasyKubeLogService.Services.CentralLogService
             }
         }
 
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, DateTimeOffset from, DateTimeOffset to)
+        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, TimeRange timeRange)
         {
-            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, from, to);
-            return QueryCaseSensitive(simpleQuery, maxResults, from, to);
+            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, timeRange);
+            return QueryCaseSensitive(simpleQuery, maxResults, timeRange);
         }
     }
 }

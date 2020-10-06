@@ -28,7 +28,7 @@ namespace EasyKubeLogService.Components.Commands
         public void Search(SearchRequest request, Action<KubernetesLogEntry[]> completed)
         {
             Stopwatch w = Stopwatch.StartNew();
-            var result = _cacheQuery.Query(request.Query, request.MaxResults, request.From, request.To);
+            var result = _cacheQuery.Query(request.Query, request.MaxResults, new TimeRange(request.From, request.To));
 
             completed(result);
             _logger.LogInformation($"Queried:{request.Query} - result length: {result.Length} needed: {w.ElapsedMilliseconds} ms");

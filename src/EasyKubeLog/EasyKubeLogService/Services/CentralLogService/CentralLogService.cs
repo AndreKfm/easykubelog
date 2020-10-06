@@ -111,9 +111,9 @@ namespace EasyKubeLogService.Services.CentralLogService
             _logEntryChannel = null;
         }
 
-        KubernetesLogEntry[] ICentralLogServiceQuery.Query(string simpleQuery, int maxResults, DateTimeOffset from, DateTimeOffset to)
+        KubernetesLogEntry[] ICentralLogServiceQuery.Query(string simpleQuery, int maxResults, TimeRange timeRange)
         {
-            return _cache.Query(simpleQuery, maxResults, from, to);
+            return _cache.Query(simpleQuery, maxResults, timeRange);
         }
     }
 }
