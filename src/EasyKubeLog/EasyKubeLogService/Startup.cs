@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using EmbeddedBlazorContent;
 using WatcherFileListClasses;
 
 namespace EasyKubeLogService
@@ -147,6 +148,7 @@ namespace EasyKubeLogService
             //app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
+            app.UseEmbeddedBlazorContent(typeof(MatBlazor.BaseMatComponent).Assembly);
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
