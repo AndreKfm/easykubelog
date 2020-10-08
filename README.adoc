@@ -8,7 +8,7 @@ endif::[]
 
 = Easy Kube Log
 
-Log viewer for Kubernetes - simple to install and use
+Log viewer for Kubernetes - simple to install and use (node only currently)
 
 [WARNING]
 [RED]*!! Pre-Alpha version so don't use in production !!*
