@@ -1,27 +1,28 @@
 ﻿@*@page "/searchfield"*@
 
 <style>
-    .search-margin { margin-right: 2.0rem; }
-    .button-background { background: rgba(200, 200, 200, 0.9); border: 0}
+    .search-margin { margin-right: 1.5rem; }
+    .button-background { background: rgba(200, 200, 200, 0.9); border: 0; align-self: center}
+    .scaled { margin-top: 0.5rem; transform: scale(0.8); }
 </style>
 
 @* ReSharper disable UnknownCssClass *@
 
-<div class="input-group defpadding">
+<div class="input-group defpadding" style="align-self: center">
     <div class="input-group-prepend search-margin">
         @*<span class="input-group-text">Search</span>*@
-        <button class="button-background" @onclick="ButtonSearch">Search</button>
+        <MatButton class="button-background" style="@ButtonBackground" Raised="true" @onclick="ButtonSearchOrAbort" >@ButtonContent</MatButton>
+
         <div class="d-flex justify-content-center align-items-center m-2" style="@(Style)">
-            <div class="spinner-grow spinner-grow-sm" role="status">
+            <div class="spinner-grow spinner-grow-sm mr-1" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
         </div>
-        <input class="form-control button-background" type="text" aria-label="Search text" @bind-value="_text" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" />
+        <MatTextField class="button-background scaled" TValue="string" Label="Search For" @bind-Value="@Text" ></MatTextField>
     </div>
 
-    <div class="input-group-prepend search-margin">
-        <span class="input-group-text button-background mr-1">Max</span>
-        <input class="form-control button-background" type="number" aria-label="Search text" @bind-value="MaxElements" @bind-value:event="oninput" @onkeyup="NewInputDelayedAndThrottled" @onchange="NewInput" style="max-width:7rem" />
+    <div class="input-group-prepend search-margin" style="align-self: center">
+        <MatNumericUpDownField class="scaled" Minimum="0" Label="Max Number of Search Items" @bind-Value="@MaxElements"  @onkeyup="CountItemsChanged"></MatNumericUpDownField>
     </div>
 
     <SearchFieldDateTime  @ref="FromDateTime" Name="From" />
@@ -30,11 +31,13 @@
     @*<div class="input-group-prepend search-margin" style="align-items:center;">
             <input type="checkbox" aria-label="Enable date from" @bind-value="_enabledDateFrom" class="form-check" style="transform: scale(2.9);" />
             <span class="input-group-text" style="padding-left: 1.0rem;">From</span>
-            <input type="datetime-local" aria-label="Search date from" style="@(_style)" @bind-value="DateFrom" disabled="@(!EnabledDateFrom)" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control" />
+            <input type="datetime-local" aria-label="Search date from" style="@(_style)" @bind-value="DateFrom" disabled="@(!EnabledDateFrom)" @bind-value:event="oninput" @onkeyup="CheckCurrentSearchTextAndExecuteIfDifferentToLast" class="form-control" />
         </div>*@
 </div>
 
 @using Microsoft.Extensions.Configuration;
+@using System.Threading
+@using System.Runtime.InteropServices.WindowsRuntime
 
 @inject IConfiguration  _configuration;
 
@@ -46,31 +49,52 @@
     private SearchFieldDateTime _toDateTime;
     // ReSharper disable once UnusedMember.Local
     private SearchFieldDateTime FromDateTime { get => _fromDateTime;
-        set { _fromDateTime = value; _fromDateTime.NewInput = NewInput; } }
+        set { _fromDateTime = value; TextChanged(); } }
     // ReSharper disable once UnusedMember.Local
     private SearchFieldDateTime ToDateTime { get => _toDateTime;
-        set { _toDateTime = value; _toDateTime.NewInput = NewInput; } }
+        set { _toDateTime = value; TextChanged(); } }
 
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     private string _text = String.Empty;
-    private int _maxElements = 100;
 
-    private bool _searching;
-    string Style => _searching ? "" : "visibility: hidden";
+    public string Text
+    {
+        get { return _text; }
+        set { _text = value; TextChanged(); }
+    }
 
-    const int DefaultDelay = 1000;
+    const int MaxElementsDefault = 100;
+
+    private int _maxElements = MaxElementsDefault;
+    private int _maxElementsSearched = MaxElementsDefault;
+
+    public bool Searching { get; set; }
+
+    static string GetSearchingStyle(bool state)
+    {
+        return state ? "color: green" : "visibility: hidden";
+    }
+
+    public string Style { get; set; } = GetSearchingStyle(false);
+
+    const int DefaultDelay = 100;
     Task _delayTask = Task.CompletedTask;
     System.Threading.CancellationTokenSource _tokenSource;
 
     public int MaxElements
     {
         get => _maxElements;
-        set => _maxElements = value < MaxElementsHighest ? value : MaxElementsHighest;
+        set
+        {
+            _maxElements = value < MaxElementsHighest ? value : MaxElementsHighest;
+            ExecuteCurrentSearch();
+        }
     }
 
     public void DisplaySpinningSearch(bool state)
     {
-        _searching = state;
+        Searching = state;
+        Style = GetSearchingStyle(state);
         InvokeAsync(StateHasChanged);
     }
 
@@ -80,24 +104,78 @@
     }
 
     string _lastQuery = String.Empty;
+    string _currentQuery = String.Empty;
 
-    private void ButtonSearch()
+
+    string ButtonContent => (_buttonStateCurrentlyExecutingSearch == false) ? "Search" : "Abort";
+
+    private bool _buttonStateCurrentlyExecutingSearch = false;
+
+    string ButtonBackground => (_buttonStateCurrentlyExecutingSearch == true) ?
+            "color:black; background: rgba(255, 150, 150, 0.9)" :
+            "color:black; background: rgba(150, 255, 150, 0.9)";
+
+    private void SetDefaultState()
     {
-        _lastQuery = String.Empty;
-        NewInput();
+        _buttonStateCurrentlyExecutingSearch = false;
+        InvokeAsync(StateHasChanged);
     }
 
-    private void NewInput()
+    private void SetSearchIsExecutingNowState()
+    {
+        _buttonStateCurrentlyExecutingSearch = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ButtonSearchOrAbort()
+    {
+
+        if (_buttonStateCurrentlyExecutingSearch)
+            AbortCurrentSearch();
+
+        SetLastQuery(_lastQuery + "#"); // Ensure that a search is executed
+
+        InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
+
+    }
+
+    private void AbortCurrentSearch()
+    {
+        AbortInCaseOfRunning();
+        SetDefaultState();
+    }
+
+    private void ExecuteCurrentSearch()
+    {
+        InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
+    }
+
+
+    private void TextChanged()
+    {
+        ExecuteCurrentSearch();
+    }
+
+    private void CountItemsChanged()
+    {
+        ExecuteCurrentSearch();
+    }
+
+    private bool CheckCurrentSearchTextAndExecuteIfDifferentToLast()
     {
         lock (_lastQuery)
         {
             string currentQuery = _text + _maxElements.ToString() + _fromDateTime.Date.ToString() + _toDateTime.Date.ToString();
-            if (currentQuery == _lastQuery)
-                return;
-            _lastQuery = currentQuery;
+            if ((currentQuery == _lastQuery) && (_maxElementsSearched == _maxElements))
+                return false;
+            _currentQuery = currentQuery;
+            _maxElementsSearched = _maxElements;
+
         }
-        OnSearchQueryChange(_text, _maxElements, _fromDateTime.Date, _toDateTime.Date);
+        InvokeAsync(() =>
+            OnSearchQueryChange(_text, _maxElements, _fromDateTime.Date, _toDateTime.Date));
         StateHasChanged();
+        return true;
     }
 
     void AbortInCaseOfRunning()
@@ -109,27 +187,76 @@
         _delayTask = null;
     }
 
-    // Method will be called on each keystroke but it won't call immediately
-    // NewInput but wait for additional keystrokes to come in
-    private void NewInputDelayedAndThrottled()
+
+    private void KeyPressed()
     {
-        AbortInCaseOfRunning();
+        InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
+    }
+
+    // Method will be called on each keystroke but it won't call immediately
+    // CheckCurrentSearchTextAndExecuteIfDifferentToLast but wait for additional keystrokes to come in
+    private void CheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled()
+    {
+        InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
+    }
+
+    bool _initialCall = false;
+
+    private void InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(int delay)
+    {
+        if (_initialCall == false)
+        {
+            _initialCall = true;
+            Task.Delay(DefaultDelay*3).Wait(); // If we don't do that on startup an cancelled exception will be thrown 
+                                               // because not everything has been initialized yet - the reason is not quite clear 
+                                               // and in worst case on slower system the initial search might not be executed
+                                               // TODO: check if there is a RenderFinished call
+        }
+        else AbortInCaseOfRunning();
         _tokenSource = new System.Threading.CancellationTokenSource();
-        _delayTask =
-        Task.Run(async () =>
+        var localToken = _tokenSource.Token;
+        InvokeAsync(SetDefaultState);
+
+        InternalExecuteSearchAsync(delay, localToken);
+
+    }
+
+    private void InternalExecuteSearchAsync(int delay, CancellationToken localToken)
+    {
+        _delayTask = Task.Run(async () =>
         {
             try
             {
-                var token = _tokenSource.Token;
-                await Task.Delay(DefaultDelay, token);
-                await InvokeAsync(NewInput);
+                var token = localToken;
+                await Task.Delay(delay, token);
+                _ = InvokeAsync(() =>
+                {
+                    DisplaySpinningSearch(true);
+                    InvokeAsync(SetSearchIsExecutingNowState);
+                    if (!CheckCurrentSearchTextAndExecuteIfDifferentToLast())
+                    {
+                        DisplaySpinningSearch(false);
+                        SetDefaultState();
+                    }
+                });
             }
             catch (Exception)
             {
-            // ignored
-        }
-        }, _tokenSource.Token);
+                // ignored
+            }
 
+            SetLastQuery(_currentQuery);
+
+            _ = InvokeAsync(SetDefaultState); // Ignore task here - otherwise UI is blocked
+        }, _tokenSource.Token);
+    }
+
+    private void SetLastQuery(string query)
+    {
+        lock (_lastQuery)
+        {
+            _lastQuery = query;
+        }
     }
 
     public Action<string, int, DateTimeOffset, DateTimeOffset> OnSearchQueryChange;

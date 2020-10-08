@@ -1,28 +1,30 @@
-﻿<div class="input-group-prepend search-margin" style="align-items:center;">
-    <div class="d-flex justify-content-center align-items-center m-2">
-        <input type="checkbox" aria-label="Date from" @bind-value="_enabledDate" class="form-check button-background" style="transform: scale(1.6);" />
+﻿
+<div class="input-group-prepend search-margin" style="align-self:center;">
+    <div class="d-flex justify-content-center align-items-center ">
+        <MatCheckbox TValue="bool" @bind-Value="@_enabledDate" m-2></MatCheckbox>
     </div>
-    <span class="input-group-text button-background mr-1" style="padding-left: 1.0rem;">@Name</span>
-    <input type="date" aria-label="Search date" style="@(Style)" @bind-value="InternalDate" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control button-background mr-1" />
-    <input type="time" aria-label="Search time" style="@(Style)" @bind-value="InternalTime" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control button-background mr-1" />
+    <div align="center">
+        <MatDatePicker TValue="DateTime" Label="@Name" Enabled="@EnabledDate" 
+                       Dense="true" Enable24hours="true" EnableTime="true" 
+                       @bind-value="@this.InternalDateTime" style="@(Style)" 
+                       disabled="@(!EnabledDate)" @onchange="NewInput" ></MatDatePicker>
+    </div>
+    @*<input type="date" aria-label="Search date" style="@(Style)" @bind-value="InternalDate" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control button-background mr-1" />
+    <input type="time" aria-label="Search time" style="@(Style)" @bind-value="InternalTime" disabled="@(!EnabledDate)" @onchange="NewInput" @bind-value:event="oninput" class="form-control button-background mr-1" />*@
 </div>
 
 @code {
 
- 
+
 
     [Parameter]
     public string Name { get; set; }
 
-    public DateTimeOffset InternalDate { get; set; } = DateTimeOffset.Now;
-    public DateTimeOffset InternalTime { get; set; } = DateTimeOffset.Now;
 
-    DateTimeOffset Combine(DateTimeOffset date, DateTimeOffset time)
-    {
-        return new DateTimeOffset(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, default/* time.Offset // Don't use date time offset right now */ );
-    }
+    public DateTime InternalDateTime { get; set; } = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local);
 
-    public DateTimeOffset Date => _enabledDate ? Combine(InternalDate, InternalTime) : default; // Default == disabled
+
+    public DateTimeOffset Date => _enabledDate ? new DateTimeOffset(DateTime.SpecifyKind(InternalDateTime, DateTimeKind.Utc)) : default; // Default == disabled
     private bool _enabledDate = false;
 
     public bool EnabledDate
@@ -31,7 +33,8 @@
         set => _enabledDate = value;
     }
 
-    string Style => _enabledDate ? "" : "visibility: hidden";
+    readonly string _defaultStyle = "margin-top: 0.5rem; margin-left:-2.0rem; transform: scale(0.8);";
+    string Style => _enabledDate ? _defaultStyle + "background: rgba(200, 200, 200, 0.9);" : _defaultStyle + "background: rgba(80, 80, 80, 0.9);";
 
     public Action NewInput;
 

@@ -3,15 +3,17 @@
 
 @* ReSharper disable UnknownCssClass *@
 <div class="main" style="">
-    <div class="mb-3 pt-3 text-light" name="mainHeader" >
+
+    <div class="mb-3 pt-3 text-light" name="mainHeader">
         <h2 class="ml-3" style="text-align: left; color: rgba(200, 200, 200, 0.9)">Easy Kube Log 0.0.11</h2>
     </div>
     <div>
         <div class="m-3">
-            <EasyKubeLogService.Components.SearchField @ref="SearchField" />
+            <EasyKubeLogService.Components.SearchField @ref="SearchField"/>
         </div>
         <div class="mt-3 mb-3 pl-3 " style="color: rgba(200, 200, 200, 0.9)">Found: @_numEntries</div>
-        <div name="MainList" style="position:absolute; width:auto; right:0; left:0; height:auto; top:160px; bottom:0; overflow:auto; box-sizing:border-box">
+        <MatDivider style="background: rgba(200, 200, 200, 0.9)"></MatDivider>
+        <div class="ml-2 mr-2" name="MainList" style="position: absolute; width: auto; right: 0; left: 0; height: auto; top: 200px; bottom: 0; overflow: auto; box-sizing: border-box">
             <EasyKubeLogService.Components.List @ref="_mainList" />
         </div>
     </div>
@@ -20,6 +22,7 @@
 @using LogEntries;
 @using System.Threading;
 @using EasyKubeLogService.Components.Commands
+@using Microsoft.Net.Http.Headers
 @inject ISearchCommand  _searchCommand;
 
 @code
