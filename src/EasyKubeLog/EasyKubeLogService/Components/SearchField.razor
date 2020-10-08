@@ -14,7 +14,7 @@
         <MatButton class="button-background" style="@ButtonBackground" Raised="true" @onclick="ButtonSearchOrAbort" >@ButtonContent</MatButton>
 
         <div class="d-flex justify-content-center align-items-center m-2" style="@(Style)">
-            <div class="spinner-grow spinner-grow-sm" role="status">
+            <div class="spinner-grow spinner-grow-sm mr-1" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
         </div>
@@ -61,7 +61,7 @@
     {
         get { return _text; }
         set { _text = value; TextChanged(); }
-    }      
+    }
 
     const int MaxElementsDefault = 100;
 
@@ -111,8 +111,8 @@
 
     private bool _buttonStateCurrentlyExecutingSearch = false;
 
-    string ButtonBackground => (_buttonStateCurrentlyExecutingSearch == true) ? 
-            "color:black; background: rgba(255, 150, 150, 0.9)" : 
+    string ButtonBackground => (_buttonStateCurrentlyExecutingSearch == true) ?
+            "color:black; background: rgba(255, 150, 150, 0.9)" :
             "color:black; background: rgba(150, 255, 150, 0.9)";
 
     private void SetDefaultState()
@@ -129,7 +129,6 @@
 
     private void ButtonSearchOrAbort()
     {
-        Console.WriteLine("Button pressed");
 
         if (_buttonStateCurrentlyExecutingSearch)
             AbortCurrentSearch();
@@ -151,9 +150,9 @@
         InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
     }
 
+
     private void TextChanged()
     {
-        Console.WriteLine($"TextChanged: {_lastQuery} - {_currentQuery}");
         ExecuteCurrentSearch();
     }
 
@@ -164,17 +163,14 @@
 
     private bool CheckCurrentSearchTextAndExecuteIfDifferentToLast()
     {
-        Console.WriteLine("CheckCurrentSearchTextAndExecuteIfDifferentToLast - 1");
         lock (_lastQuery)
         {
-            Console.WriteLine($"CheckCurrentSearchTextAndExecuteIfDifferentToLast - 2:: {_text}");
             string currentQuery = _text + _maxElements.ToString() + _fromDateTime.Date.ToString() + _toDateTime.Date.ToString();
             if ((currentQuery == _lastQuery) && (_maxElementsSearched == _maxElements))
                 return false;
             _currentQuery = currentQuery;
             _maxElementsSearched = _maxElements;
 
-            Console.WriteLine("CheckCurrentSearchTextAndExecuteIfDifferentToLast - 3");
         }
         InvokeAsync(() =>
             OnSearchQueryChange(_text, _maxElements, _fromDateTime.Date, _toDateTime.Date));
@@ -204,9 +200,19 @@
         InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
     }
 
+    bool _initialCall = false;
+
     private void InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(int delay)
     {
-        AbortInCaseOfRunning();
+        if (_initialCall == false)
+        {
+            _initialCall = true;
+            Task.Delay(DefaultDelay*3).Wait(); // If we don't do that on startup an cancelled exception will be thrown 
+                                               // because not everything has been initialized yet - the reason is not quite clear 
+                                               // and in worst case on slower system the initial search might not be executed
+                                               // TODO: check if there is a RenderFinished call
+        }
+        else AbortInCaseOfRunning();
         _tokenSource = new System.Threading.CancellationTokenSource();
         var localToken = _tokenSource.Token;
         InvokeAsync(SetDefaultState);
@@ -250,8 +256,6 @@
         lock (_lastQuery)
         {
             _lastQuery = query;
-            Console.WriteLine($"QUERY SET TO LAST: {query}")
-                ;
         }
     }
 
