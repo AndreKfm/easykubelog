@@ -3,6 +3,7 @@
 <style>
     .search-margin { margin-right: 1.5rem; }
     .button-background { background: rgba(200, 200, 200, 0.9); border: 0; align-self: center}
+    .scaled { margin-top: 0.5rem; transform: scale(0.8); }
 </style>
 
 @* ReSharper disable UnknownCssClass *@
@@ -10,18 +11,18 @@
 <div class="input-group defpadding" style="align-self: center">
     <div class="input-group-prepend search-margin">
         @*<span class="input-group-text">Search</span>*@
-        <button class="button-background" @onclick="ButtonSearch" style="height: 50%; align-self: center">Search</button>
+        <button class="button-background" @onclick="ButtonSearchOrAbort" style="height: 49%; align-self: center; background: @ButtonBackground">@ButtonContent</button>
         <div class="d-flex justify-content-center align-items-center m-2" style="@(Style)">
             <div class="spinner-grow spinner-grow-sm" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
         </div>
-        <input class="form-control button-background" type="text" aria-label="Search text" @bind-value="_text"  @onkeyup="KeyPressed"  />
+        <MatTextField class="button-background scaled" TValue="string" Label="Search For" @bind-Value="@_text" @onkeyup="TextChanged"  ></MatTextField>
     </div>
 
     <div class="input-group-prepend search-margin" style="align-self: center">
         <span class="input-group-text button-background mr-1">Max</span>
-        <input class="form-control button-background" type="number" aria-label="Search text" @bind-value="MaxElements"  @onkeyup="KeyPressed" style="max-width:7rem" />
+        <input class="form-control button-background" type="number" aria-label="Search text" @bind-value="MaxElements"  @onkeyup="TextChanged" style="max-width:7rem" />
     </div>
 
     <SearchFieldDateTime  @ref="FromDateTime" Name="From" />
@@ -30,12 +31,13 @@
     @*<div class="input-group-prepend search-margin" style="align-items:center;">
             <input type="checkbox" aria-label="Enable date from" @bind-value="_enabledDateFrom" class="form-check" style="transform: scale(2.9);" />
             <span class="input-group-text" style="padding-left: 1.0rem;">From</span>
-            <input type="datetime-local" aria-label="Search date from" style="@(_style)" @bind-value="DateFrom" disabled="@(!EnabledDateFrom)" @bind-value:event="oninput" @onkeyup="NewInput" class="form-control" />
+            <input type="datetime-local" aria-label="Search date from" style="@(_style)" @bind-value="DateFrom" disabled="@(!EnabledDateFrom)" @bind-value:event="oninput" @onkeyup="CheckCurrentSearchTextAndExecuteIfDifferentToLast" class="form-control" />
         </div>*@
 </div>
 
 @using Microsoft.Extensions.Configuration;
 @using System.Threading
+@using System.Runtime.InteropServices.WindowsRuntime
 
 @inject IConfiguration  _configuration;
 
@@ -47,10 +49,10 @@
     private SearchFieldDateTime _toDateTime;
     // ReSharper disable once UnusedMember.Local
     private SearchFieldDateTime FromDateTime { get => _fromDateTime;
-        set { _fromDateTime = value; _fromDateTime.NewInput = NewInput; } }
+        set { _fromDateTime = value; TextChanged(); } }
     // ReSharper disable once UnusedMember.Local
     private SearchFieldDateTime ToDateTime { get => _toDateTime;
-        set { _toDateTime = value; _toDateTime.NewInput = NewInput; } }
+        set { _toDateTime = value; TextChanged(); } }
 
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     private string _text = String.Empty;
@@ -65,7 +67,7 @@
 
     public string Style { get; set; } = GetSearchingStyle(false);
 
-    const int DefaultDelay = 1000;
+    const int DefaultDelay = 100;
     Task _delayTask = Task.CompletedTask;
     System.Threading.CancellationTokenSource _tokenSource;
 
@@ -88,46 +90,71 @@
     }
 
     string _lastQuery = String.Empty;
+    string _currentQuery = String.Empty;
 
-    private void ButtonSearch()
+
+    string ButtonContent => (_buttonStateCurrentlyExecutingSearch == false) ? "Search" : "Abort";
+
+    private bool _buttonStateCurrentlyExecutingSearch = false;
+
+    string ButtonBackground => (_buttonStateCurrentlyExecutingSearch == true) ? "rgba(255, 150, 150, 0.9)" : "rgba(150, 255, 150, 0.9)";
+
+    private void SetDefaultState()
     {
-
-        Console.WriteLine("Button Pressed");
-        try
-        {
-            AbortInCaseOfRunning();
-        }
-        catch (Exception )
-        {
-        }
-        _lastQuery = String.Empty;
-
-        Interlocked.Exchange(ref _buttonPressed, 1);
-        try
-        {
-            Console.WriteLine("Button Search");
-            InternalNewInputDelayedAndThrottled(0);
-        }
-        catch (Exception )
-        {
-        }
-        Interlocked.Exchange(ref _buttonPressed, 0);
-
-
-
+        _buttonStateCurrentlyExecutingSearch = false;
+        InvokeAsync(StateHasChanged);
     }
 
-    private void NewInput()
+    private void SetSearchIsExecutingNowState()
     {
+        _buttonStateCurrentlyExecutingSearch = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ButtonSearchOrAbort()
+    {
+        Console.WriteLine("Button pressed");
+
+        if (_buttonStateCurrentlyExecutingSearch)
+            AbortCurrentSearch();
+
+        InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
+    }
+
+    private void AbortCurrentSearch()
+    {
+        AbortInCaseOfRunning();
+        SetDefaultState();
+    }
+
+    private void ExecuteCurrentSearch()
+    {
+        SetSearchIsExecutingNowState();
+        InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
+    }
+
+    private void TextChanged()
+    {
+        Console.WriteLine($"TextChanged: {_lastQuery} - {_currentQuery}");
+        ExecuteCurrentSearch();
+    }
+
+    private bool CheckCurrentSearchTextAndExecuteIfDifferentToLast()
+    {
+        Console.WriteLine("CheckCurrentSearchTextAndExecuteIfDifferentToLast - 1");
         lock (_lastQuery)
         {
+            Console.WriteLine($"CheckCurrentSearchTextAndExecuteIfDifferentToLast - 2:: {_text}");
             string currentQuery = _text + _maxElements.ToString() + _fromDateTime.Date.ToString() + _toDateTime.Date.ToString();
             if (currentQuery == _lastQuery)
-                return;
-            _lastQuery = currentQuery;
+                return false;
+            _currentQuery = currentQuery;
+            Console.WriteLine("CheckCurrentSearchTextAndExecuteIfDifferentToLast - 3");
         }
-        OnSearchQueryChange(_text, _maxElements, _fromDateTime.Date, _toDateTime.Date);
+        InvokeAsync(() =>
+            OnSearchQueryChange(_text, _maxElements, _fromDateTime.Date, _toDateTime.Date));
         StateHasChanged();
+        return true;
     }
 
     void AbortInCaseOfRunning()
@@ -139,50 +166,62 @@
         _delayTask = null;
     }
 
-    int _buttonPressed = 0;
 
     private void KeyPressed()
     {
-        if (_buttonPressed == 0)
-        {
-            InternalNewInputDelayedAndThrottled(DefaultDelay);
-        }
+        InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
     }
 
     // Method will be called on each keystroke but it won't call immediately
-    // NewInput but wait for additional keystrokes to come in
-    private void NewInputDelayedAndThrottled()
+    // CheckCurrentSearchTextAndExecuteIfDifferentToLast but wait for additional keystrokes to come in
+    private void CheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled()
     {
-        InternalNewInputDelayedAndThrottled(DefaultDelay);
+        InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
     }
 
-    private void InternalNewInputDelayedAndThrottled(int delay)
+    private void InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(int delay)
     {
         AbortInCaseOfRunning();
         _tokenSource = new System.Threading.CancellationTokenSource();
         var localToken = _tokenSource.Token;
-        Console.WriteLine("XXX CreateTask");
+        InvokeAsync(SetDefaultState);
 
+        InternalExecuteSearchAsync(delay, localToken);
+
+    }
+
+    private void InternalExecuteSearchAsync(int delay, CancellationToken localToken)
+    {
         _delayTask = Task.Run(async () =>
         {
             try
             {
                 var token = localToken;
                 await Task.Delay(delay, token);
-                Console.WriteLine("XXX Search");
-                await InvokeAsync(() =>
+                _ = InvokeAsync(() =>
                 {
                     DisplaySpinningSearch(true);
-                    NewInput();
+                    InvokeAsync(SetSearchIsExecutingNowState);
+                    if (!CheckCurrentSearchTextAndExecuteIfDifferentToLast())
+                    {
+                        DisplaySpinningSearch(false);
+                        SetDefaultState();
+                    }
                 });
             }
             catch (Exception)
             {
-                Console.WriteLine("XXX Abort");
                 // ignored
             }
-        }, _tokenSource.Token);
 
+            lock (_lastQuery)
+            {
+                _lastQuery = _currentQuery;
+                Console.WriteLine($"QUERY SET TO LAST: {_lastQuery}")
+                ;
+            }
+            _ = InvokeAsync(SetDefaultState); // Ignore task here - otherwise UI is blocked
+        }, _tokenSource.Token);
     }
 
     public Action<string, int, DateTimeOffset, DateTimeOffset> OnSearchQueryChange;

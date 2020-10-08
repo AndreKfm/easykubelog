@@ -33,7 +33,7 @@
         set => _enabledDate = value;
     }
 
-    readonly string _defaultStyle = "margin-top: 0.4rem; margin-left:-2.0rem; transform: scale(0.8);";
+    readonly string _defaultStyle = "margin-top: 0.5rem; margin-left:-2.0rem; transform: scale(0.8);";
     string Style => _enabledDate ? _defaultStyle + "background: rgba(200, 200, 200, 0.9);" : _defaultStyle + "background: rgba(80, 80, 80, 0.9);";
 
     public Action NewInput;
