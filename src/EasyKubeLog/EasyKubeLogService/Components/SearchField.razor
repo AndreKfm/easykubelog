@@ -1,43 +1,60 @@
 ﻿@*@page "/searchfield"*@
 
-<style>
-    .search-margin { margin-right: 1.5rem; }
-    .button-background { background: rgba(200, 200, 200, 0.9); border: 0; align-self: center}
-    .scaled { margin-top: 0.5rem; transform: scale(0.8); }
-</style>
+@code {
+    const string DefaultBackgroundControls = "background: rgba(200, 200, 200, 0.9);";
+
+    static string DefaultControlsLayoutRemWidthPx(double leftRem = 0.0, int width = 0)
+    {
+        string leftRemString = $"{leftRem.ToString(CultureInfo.InvariantCulture)}";
+        string remWidthString = $"{((leftRem == 0.0 && width == 0) ? String.Empty : $"margin-left: {leftRemString}rem; width:{width}px")}";
+        return $"border: 0; align-self: center; {remWidthString}";
+    }
+
+    static readonly string DefaultControlsLayout = DefaultControlsLayoutRemWidthPx(0.0, 0);
+
+    const string ButtonRed = "color:black; background: rgba(255, 150, 150, 0.9);";
+    const string ButtonGreen = "color:black; background: rgba(150, 255, 150, 0.9);";
+
+    const int ButtonPixelWidth = 100;
+
+    static string Width(int pixelWidth)
+    {
+        return $"width:{pixelWidth}px; ";
+    }
+
+    static string ButtonRedDefaultLayout(int pixelWidth = ButtonPixelWidth) => ButtonRed + DefaultControlsLayout + Width(pixelWidth);
+    static string ButtonGreenDefaultLayout(int pixelWidth = ButtonPixelWidth) => ButtonGreen + DefaultControlsLayout + Width(pixelWidth);
+    static string DefaultControlStyle => DefaultBackgroundControls + DefaultControlsLayout;
+
+    const string TopScaled = "margin-top: 0.5rem; transform: scale(0.8);";
+    static readonly string DefaultControlStyleTopScaled = DefaultControlStyle + TopScaled;
+}
 
 @* ReSharper disable UnknownCssClass *@
 
 <div class="input-group defpadding" style="align-self: center">
     <div class="input-group-prepend search-margin">
-        @*<span class="input-group-text">Search</span>*@
-        <MatButton class="button-background" style="@ButtonBackground" Raised="true" @onclick="ButtonSearchOrAbort" >@ButtonContent</MatButton>
-
-        <div class="d-flex justify-content-center align-items-center m-2" style="@(Style)">
-            <div class="spinner-grow spinner-grow-sm mr-1" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-        </div>
-        <MatTextField class="button-background scaled" TValue="string" Label="Search For" @bind-Value="@Text" ></MatTextField>
+        <MatButton style="@ButtonBackground" Raised="true" @onclick="ButtonSearchOrAbort">@ButtonContent</MatButton>
+        <MatProgressBar Indeterminate="true" Closed="@NotSearching" style="@DefaultControlsLayoutRemWidthPx(1.5, 30)"></MatProgressBar>
+        <MatTextField style="@DefaultControlStyleTopScaled" TValue="string" Label="Search For" @bind-Value="@Text"></MatTextField>
     </div>
 
-    <div class="input-group-prepend search-margin" style="align-self: center">
-        <MatNumericUpDownField class="scaled" Minimum="0" Label="Max Number of Search Items" @bind-Value="@MaxElements"  @onkeyup="CountItemsChanged"></MatNumericUpDownField>
+    <div class="input-group-prepend" style="align-self: center">
+        <MatNumericUpDownField style="@DefaultControlStyleTopScaled" Minimum="0"
+                               Label="Max Number of Search Items" 
+                               @bind-Value="@MaxElements"
+                               @onkeyup="CountItemsChanged">
+        </MatNumericUpDownField>
     </div>
 
-    <SearchFieldDateTime  @ref="FromDateTime" Name="From" />
-    <SearchFieldDateTime  @ref="ToDateTime" Name="To" />
-
-    @*<div class="input-group-prepend search-margin" style="align-items:center;">
-            <input type="checkbox" aria-label="Enable date from" @bind-value="_enabledDateFrom" class="form-check" style="transform: scale(2.9);" />
-            <span class="input-group-text" style="padding-left: 1.0rem;">From</span>
-            <input type="datetime-local" aria-label="Search date from" style="@(_style)" @bind-value="DateFrom" disabled="@(!EnabledDateFrom)" @bind-value:event="oninput" @onkeyup="CheckCurrentSearchTextAndExecuteIfDifferentToLast" class="form-control" />
-        </div>*@
+    <SearchFieldDateTime @ref="FromDateTime" Name="From" />
+    <SearchFieldDateTime @ref="ToDateTime" Name="To" />
 </div>
 
 @using Microsoft.Extensions.Configuration;
 @using System.Threading
 @using System.Runtime.InteropServices.WindowsRuntime
+@using System.Globalization
 
 @inject IConfiguration  _configuration;
 
@@ -48,18 +65,24 @@
     private SearchFieldDateTime _fromDateTime;
     private SearchFieldDateTime _toDateTime;
     // ReSharper disable once UnusedMember.Local
-    private SearchFieldDateTime FromDateTime { get => _fromDateTime;
-        set { _fromDateTime = value; TextChanged(); } }
+    private SearchFieldDateTime FromDateTime
+    {
+        get => _fromDateTime;
+        set { _fromDateTime = value; TextChanged(); }
+    }
     // ReSharper disable once UnusedMember.Local
-    private SearchFieldDateTime ToDateTime { get => _toDateTime;
-        set { _toDateTime = value; TextChanged(); } }
+    private SearchFieldDateTime ToDateTime
+    {
+        get => _toDateTime;
+        set { _toDateTime = value; TextChanged(); }
+    }
 
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     private string _text = String.Empty;
 
     public string Text
     {
-        get { return _text; }
+        get => _text;
         set { _text = value; TextChanged(); }
     }
 
@@ -69,6 +92,7 @@
     private int _maxElementsSearched = MaxElementsDefault;
 
     public bool Searching { get; set; }
+    public bool NotSearching => !Searching;
 
     static string GetSearchingStyle(bool state)
     {
@@ -112,8 +136,7 @@
     private bool _buttonStateCurrentlyExecutingSearch = false;
 
     string ButtonBackground => (_buttonStateCurrentlyExecutingSearch == true) ?
-            "color:black; background: rgba(255, 150, 150, 0.9)" :
-            "color:black; background: rgba(150, 255, 150, 0.9)";
+            ButtonRedDefaultLayout() : ButtonGreenDefaultLayout();
 
     private void SetDefaultState()
     {
@@ -207,10 +230,10 @@
         if (_initialCall == false)
         {
             _initialCall = true;
-            Task.Delay(DefaultDelay*3).Wait(); // If we don't do that on startup an cancelled exception will be thrown 
-                                               // because not everything has been initialized yet - the reason is not quite clear 
-                                               // and in worst case on slower system the initial search might not be executed
-                                               // TODO: check if there is a RenderFinished call
+            Task.Delay(DefaultDelay * 3).Wait(); // If we don't do that on startup an cancelled exception will be thrown
+                                                 // because not everything has been initialized yet - the reason is not quite clear
+                                                 // and in worst case on slower system the initial search might not be executed
+                                                 // TODO: check if there is a RenderFinished call
         }
         else AbortInCaseOfRunning();
         _tokenSource = new System.Threading.CancellationTokenSource();
