@@ -10,6 +10,11 @@
     const string ButtonRedDefaultLayout = ButtonRed + DefaultControlsLayout;
     const string ButtonGreenDefaultLayout = ButtonGreen + DefaultControlsLayout;
     const string DefaultControlStyle = DefaultBackgroundControls + DefaultControlsLayout;
+
+    const string TopScaled = "margin-top: 0.5rem; transform: scale(0.8);";
+    const string DefaultControlStyleTopScaled = DefaultControlStyle + TopScaled;
+
+
 }
 
 <style>
@@ -39,11 +44,11 @@
                 <span class="sr-only">Loading...</span>
             </div>
         </div>
-        <MatTextField class="scaled" style="@DefaultControlStyle" TValue="string" Label="Search For" @bind-Value="@Text"></MatTextField>
+        <MatTextField style="@DefaultControlStyleTopScaled" TValue="string" Label="Search For" @bind-Value="@Text"></MatTextField>
     </div>
 
     <div class="input-group-prepend search-margin" style="align-self: center">
-        <MatNumericUpDownField class="scaled"  style="@DefaultControlStyle" Minimum="0" Label="Max Number of Search Items" @bind-Value="@MaxElements" @onkeyup="CountItemsChanged"></MatNumericUpDownField>
+        <MatNumericUpDownField style="@DefaultControlStyleTopScaled" Minimum="0" Label="Max Number of Search Items" @bind-Value="@MaxElements" @onkeyup="CountItemsChanged"></MatNumericUpDownField>
     </div>
 
     <SearchFieldDateTime @ref="FromDateTime" Name="From" />
@@ -262,13 +267,13 @@
             }
             catch (Exception)
             {
-                // ignored
-            }
+            // ignored
+        }
 
             SetLastQuery(_currentQuery);
 
             _ = InvokeAsync(SetDefaultState); // Ignore task here - otherwise UI is blocked
-        }, _tokenSource.Token);
+    }, _tokenSource.Token);
     }
 
     private void SetLastQuery(string query)
