@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using EasyKubeLogService.Styles;
 using EmbeddedBlazorContent;
 using WatcherFileListClasses;
 
@@ -113,6 +114,12 @@ namespace EasyKubeLogService
                 var settings = x.GetService<IOptions<CentralLogServiceCacheSettings>>();
                 return new CentralLogServiceCache(settings, logger);
             });
+
+            // Register styles
+            services.AddSingleton<StylesImpl>(x => new StylesImpl(new DefaultStyles()));
+            services.AddSingleton<IButtonStyles>(x => x.GetRequiredService<StylesImpl>());
+            services.AddSingleton<IDefaultStyles>(x => x.GetRequiredService<StylesImpl>());
+
 
             services.AddSingleton<ICentralLogService, CentralLogService>();
             services.AddSingleton<ICentralLogServiceWatcher, CentralLogServiceWatcher>();

@@ -1,47 +1,18 @@
 ﻿@*@page "/searchfield"*@
 
-@code {
-    const string DefaultBackgroundControls = "background: rgba(200, 200, 200, 0.9);";
-
-    static string DefaultControlsLayoutRemWidthPx(double leftRem = 0.0, int width = 0)
-    {
-        string leftRemString = $"{leftRem.ToString(CultureInfo.InvariantCulture)}";
-        string remWidthString = $"{((leftRem == 0.0 && width == 0) ? String.Empty : $"margin-left: {leftRemString}rem; width:{width}px")}";
-        return $"border: 0; align-self: center; {remWidthString}";
-    }
-
-    static readonly string DefaultControlsLayout = DefaultControlsLayoutRemWidthPx(0.0, 0);
-
-    const string ButtonRed = "color:black; background: rgba(255, 150, 150, 0.9);";
-    const string ButtonGreen = "color:black; background: rgba(150, 255, 150, 0.9);";
-
-    const int ButtonPixelWidth = 100;
-
-    static string Width(int pixelWidth)
-    {
-        return $"width:{pixelWidth}px; ";
-    }
-
-    static string ButtonRedDefaultLayout(int pixelWidth = ButtonPixelWidth) => ButtonRed + DefaultControlsLayout + Width(pixelWidth);
-    static string ButtonGreenDefaultLayout(int pixelWidth = ButtonPixelWidth) => ButtonGreen + DefaultControlsLayout + Width(pixelWidth);
-    static string DefaultControlStyle => DefaultBackgroundControls + DefaultControlsLayout;
-
-    const string TopScaled = "margin-top: 0.5rem; transform: scale(0.8);";
-    static readonly string DefaultControlStyleTopScaled = DefaultControlStyle + TopScaled;
-}
 
 @* ReSharper disable UnknownCssClass *@
 
 <div class="input-group defpadding" style="align-self: center">
     <div class="input-group-prepend search-margin">
-        <MatButton style="@ButtonBackground" Raised="true" @onclick="ButtonSearchOrAbort">@ButtonContent</MatButton>
-        <MatProgressBar Indeterminate="true" Closed="@NotSearching" style="@DefaultControlsLayoutRemWidthPx(1.5, 30)"></MatProgressBar>
-        <MatTextField style="@DefaultControlStyleTopScaled" TValue="string" Label="Search For" @bind-Value="@Text"></MatTextField>
+        <MatButton style="@DynamicButtonBackground" Raised="true" @onclick="ButtonSearchOrAbort">@ButtonContent</MatButton>
+        <MatProgressBar Indeterminate="true" Closed="@NotSearching" style="@_defaultStyles.DefaultControlsLayoutRemWidthPx(1.5, 30)"></MatProgressBar>
+        <MatTextField style="@_defaultStyles.DefaultControlStyleTopScaled()" TValue="string" Label="Search For" @bind-Value="@Text"></MatTextField>
     </div>
 
     <div class="input-group-prepend" style="align-self: center">
-        <MatNumericUpDownField style="@DefaultControlStyleTopScaled" Minimum="0"
-                               Label="Max Number of Search Items" 
+        <MatNumericUpDownField style="@_defaultStyles.DefaultControlStyleTopScaled()" Minimum="0"
+                               Label="Max Number of Search Items"
                                @bind-Value="@MaxElements"
                                @onkeyup="CountItemsChanged">
         </MatNumericUpDownField>
@@ -55,26 +26,41 @@
 @using System.Threading
 @using System.Runtime.InteropServices.WindowsRuntime
 @using System.Globalization
+@using EasyKubeLogService.Styles
 
 @inject IConfiguration  _configuration;
+@inject IButtonStyles  _buttonStyles;
+@inject IDefaultStyles  _defaultStyles;
 
 @code {
 
-    const int MaxElementsHighest = 2000;
+    //
+    // Properties and member variables
+
 
     private SearchFieldDateTime _fromDateTime;
     private SearchFieldDateTime _toDateTime;
+
     // ReSharper disable once UnusedMember.Local
     private SearchFieldDateTime FromDateTime
     {
         get => _fromDateTime;
-        set { _fromDateTime = value; TextChanged(); }
+        set
+        {
+            _fromDateTime = value;
+            TextChanged();
+        }
     }
+
     // ReSharper disable once UnusedMember.Local
     private SearchFieldDateTime ToDateTime
     {
         get => _toDateTime;
-        set { _toDateTime = value; TextChanged(); }
+        set
+        {
+            _toDateTime = value;
+            TextChanged();
+        }
     }
 
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
@@ -83,60 +69,44 @@
     public string Text
     {
         get => _text;
-        set { _text = value; TextChanged(); }
+        set
+        {
+            _text = value;
+            TextChanged();
+        }
     }
 
     const int MaxElementsDefault = 100;
 
+
+    private Task _delayTask = Task.CompletedTask;
+    private System.Threading.CancellationTokenSource _tokenSource;
+
+    private const int DefaultDelay = 100;
+    private const int MaxElementsHighest = 2000;
     private int _maxElements = MaxElementsDefault;
     private int _maxElementsSearched = MaxElementsDefault;
 
-    public bool Searching { get; set; }
-    public bool NotSearching => !Searching;
+    private bool _initialCall = false;
+    private bool Searching { get; set; }
+    private bool NotSearching => !Searching;
+    private bool _buttonStateCurrentlyExecutingSearch = false;
+    private string _lastQuery = String.Empty;
+    private string _currentQuery = String.Empty;
+    private string ButtonContent => (_buttonStateCurrentlyExecutingSearch == false) ? "Search" : "Abort";
 
-    static string GetSearchingStyle(bool state)
+    private string DynamicButtonBackground => (_buttonStateCurrentlyExecutingSearch == true) ?
+             _buttonStyles.ButtonRedDefaultLayout() : _buttonStyles.ButtonGreenDefaultLayout();
+
+    public string Style { get; set; } = GetSearchingStyle(false);
+
+
+    private static string GetSearchingStyle(bool state)
     {
         return state ? "color: green" : "visibility: hidden";
     }
 
-    public string Style { get; set; } = GetSearchingStyle(false);
 
-    const int DefaultDelay = 100;
-    Task _delayTask = Task.CompletedTask;
-    System.Threading.CancellationTokenSource _tokenSource;
-
-    public int MaxElements
-    {
-        get => _maxElements;
-        set
-        {
-            _maxElements = value < MaxElementsHighest ? value : MaxElementsHighest;
-            ExecuteCurrentSearch();
-        }
-    }
-
-    public void DisplaySpinningSearch(bool state)
-    {
-        Searching = state;
-        Style = GetSearchingStyle(state);
-        InvokeAsync(StateHasChanged);
-    }
-
-    protected override void OnInitialized()
-    {
-        _maxElements = _configuration.GetValue<int>("MaxLogQueryResultLines");
-    }
-
-    string _lastQuery = String.Empty;
-    string _currentQuery = String.Empty;
-
-
-    string ButtonContent => (_buttonStateCurrentlyExecutingSearch == false) ? "Search" : "Abort";
-
-    private bool _buttonStateCurrentlyExecutingSearch = false;
-
-    string ButtonBackground => (_buttonStateCurrentlyExecutingSearch == true) ?
-            ButtonRedDefaultLayout() : ButtonGreenDefaultLayout();
 
     private void SetDefaultState()
     {
@@ -173,16 +143,9 @@
         InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
     }
 
+    private void TextChanged() { ExecuteCurrentSearch(); }
 
-    private void TextChanged()
-    {
-        ExecuteCurrentSearch();
-    }
-
-    private void CountItemsChanged()
-    {
-        ExecuteCurrentSearch();
-    }
+    private void CountItemsChanged() { ExecuteCurrentSearch();}
 
     private bool CheckCurrentSearchTextAndExecuteIfDifferentToLast()
     {
@@ -201,7 +164,7 @@
         return true;
     }
 
-    void AbortInCaseOfRunning()
+    private void AbortInCaseOfRunning()
     {
         _tokenSource?.Cancel();
         _delayTask?.Wait();
@@ -211,19 +174,6 @@
     }
 
 
-    private void KeyPressed()
-    {
-        InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
-    }
-
-    // Method will be called on each keystroke but it won't call immediately
-    // CheckCurrentSearchTextAndExecuteIfDifferentToLast but wait for additional keystrokes to come in
-    private void CheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled()
-    {
-        InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(DefaultDelay);
-    }
-
-    bool _initialCall = false;
 
     private void InternalCheckCurrentSearchTextAndExecuteIfDifferentToLastDelayedAndThrottled(int delay)
     {
@@ -282,5 +232,27 @@
         }
     }
 
+    protected override void OnInitialized()
+    {
+        _maxElements = _configuration.GetValue<int>("MaxLogQueryResultLines");
+    }
+
     public Action<string, int, DateTimeOffset, DateTimeOffset> OnSearchQueryChange;
+    public int MaxElements
+    {
+        get => _maxElements;
+        set
+        {
+            _maxElements = value < MaxElementsHighest ? value : MaxElementsHighest;
+            ExecuteCurrentSearch();
+        }
+    }
+
+    public void DisplaySpinningSearch(bool state)
+    {
+        Searching = state;
+        Style = GetSearchingStyle(state);
+        InvokeAsync(StateHasChanged);
+    }
+
 }
