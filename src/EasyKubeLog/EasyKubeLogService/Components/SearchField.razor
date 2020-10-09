@@ -14,8 +14,16 @@
 
     const string ButtonRed = "color:black; background: rgba(255, 150, 150, 0.9);";
     const string ButtonGreen = "color:black; background: rgba(150, 255, 150, 0.9);";
-    static string ButtonRedDefaultLayout => ButtonRed + DefaultControlsLayout;
-    static string ButtonGreenDefaultLayout => ButtonGreen + DefaultControlsLayout;
+
+    const int ButtonPixelWidth = 100;
+
+    static string Width(int pixelWidth)
+    {
+        return $"width:{pixelWidth}px; ";
+    }
+
+    static string ButtonRedDefaultLayout(int pixelWidth = ButtonPixelWidth) => ButtonRed + DefaultControlsLayout + Width(pixelWidth);
+    static string ButtonGreenDefaultLayout(int pixelWidth = ButtonPixelWidth) => ButtonGreen + DefaultControlsLayout + Width(pixelWidth);
     static string DefaultControlStyle => DefaultBackgroundControls + DefaultControlsLayout;
 
     const string TopScaled = "margin-top: 0.5rem; transform: scale(0.8);";
@@ -27,7 +35,7 @@
 <div class="input-group defpadding" style="align-self: center">
     <div class="input-group-prepend search-margin">
         <MatButton style="@ButtonBackground" Raised="true" @onclick="ButtonSearchOrAbort">@ButtonContent</MatButton>
-        <MatProgressBar Indeterminate="true" Closed="@Is" style="@DefaultControlsLayoutRemWidthPx(1.5, 30)"></MatProgressBar>
+        <MatProgressBar Indeterminate="true" Closed="@NotSearching" style="@DefaultControlsLayoutRemWidthPx(1.5, 30)"></MatProgressBar>
         <MatTextField style="@DefaultControlStyleTopScaled" TValue="string" Label="Search For" @bind-Value="@Text"></MatTextField>
     </div>
 
@@ -128,7 +136,7 @@
     private bool _buttonStateCurrentlyExecutingSearch = false;
 
     string ButtonBackground => (_buttonStateCurrentlyExecutingSearch == true) ?
-            ButtonRedDefaultLayout : ButtonGreenDefaultLayout;
+            ButtonRedDefaultLayout() : ButtonGreenDefaultLayout();
 
     private void SetDefaultState()
     {
