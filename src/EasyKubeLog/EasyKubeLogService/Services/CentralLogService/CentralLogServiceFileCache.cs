@@ -14,16 +14,14 @@ namespace EasyKubeLogService.Services.CentralLogService
     public class FileCache : ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry>
     {
         private readonly string _fileName;
-        private readonly StreamWriter _streamWriter;
+        private StreamWriter _streamWriter;
         private FileStream _file;
-        private StreamReader _stream;
         private IParser _defaultParser;
 
         public FileCache(string fileName)
         {
             _fileName = fileName;
             _file = File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
-            _stream = new StreamReader(_file);
             _streamWriter = new StreamWriter(_file);
         }
 
@@ -39,7 +37,7 @@ namespace EasyKubeLogService.Services.CentralLogService
 
         public void Dispose()
         {
-            _stream?.Dispose(); _stream = null;
+            _streamWriter?.Dispose(); _streamWriter = null;
             _file?.Dispose(); _file = null;
         }
 
@@ -63,34 +61,42 @@ namespace EasyKubeLogService.Services.CentralLogService
             return timeRange.IsInBetweenOrDefault(k.Time);
         }
 
-        private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, TimeRange timeRange)
+
+        private StreamReader CreateStreamReader()
         {
-            using FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-            using StreamReader localStream = new StreamReader(file);
+            FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            StreamReader localStream = new StreamReader(file);
+            return localStream;
+        }
+
+
+
+        private KubernetesLogEntry[] Query(string simpleQuery, int maxResults, TimeRange timeRange, Func<KubernetesLogEntry, bool> compareFunction)
+        {
+            using StreamReader localStream = CreateStreamReader();
             var result = EnumerateStreamLines(localStream).
                 Where(x => CheckInBetween(x, timeRange)).
-                Where(x => x.Line.Contains(simpleQuery)).
+                Where(compareFunction).
                 Take(maxResults).
                 OrderByDescending(x => x.Time);
             return result.ToArray();
         }
-
-        private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, TimeRange timeRange)
+        
+        private KubernetesLogEntry[] CaseInSensitiveQuery(string simpleQuery, int maxResults, TimeRange timeRange)
         {
-            using FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-            using StreamReader localStream = new StreamReader(file);
-            var result = EnumerateStreamLines(localStream).
-                Where(x => CheckInBetween(x, timeRange)).
-                Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.Line, simpleQuery, CompareOptions.IgnoreCase) >= 0).
-                Take(maxResults).
-                OrderByDescending(x => x.Time);
-            return result.ToArray();
+            bool Compare(KubernetesLogEntry k) => CultureInfo.CurrentCulture.CompareInfo.IndexOf(k.Line, simpleQuery, CompareOptions.IgnoreCase) >= 0;
+            return Query(simpleQuery, maxResults, timeRange, Compare);
+        }
+        private KubernetesLogEntry[] CaseSensitiveQuery(string simpleQuery, int maxResults, TimeRange timeRange)
+        {
+            bool Compare(KubernetesLogEntry k) => k.Line.Contains(simpleQuery);
+            return Query(simpleQuery, maxResults, timeRange, Compare);
         }
 
         public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, TimeRange timeRange)
         {
-            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, timeRange);
-            return QueryCaseSensitive(simpleQuery, maxResults, timeRange);
+            if (mode == CacheQueryMode.CaseInsensitive) return CaseInSensitiveQuery(simpleQuery, maxResults, timeRange);
+            return CaseSensitiveQuery(simpleQuery, maxResults, timeRange);
         }
     }
 
