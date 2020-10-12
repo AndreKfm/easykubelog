@@ -130,11 +130,11 @@ namespace EasyKubeLogService.Services.CentralLogService
             }
         }
 
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, TimeRange timeRange)
+        public KubernetesLogEntry[] Query(QueryParams queryParams)
         {
             lock (_logCache)
             {
-                return _logCache.Query(simpleQuery, maxResults, CacheQueryMode.CaseInsensitive, timeRange);
+                return _logCache.Query(queryParams, CacheQueryMode.CaseInsensitive);
             }
         }
 

@@ -71,32 +71,32 @@ namespace EasyKubeLogService.Services.CentralLogService
 
 
 
-        private KubernetesLogEntry[] Query(string simpleQuery, int maxResults, TimeRange timeRange, Func<KubernetesLogEntry, bool> compareFunction)
+        private KubernetesLogEntry[] LocalQuery(QueryParams queryParams, Func<KubernetesLogEntry, bool> compareFunction)
         {
             using StreamReader localStream = CreateStreamReader();
             var result = EnumerateStreamLines(localStream).
-                Where(x => CheckInBetween(x, timeRange)).
+                Where(x => CheckInBetween(x, queryParams.Time)).
                 Where(compareFunction).
-                Take(maxResults).
+                Take(queryParams.MaxResults).
                 OrderByDescending(x => x.Time);
             return result.ToArray();
         }
         
-        private KubernetesLogEntry[] CaseInSensitiveQuery(string simpleQuery, int maxResults, TimeRange timeRange)
+        private KubernetesLogEntry[] CaseInSensitiveQuery(QueryParams queryParams)
         {
-            bool Compare(KubernetesLogEntry k) => CultureInfo.CurrentCulture.CompareInfo.IndexOf(k.Line, simpleQuery, CompareOptions.IgnoreCase) >= 0;
-            return Query(simpleQuery, maxResults, timeRange, Compare);
+            bool Compare(KubernetesLogEntry k) => CultureInfo.CurrentCulture.CompareInfo.IndexOf(k.Line, queryParams.SimpleQuery, CompareOptions.IgnoreCase) >= 0;
+            return LocalQuery(queryParams, Compare);
         }
-        private KubernetesLogEntry[] CaseSensitiveQuery(string simpleQuery, int maxResults, TimeRange timeRange)
+        private KubernetesLogEntry[] CaseSensitiveQuery(QueryParams queryParams)
         {
-            bool Compare(KubernetesLogEntry k) => k.Line.Contains(simpleQuery);
-            return Query(simpleQuery, maxResults, timeRange, Compare);
+            bool Compare(KubernetesLogEntry k) => k.Line.Contains(queryParams.SimpleQuery);
+            return LocalQuery(queryParams, Compare);
         }
 
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, TimeRange timeRange)
+        public KubernetesLogEntry[] Query(QueryParams queryParams, CacheQueryMode mode)
         {
-            if (mode == CacheQueryMode.CaseInsensitive) return CaseInSensitiveQuery(simpleQuery, maxResults, timeRange);
-            return CaseSensitiveQuery(simpleQuery, maxResults, timeRange);
+            if (mode == CacheQueryMode.CaseInsensitive) return CaseInSensitiveQuery(queryParams);
+            return CaseSensitiveQuery(queryParams);
         }
     }
 
@@ -124,33 +124,33 @@ namespace EasyKubeLogService.Services.CentralLogService
             return timeRange.IsInBetweenOrDefault(k.Time);
         }
 
-        private KubernetesLogEntry[] QueryCaseSensitive(string simpleQuery, int maxResults, TimeRange timeRange)
+        private KubernetesLogEntry[] QueryCaseSensitive(QueryParams queryParams)
         {
             var result = _stream.Reader.ReadEntries(_direction, int.MaxValue).
-                Where(x => x.content != null && x.content.Contains(simpleQuery)).
+                Where(x => x.content != null && x.content.Contains(queryParams.SimpleQuery)).
                 Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
-                Where(x => CheckInBetween(x, timeRange)).
-                Take(maxResults).
+                Where(x => CheckInBetween(x, queryParams.Time)).
+                Take(queryParams.MaxResults).
                 OrderByDescending(x => x.Time);
 
             return result.ToArray();
         }
 
-        private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, TimeRange timeRange)
+        private KubernetesLogEntry[] QueryCaseInSensitive(QueryParams queryParams)
         {
             var result = _stream.Reader.ReadEntries(_direction, int.MaxValue).
-              Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.content ?? string.Empty, simpleQuery, CompareOptions.IgnoreCase) >= 0).
+              Where(x => CultureInfo.CurrentCulture.CompareInfo.IndexOf(x.content ?? string.Empty, queryParams.SimpleQuery, CompareOptions.IgnoreCase) >= 0).
               Select(x => KubernetesLogEntry.Parse(ref _defaultParser, x.content, x.filename)).
-              Where(x => CheckInBetween(x, timeRange)).
-              Take(maxResults).
+              Where(x => CheckInBetween(x, queryParams.Time)).
+              Take(queryParams.MaxResults).
               OrderByDescending(x => x.Time);
             return result.ToArray();
         }
 
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, TimeRange timeRange)
+        public KubernetesLogEntry[] Query(QueryParams queryParams, CacheQueryMode mode)
         {
-            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, timeRange);
-            return QueryCaseSensitive(simpleQuery, maxResults, timeRange);
+            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(queryParams);
+            return QueryCaseSensitive(queryParams);
         }
 
         public void Add((DateTimeOffset, int fileIndex) key, KubernetesLogEntry value)

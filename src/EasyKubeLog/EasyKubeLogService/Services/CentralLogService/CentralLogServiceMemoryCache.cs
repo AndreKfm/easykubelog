@@ -63,32 +63,17 @@ namespace EasyKubeLogService.Services.CentralLogService
             return LocalQuery(queryParams, Compare);
         }
 
-        readonly struct QueryParams
+        private KubernetesLogEntry[] QueryCaseInSensitive(QueryParams queryParams)
         {
-            public QueryParams(string simpleQuery, int maxResults, TimeRange timeRange)
-            {
-                SimpleQuery = simpleQuery;
-                MaxResults = maxResults;
-                Time = timeRange;
-            }
-
-            public readonly string SimpleQuery;
-            public readonly int MaxResults;
-            public readonly TimeRange Time;
-        }
-
-        private KubernetesLogEntry[] QueryCaseInSensitive(string simpleQuery, int maxResults, TimeRange timeRange)
-        {
-            var queryParams = new QueryParams(simpleQuery, maxResults, timeRange);
-            bool Compare(KubernetesLogEntry k) => CultureInfo.CurrentCulture.CompareInfo.IndexOf(k.Line, simpleQuery, 
+            bool Compare(KubernetesLogEntry k) => CultureInfo.CurrentCulture.CompareInfo.IndexOf(k.Line, queryParams.SimpleQuery, 
                 CompareOptions.IgnoreCase) >= 0;
             return LocalQuery(queryParams, Compare);
         }
 
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, TimeRange timeRange)
+        public KubernetesLogEntry[] Query(QueryParams queryParams, CacheQueryMode mode)
         {
-            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(simpleQuery, maxResults, timeRange);
-            return QueryCaseSensitive(new QueryParams(simpleQuery, maxResults, timeRange));
+            if (mode == CacheQueryMode.CaseInsensitive) return QueryCaseInSensitive(queryParams);
+            return QueryCaseSensitive(queryParams);
         }
     }
 }

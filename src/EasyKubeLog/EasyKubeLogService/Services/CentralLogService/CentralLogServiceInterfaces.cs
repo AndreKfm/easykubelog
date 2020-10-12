@@ -6,7 +6,7 @@ namespace EasyKubeLogService.Services.CentralLogService
 {
     public interface ICentralLogServiceQuery : IDisposable
     {
-        public KubernetesLogEntry[] Query(string simpleQuery, int maxResults, TimeRange timeRange);
+        public KubernetesLogEntry[] Query(QueryParams queryParams);
     }
 
     public interface ICentralLogService : IDisposable
@@ -54,6 +54,19 @@ namespace EasyKubeLogService.Services.CentralLogService
         public readonly DateTimeOffset To { get; }
     }
 
+    public readonly struct QueryParams
+    {
+        public QueryParams(string simpleQuery, int maxResults, TimeRange timeRange)
+        {
+            SimpleQuery = simpleQuery;
+            MaxResults = maxResults;
+            Time = timeRange;
+        }
+
+        public readonly string SimpleQuery;
+        public readonly int MaxResults;
+        public readonly TimeRange Time;
+    }
 
     public interface ICache<in TKey, in TValue> : IDisposable
     {
@@ -61,6 +74,6 @@ namespace EasyKubeLogService.Services.CentralLogService
 
         void Flush();
 
-        KubernetesLogEntry[] Query(string simpleQuery, int maxResults, CacheQueryMode mode, TimeRange timeRange);
+        KubernetesLogEntry[] Query(QueryParams queryParams, CacheQueryMode mode);
     }
 }
