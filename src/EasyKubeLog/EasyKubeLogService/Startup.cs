@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EasyKubeLogService.Styles;
 using EmbeddedBlazorContent;
+using EndlessFileStream;
 using WatcherFileListClasses;
 
 namespace EasyKubeLogService
@@ -112,7 +113,17 @@ namespace EasyKubeLogService
             {
                 var logger = x.GetService<ILogger<CentralLogServiceCache>>();
                 var settings = x.GetService<IOptions<CentralLogServiceCacheSettings>>();
-                return new CentralLogServiceCache(settings, logger);
+
+                EndlessFileStreamSettings endlessSettings =
+                    new EndlessFileStreamSettings
+                    {
+                        BaseDirectory = settings.Value.CentralMasterLogDirectory,
+                        MaxLogFileSizeInMByte = settings.Value.MaxLogFileSizeInMByte
+                    };
+                var endlessStream = new EndlessFileStream.EndlessFileStream(endlessSettings);
+                var cache = new EndlessFileStreamCache(endlessStream);
+
+                return new CentralLogServiceCache(settings, logger, cache);
             });
 
             // Register styles

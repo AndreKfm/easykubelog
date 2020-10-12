@@ -1,5 +1,4 @@
-﻿using EndlessFileStream;
-using LogEntries;
+﻿using LogEntries;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -32,15 +31,8 @@ namespace EasyKubeLogService.Services.CentralLogService
         {
             _settings = settings.Value;
 
-            EndlessFileStreamSettings endlessSettings =
-                new EndlessFileStreamSettings
-                {
-                    BaseDirectory = settings.Value.CentralMasterLogDirectory,
-                    MaxLogFileSizeInMByte = settings.Value.MaxLogFileSizeInMByte
-                };
 
-            var endlessStream = new EndlessFileStream.EndlessFileStream(endlessSettings);
-            _logCache = cache ?? new EndlessFileStreamCache(endlessStream);
+            _logCache = cache ?? throw new Exception("Log cache not specified in Central log service cache");
             _logger = logger;
         }
 
