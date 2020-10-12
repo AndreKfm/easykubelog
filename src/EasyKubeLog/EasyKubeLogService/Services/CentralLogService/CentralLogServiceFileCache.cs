@@ -41,11 +41,11 @@ namespace EasyKubeLogService.Services.CentralLogService
             _file?.Dispose(); _file = null;
         }
 
-        private IEnumerable<KubernetesLogEntry> EnumerateStreamLines(StreamReader localStream)
+        private IEnumerable<KubernetesLogEntry> EnumerateStreamLines(IStreamReaderWrapper localStream)
         {
             //lock (_lockObject)
             {
-                localStream.BaseStream.Seek(0, SeekOrigin.Begin);
+                localStream.Seek(0, SeekOrigin.Begin);
                 for (; ; )
                 {
                     var line = localStream.ReadLine();
@@ -61,19 +61,15 @@ namespace EasyKubeLogService.Services.CentralLogService
             return timeRange.IsInBetweenOrDefault(k.Time);
         }
 
-
-        private StreamReader CreateStreamReader()
+        private IStreamReaderWrapper CreateStreamReader()
         {
-            FileStream file = File.Open(_fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            StreamReader localStream = new StreamReader(file);
-            return localStream;
+            StreamReaderWrapperFactoryImpl streamReaderFactory = new StreamReaderWrapperFactoryImpl(_fileName, new FileModes(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+            return streamReaderFactory.Create();
         }
-
-
 
         private KubernetesLogEntry[] LocalQuery(QueryParams queryParams, Func<KubernetesLogEntry, bool> compareFunction)
         {
-            using StreamReader localStream = CreateStreamReader();
+            using IStreamReaderWrapper localStream = CreateStreamReader();
             var result = EnumerateStreamLines(localStream).
                 Where(x => CheckInBetween(x, queryParams.Time)).
                 Where(compareFunction).
@@ -99,6 +95,7 @@ namespace EasyKubeLogService.Services.CentralLogService
             return CaseSensitiveQuery(queryParams);
         }
     }
+
 
     public class EndlessFileStreamCache : ICache<(DateTimeOffset, int fileIndex), KubernetesLogEntry>
     {

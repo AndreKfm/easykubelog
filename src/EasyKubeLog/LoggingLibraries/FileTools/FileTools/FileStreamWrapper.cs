@@ -65,6 +65,9 @@ namespace FileToolsClasses
         }
     }
 
+
+
+
     public class FileReadOnlyWrapper : IFile
     {
         private long _currentPosition;
