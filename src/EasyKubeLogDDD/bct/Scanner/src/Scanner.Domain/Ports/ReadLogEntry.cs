@@ -5,9 +5,9 @@ using Scanner.Domain.Entities;
 
 namespace Scanner.Domain.Ports
 {
-    interface IReadLogEntryPort
+    public interface IReadLogEntryPort
     {
         // Returns default value if no new entry is available
-        LogEntryEntity ReadNext();
+        LogEntry ReadNext();
     }
 }
