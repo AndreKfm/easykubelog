@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>ManualFileSystemWatcher.Console</AssemblyName>
     <RootNamespace>ManualFileSystemWatcherConsole</RootNamespace>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
+using SharedKernel;
+
 
 namespace Scanner.Domain.Entities
 {
+
     public class LogEntry : Entity
     {
         public LogEntry(DateTimeOffset createTime, string content, string moduleName)
@@ -19,9 +22,9 @@ namespace Scanner.Domain.Entities
         {
         }
 
-        public string Content { get; }
-        public DateTimeOffset CreateTime { get; }
-        public string ModuleName { get; }
+        public string Content { get; init; }
+        public DateTimeOffset CreateTime { get; init; }
+        public string ModuleName { get; init;  }
 
 
         private bool IsEmpty => ModuleName == default && Content == default && ModuleName == default;

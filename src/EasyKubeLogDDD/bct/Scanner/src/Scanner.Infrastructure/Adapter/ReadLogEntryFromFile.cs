@@ -6,12 +6,12 @@ using Scanner.Domain.Ports;
 
 namespace Scanner.Infrastructure.Adapter
 {
-    class ReadLogEntryFromFile : IReadLogEntryPort
+    class ReadLogEntryFromFile : IReadLogEntry
     {
         public LogEntry ReadNext()
         {
             // Generate demo entries for now 
-            return new LogEntry { ModuleName = "DEMO ENTITY", Content = $"DEMO ENTITY: {++index}", CreateTime = DateTimeOffset.Now};
+            return new LogEntry{ ModuleName = "DEMO ENTITY", Content = $"DEMO ENTITY: {++index}", CreateTime = DateTimeOffset.Now};
         }
 
         private int index = 0;

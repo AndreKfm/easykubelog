@@ -67,11 +67,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Boundaries", "Boundaries", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scanner", "Scanner", "{A5C01EC5-3376-446B-B986-96B55D390C2C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scanner.Api", "..\EasyKubeLogDDD\bct\Scanner\src\Scanner.Api\Scanner.Api.csproj", "{75074266-EB24-43E4-9A1F-C5C5215D0B11}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scanner.Api", "..\EasyKubeLogDDD\bct\Scanner\src\Scanner.Api\Scanner.Api.csproj", "{75074266-EB24-43E4-9A1F-C5C5215D0B11}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scanner.Domain", "..\EasyKubeLogDDD\bct\Scanner\src\Scanner.Domain\Scanner.Domain.csproj", "{5B1039A7-5BEE-4C4D-81A0-EC13B69B40EA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scanner.Infrastructure", "..\EasyKubeLogDDD\bct\Scanner\src\Scanner.Infrastructure\Scanner.Infrastructure.csproj", "{AD688F36-38DA-4C63-80DD-6A06798A1C8F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{349CE60B-47FA-43D4-900D-0FF45A74C258}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedKernel", "..\EasyKubeLogDDD\bct\Shared\SharedKernel.csproj", "{08051EF7-FB2D-4290-ABAF-82BA62776C45}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -155,6 +159,10 @@ Global
 		{AD688F36-38DA-4C63-80DD-6A06798A1C8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD688F36-38DA-4C63-80DD-6A06798A1C8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD688F36-38DA-4C63-80DD-6A06798A1C8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08051EF7-FB2D-4290-ABAF-82BA62776C45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08051EF7-FB2D-4290-ABAF-82BA62776C45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08051EF7-FB2D-4290-ABAF-82BA62776C45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08051EF7-FB2D-4290-ABAF-82BA62776C45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -190,6 +198,8 @@ Global
 		{75074266-EB24-43E4-9A1F-C5C5215D0B11} = {A5C01EC5-3376-446B-B986-96B55D390C2C}
 		{5B1039A7-5BEE-4C4D-81A0-EC13B69B40EA} = {A5C01EC5-3376-446B-B986-96B55D390C2C}
 		{AD688F36-38DA-4C63-80DD-6A06798A1C8F} = {A5C01EC5-3376-446B-B986-96B55D390C2C}
+		{349CE60B-47FA-43D4-900D-0FF45A74C258} = {2B5FA352-F29F-48CD-8F44-FF6BF662E73B}
+		{08051EF7-FB2D-4290-ABAF-82BA62776C45} = {349CE60B-47FA-43D4-900D-0FF45A74C258}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9D1BF3C4-FFEE-43FF-8016-7458E4F2617E}

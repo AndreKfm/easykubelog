@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Scanner.Domain.Entities
+namespace SharedKernel
 {
     public class Entity
     {
