@@ -14,12 +14,15 @@ namespace Scanner.Domain.Entities
         public LogEntry(DateTimeOffset createTime, string content, string moduleName)
         {
             CreateTime = createTime;
-            Content = Content;
+            Content = content;
             ModuleName = moduleName;
         }
 
         public LogEntry()
         {
+            Content = String.Empty;
+            CreateTime = default;
+            ModuleName = String.Empty;
         }
 
         public string Content { get; init; }
