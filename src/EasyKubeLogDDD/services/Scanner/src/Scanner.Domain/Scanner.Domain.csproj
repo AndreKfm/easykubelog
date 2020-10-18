@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\EasyKubeLog\LoggingLibraries\DirectoryWatcher\DirectoryWatcher\DirectoryWatcher.csproj" />
     <ProjectReference Include="..\..\..\Shared\SharedKernel.csproj" />
   </ItemGroup>
 

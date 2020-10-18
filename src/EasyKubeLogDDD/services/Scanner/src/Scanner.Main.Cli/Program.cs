@@ -2,6 +2,8 @@
 using Scanner.Domain;
 using Scanner.Domain.Ports;
 using Scanner.Infrastructure.Adapter;
+using Scanner.Infrastructure.Adapter.LogDirWatcher;
+using Scanner.Infrastructure.Adapter.LogDirWatcher.ManualDirectoryScan;
 
 namespace Scanner.Main.Cli
 {
@@ -19,9 +21,12 @@ namespace Scanner.Main.Cli
     {
         static void Main(string[] args)
         {
+            ManualDirectoryScanAndGenerateDifferenceToLastScan pollDirectoryForChanges = 
+                new ManualDirectoryScanAndGenerateDifferenceToLastScan(new ManualDirectoryScanAndGenerateDifferenceToLastScanSettings(@"d:\test\polldir"),
+                    new ManualScanDirectory());
 
             LogFileChangedHandler handler = new LogFileChangedHandler();
-            LogDirWatcher watcher = new LogDirWatcher();
+            LogDirectoryWatcher watcher = new LogDirectoryWatcher(pollDirectoryForChanges);
             ScannerMain main = new ScannerMain(watcher, handler);
 
             Console.WriteLine("Starting scanner");

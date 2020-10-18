@@ -1,32 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
-using System.Threading.Tasks;
 using Scanner.Domain.Ports;
+using Scanner.Domain.Shared;
 
-namespace Scanner.Infrastructure.Adapter
+namespace Scanner.Infrastructure.Adapter.LogDirWatcher
 {
-    public class LogDirWatcher : ILogDirWatcher
+    public class LogDirectoryWatcher : ILogDirWatcher
     {
-        private int _index = 0;
+        private readonly IDirectoryFileScanner _pollNewFiles;
 
 
-        public LogDirWatcher()
+        public LogDirectoryWatcher(IDirectoryFileScanner pollNewFiles)
         {
+            _pollNewFiles = pollNewFiles;
         }
 
 
-        public void WaitForNextChange(CancellationToken token)
+        public void ScanDirectory()
         {
-            token.WaitHandle.WaitOne(1000); // Just for simulation purposes
+            _pollNewFiles.ScanDirectory();
         }
 
 
 
-        public string GetChangedFile()
+        public ReadOnlyCollection<FileEntry> GetChangedFiles()
         {
-            return $"Simulation{++_index}.log";
+            return _pollNewFiles.GetChangedFiles();
         }
+
     }
 }

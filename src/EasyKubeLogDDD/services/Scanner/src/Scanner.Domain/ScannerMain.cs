@@ -43,9 +43,16 @@ namespace Scanner.Domain
         {
             while (token.IsCancellationRequested == false)
             {
-                _watcher.WaitForNextChange(token);
+                Task.Delay(TimeSpan.FromSeconds(1), token).Wait(token);
                 if (token.IsCancellationRequested == false)
-                    fileChanged.LogFileChanged(_watcher.GetChangedFile());
+                {
+                    _watcher.ScanDirectory();
+                    var changeList = _watcher.GetChangedFiles();
+                    foreach (var entry in changeList)
+                    {
+                        fileChanged.LogFileChanged(entry.FileName);
+                    }
+                }
             }
         }
     }
