@@ -5,7 +5,7 @@ using SharedKernel;
 
 namespace Scanner.Domain.Ports
 {
-    interface IEventListener
+    public interface IEventListener
     {
         void NewEvent(Event newEvent);
     }

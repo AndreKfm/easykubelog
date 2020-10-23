@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,8 +8,10 @@ using Scanner.Domain.Events;
 using Scanner.Domain.Ports;
 using SharedKernel;
 
+[assembly: InternalsVisibleTo("Scanner.Test")]
 namespace Scanner.Domain
 {
+
     internal class ScannerWatcherExecutor
     {
         private readonly IEventListener _eventListener;
@@ -41,18 +44,24 @@ namespace Scanner.Domain
 
         void ExecuteWatcher(CancellationToken token, ILogFileChanged fileChanged)
         {
-            while (token.IsCancellationRequested == false)
+            try
             {
-                Task.Delay(TimeSpan.FromSeconds(1), token).Wait(token);
-                if (token.IsCancellationRequested == false)
+                while (token.IsCancellationRequested == false)
                 {
-                    _watcher.ScanDirectory();
-                    var changeList = _watcher.GetChangedFiles();
-                    foreach (var entry in changeList)
+                    Task.Delay(TimeSpan.FromSeconds(1), token).Wait(token);
+                    if (token.IsCancellationRequested == false)
                     {
-                        fileChanged.LogFileChanged(entry.FileName);
+                        _watcher.ScanDirectory();
+                        var changeList = _watcher.GetChangedFiles();
+                        foreach (var entry in changeList)
+                        {
+                            fileChanged.LogFileChanged(entry.FileName);
+                        }
                     }
                 }
+            }
+            catch (OperationCanceledException)
+            {
             }
         }
     }
