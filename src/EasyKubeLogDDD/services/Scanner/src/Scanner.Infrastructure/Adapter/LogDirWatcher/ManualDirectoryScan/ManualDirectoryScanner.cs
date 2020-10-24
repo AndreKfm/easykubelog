@@ -97,7 +97,7 @@ namespace Scanner.Infrastructure.Adapter.LogDirWatcher.ManualDirectoryScan
     }
 
 
-  public interface IManualScanDirectory
+    public interface IManualScanDirectory
     {
         public FileList Scan(string directory);
     }

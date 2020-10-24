@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Moq;
@@ -7,7 +6,7 @@ using Scanner.Domain.Ports;
 using Scanner.Domain.Shared;
 using Xunit;
 
-namespace Scanner.Test
+namespace Scanner.Domain.Test
 {
     public class ScannerWatcherExecutorTest
     {
@@ -55,14 +54,8 @@ namespace Scanner.Test
             executor.Stop();
         }
 
-
-        [Fact]
-        public void CheckAllChangeTypes()
+        private ReadOnlyCollection<FileEntry> GetCollection()
         {
-            Mock<ILogFileChanged> changeCallback = new Mock<ILogFileChanged>();
-            Mock<IEventListener> listener = new Mock<IEventListener>();
-            Mock<ILogDirWatcher> watcherMock = new Mock<ILogDirWatcher>();
-
             var collection = new List<FileEntry>(new FileEntry[]
             {
                 new FileEntry("changed", FileSystemWatcherChangeType.Changed),
@@ -71,15 +64,29 @@ namespace Scanner.Test
                 new FileEntry("error", FileSystemWatcherChangeType.Error),
                 new FileEntry("rename", FileSystemWatcherChangeType.Rename)
             });
+            return collection.AsReadOnly();
+        }
 
-            watcherMock.Setup(x => x.GetChangedFiles()).Returns(collection.AsReadOnly);
 
+        [Fact]
+        public void CheckAllChangeTypes()
+        {
+            Mock<ILogFileChanged> changeCallback = new Mock<ILogFileChanged>();
+            Mock<IEventListener> listener = new Mock<IEventListener>();
+            Mock<ILogDirWatcher> watcherMock = new Mock<ILogDirWatcher>();
+
+            var listenerInterface = listener.Object;
+            var changeInterface = changeCallback.Object;
+
+            var collection = GetCollection();
+            watcherMock.Setup(x => x.GetChangedFiles()).Returns(collection);
             var watcher = watcherMock.Object;
 
-            ScannerWatcherExecutor executor = new ScannerWatcherExecutor(listener.Object, watcher);
-            executor.Start(changeCallback.Object);
+            ScannerWatcherExecutor executor = new ScannerWatcherExecutor(listenerInterface, watcher);
+            executor.Start(changeInterface);
 
             var changes = watcher.GetChangedFiles();
+
 
             Assert.True(changes.Count == collection.Count);
             Check(changes[0], "changed", FileSystemWatcherChangeType.Changed);

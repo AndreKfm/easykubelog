@@ -8,7 +8,8 @@ using Scanner.Domain.Events;
 using Scanner.Domain.Ports;
 using SharedKernel;
 
-[assembly: InternalsVisibleTo("Scanner.Test")]
+[assembly: InternalsVisibleTo("Scanner.Domain.Test")]
+[assembly: InternalsVisibleTo("Scanner.Infrastructure.Test")]
 namespace Scanner.Domain
 {
 

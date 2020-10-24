@@ -27,6 +27,7 @@ namespace Scanner.Main.Cli
 
             LogFileChangedHandler handler = new LogFileChangedHandler();
             LogDirectoryWatcher watcher = new LogDirectoryWatcher(pollDirectoryForChanges);
+
             ScannerMain main = new ScannerMain(watcher, handler);
 
             Console.WriteLine("Starting scanner");
