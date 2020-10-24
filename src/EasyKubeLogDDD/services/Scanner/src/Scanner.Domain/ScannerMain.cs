@@ -28,7 +28,7 @@ namespace Scanner.Domain
 
         public void Start(ILogFileChanged logfileChanged)
         {
-            _eventListener.NewEvent(new StartDirScanEvent("Unknown directory"));
+            _eventListener.NewEvent(new StartDirScanEvent(_watcher.GetCurrentDirectory()));
 
             Stop();
             _source = new CancellationTokenSource();
@@ -41,6 +41,7 @@ namespace Scanner.Domain
             _watcherTask?.Wait();
             _source = null;
             _watcherTask = null;
+            _eventListener.NewEvent(new StopDirScanEvent(_watcher.GetCurrentDirectory()));
         }
 
         void ExecuteWatcher(CancellationToken token, ILogFileChanged fileChanged)
@@ -52,8 +53,15 @@ namespace Scanner.Domain
                     Task.Delay(TimeSpan.FromSeconds(1), token).Wait(token);
                     if (token.IsCancellationRequested == false)
                     {
+                        _eventListener.NewEvent(new StartDirScanEvent(_watcher.GetCurrentDirectory()));
                         _watcher.ScanDirectory();
                         var changeList = _watcher.GetChangedFiles();
+                        if (changeList.Count > 0)
+                        {
+                            _eventListener.NewEvent(new FileChangesFound(_watcher.GetCurrentDirectory(), changeList));
+                        }
+                        _eventListener.NewEvent(new DirScanCompletedEvent(_watcher.GetCurrentDirectory()));
+
                         foreach (var entry in changeList)
                         {
                             fileChanged.LogFileChanged(entry.FileName);
@@ -72,7 +80,9 @@ namespace Scanner.Domain
     {
         public void NewEvent(Event newEvent)
         {
-            Console.WriteLine($"New event: {newEvent.Name}");
+            Console.WriteLine($"New event: {newEvent.Name} ");
+            newEvent.EnumerateProperties(((string name, string content) values) =>
+                 Console.WriteLine($"  {values.name} = {values.content}"));
         }
     }
 

@@ -93,7 +93,14 @@ namespace Scanner.Infrastructure.Test
             Assert.True(files.Count > 0);
             Assert.True(files[0].ChangeType == FileSystemWatcherChangeType.Changed);
 
-            File.Delete(fileName);
+            var newFileName = fileName + ".new";
+            File.Move(fileName, newFileName);
+            files = GetChangeFiles(watcher);
+            Assert.True(files.Count == 2);
+            Assert.True(files[0].ChangeType == FileSystemWatcherChangeType.Created);
+            Assert.True(files[1].ChangeType == FileSystemWatcherChangeType.Deleted);
+
+            File.Delete(newFileName);
             files = GetChangeFiles(watcher);
             Assert.True(files.Count > 0);
             Assert.True(files[0].ChangeType == FileSystemWatcherChangeType.Deleted);

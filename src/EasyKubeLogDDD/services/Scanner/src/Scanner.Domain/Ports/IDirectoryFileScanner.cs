@@ -8,6 +8,7 @@ namespace Scanner.Domain.Ports
 {
     public interface IDirectoryFileScanner
     {
+        public string GetCurrentDirectory();
         public void ScanDirectory();
         public ReadOnlyCollection<FileEntry> GetChangedFiles();
     }

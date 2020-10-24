@@ -40,6 +40,11 @@ namespace Scanner.Infrastructure.Adapter.LogDirWatcher.ManualDirectoryScan
      
 
         private Dictionary<string, long>? _currentDirectoryScan;
+        public string GetCurrentDirectory()
+        {
+            return _settings.ScanDirectory;
+        }
+
         public void ScanDirectory()
         {
             try

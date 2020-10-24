@@ -11,6 +11,8 @@ namespace Scanner.Domain.Ports
 
     public interface ILogDirWatcher 
     {
+        public string GetCurrentDirectory();
+
         public void ScanDirectory();
         public ReadOnlyCollection<FileEntry> GetChangedFiles();
 

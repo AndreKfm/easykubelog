@@ -17,6 +17,11 @@ namespace Scanner.Infrastructure.Adapter.LogDirWatcher
         }
 
 
+        public string GetCurrentDirectory()
+        {
+            return _pollNewFiles.GetCurrentDirectory();
+        }
+
         public void ScanDirectory()
         {
             _pollNewFiles.ScanDirectory();
