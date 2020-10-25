@@ -8,6 +8,7 @@ using Scanner.Domain.Events;
 using Scanner.Domain.Ports;
 using Scanner.Domain.Ports.Query;
 using SharedKernel;
+using SharedKernel.RootInterfaces;
 
 [assembly: InternalsVisibleTo("Scanner.Domain.Test")]
 [assembly: InternalsVisibleTo("Scanner.Infrastructure.Test")]
@@ -104,7 +105,7 @@ namespace Scanner.Domain
 
     }
 
-    public class ScannerMainApplicationRoot
+    public class ScannerMainApplicationRoot : IApplicationMain
     {
         private readonly ILogDirWatcher _watcher;
         private readonly IScanLogFile _scanner;

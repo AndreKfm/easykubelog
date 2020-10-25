@@ -14,6 +14,7 @@ using Scanner.Infrastructure.Adapter.LogDirWatcher;
 using Scanner.Infrastructure.Adapter.LogDirWatcher.ManualDirectoryScan;
 using Scanner.Infrastructure.Adapter.ScanLogFiles;
 using SharedKernel;
+using SharedKernel.RootInterfaces;
 
 namespace Scanner.Main.Cli
 {
@@ -34,7 +35,12 @@ namespace Scanner.Main.Cli
             using var container = CreateServiceCollection();
 
 
-            ScannerMainApplicationRoot mainRoot = CreateApplicationRoot(container);
+            IApplicationMain mainRoot = CreateApplicationRoot(container);
+
+            //var app = new CommandLineApplication<Program>();
+            //app.Conventions
+            //    .UseDefaultConventions()
+            //    .UseConstructorInjection(serviceProvider);
 
             if (mainRoot != null)
             {
@@ -74,7 +80,7 @@ namespace Scanner.Main.Cli
             return container;
         }
 
-        private static ScannerMainApplicationRoot CreateApplicationRoot(ServiceProvider container)
+        private static IApplicationMain CreateApplicationRoot(ServiceProvider container)
         {
             var classes = AppDomain.CurrentDomain.GetAssemblies()
                 .Where(p =>
@@ -86,7 +92,7 @@ namespace Scanner.Main.Cli
                         type.IsClass && type.FullName != null && type.FullName.EndsWith("ApplicationRoot")))
                 .SelectMany(p => p.Select(p => p));
 
-            ScannerMainApplicationRoot mainRoot = null;
+            IApplicationMain mainRoot = null;
             foreach (var classType in classes)
             {
                 var cstr = classType.GetConstructors();
@@ -99,7 +105,7 @@ namespace Scanner.Main.Cli
 
                     if (mainParams.Count() == main.GetParameters().Length)
                     {
-                        mainRoot = (ScannerMainApplicationRoot) System.ComponentModel.TypeDescriptor.CreateInstance(null,
+                        mainRoot = (IApplicationMain) System.ComponentModel.TypeDescriptor.CreateInstance(null,
                             classType,
                             main.GetParameters().Select(p => p.ParameterType).ToArray(),
                             param.ToArray());
