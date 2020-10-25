@@ -4,6 +4,7 @@ using System.IO;
 using Scanner.Domain;
 using Scanner.Domain.Ports;
 using Scanner.Domain.Shared;
+using Scanner.Infrastructure.Adapter.EventQueue;
 using Scanner.Infrastructure.Adapter.LogDirWatcher;
 using Scanner.Infrastructure.Adapter.LogDirWatcher.ManualDirectoryScan;
 using SharedKernel;
@@ -26,9 +27,9 @@ namespace Scanner.Infrastructure.Test
             }
         }
 
-        internal class TestScannerEventLister : IEventListener
+        internal class TestScannerEventLister : IEventConsumer
         {
-            public void NewEvent(Event newEvent)
+            public void NewEventReceived(Event newEvent)
             {
                 Console.WriteLine($"New event: {newEvent.Name}");
             }
@@ -48,13 +49,19 @@ namespace Scanner.Infrastructure.Test
             return (watcher, dir);
         }
 
+        private IEventBus GetEventBusPreconfigured()
+        {
+            TestScannerEventLister listener = new TestScannerEventLister();
+            CentralEventQueue queue = new CentralEventQueue();
+            queue.AddConsumer(listener);
+            return queue;
+        }
 
         [Fact]
         public void Create()
         {
-            TestScannerEventLister listener = new TestScannerEventLister();
             var watcher = CreateWatcherAndDir().watcher;
-            ScannerWatcherExecutor executor = new ScannerWatcherExecutor(listener, watcher);
+            ScannerWatcherExecutor executor = new ScannerWatcherExecutor(GetEventBusPreconfigured(), watcher);
         }
 
 
@@ -68,9 +75,8 @@ namespace Scanner.Infrastructure.Test
         [Fact]
         public void CheckForChanges()
         {
-            TestScannerEventLister listener = new TestScannerEventLister();
             var (watcher, dir)= CreateWatcherAndDir();
-            ScannerWatcherExecutor executor = new ScannerWatcherExecutor(listener, watcher);
+            ScannerWatcherExecutor executor = new ScannerWatcherExecutor(GetEventBusPreconfigured(), watcher);
 
             var files = GetChangeFiles(watcher);
             Assert.True(files.Count == 0);

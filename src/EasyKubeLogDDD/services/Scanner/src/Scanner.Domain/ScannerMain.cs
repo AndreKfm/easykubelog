@@ -16,20 +16,20 @@ namespace Scanner.Domain
 
     internal class ScannerWatcherExecutor
     {
-        private readonly IEventListener _eventListener;
+        private readonly IEventProducer _eventProducer;
         private readonly ILogDirWatcher _watcher;
         private CancellationTokenSource? _source;
         private Task? _watcherTask;
 
-        public ScannerWatcherExecutor(IEventListener eventListener, ILogDirWatcher watcher)
+        public ScannerWatcherExecutor(IEventBus eventBus, ILogDirWatcher watcher)
         {
-            _eventListener = eventListener;
+            _eventProducer = eventBus.GetProducer();
             _watcher = watcher;
         }
 
         public void Start()
         {
-            _eventListener.NewEvent(new StartDirScanEvent(_watcher.GetCurrentDirectory()));
+            _eventProducer.PostEvent(new StartDirScanEvent(_watcher.GetCurrentDirectory()));
 
             Stop();
             _source = new CancellationTokenSource();
@@ -42,7 +42,7 @@ namespace Scanner.Domain
             _watcherTask?.Wait();
             _source = null;
             _watcherTask = null;
-            _eventListener.NewEvent(new StopDirScanEvent(_watcher.GetCurrentDirectory()));
+            _eventProducer.PostEvent(new StopDirScanEvent(_watcher.GetCurrentDirectory()));
         }
 
         void ExecuteWatcher(CancellationToken token)
@@ -54,14 +54,14 @@ namespace Scanner.Domain
                     Task.Delay(TimeSpan.FromSeconds(1), token).Wait(token);
                     if (token.IsCancellationRequested == false)
                     {
-                        _eventListener.NewEvent(new StartDirScanEvent(_watcher.GetCurrentDirectory()));
+                        _eventProducer.PostEvent(new StartDirScanEvent(_watcher.GetCurrentDirectory()));
                         _watcher.ScanDirectory();
                         var changeList = _watcher.GetChangedFiles();
                         if (changeList.Count > 0)
                         {
-                            _eventListener.NewEvent(new FileChangesFoundEvent(_watcher.GetCurrentDirectory(), changeList));
+                            _eventProducer.PostEvent(new FileChangesFoundEvent(_watcher.GetCurrentDirectory(), changeList));
                         }
-                        _eventListener.NewEvent(new DirScanCompletedEvent(_watcher.GetCurrentDirectory()));
+                        _eventProducer.PostEvent(new DirScanCompletedEvent(_watcher.GetCurrentDirectory()));
                     }
                 }
             }
@@ -76,7 +76,7 @@ namespace Scanner.Domain
 
 
 
-    internal class ScannerEventLister : IEventListener
+    internal class ScannerEventLister : IEventConsumer
     {
         private readonly IScanLogFile _scanner;
 
@@ -85,7 +85,7 @@ namespace Scanner.Domain
         {
             _scanner = scanner;
         }
-        public void NewEvent(Event newEvent)
+        public void NewEventReceived(Event newEvent)
         {
             Console.WriteLine($"New event: {newEvent.Name} ");
             newEvent.EnumerateProperties(((string name, string content) values) =>
@@ -101,25 +101,31 @@ namespace Scanner.Domain
                 }
             }
         }
+
     }
 
-    public class ScannerMain 
+    public class ScannerMainApplicationRoot
     {
         private readonly ILogDirWatcher _watcher;
         private readonly IScanLogFile _scanner;
+        private readonly IEventBus _eventBus;
 
         private ScannerWatcherExecutor? _executor;
-
-        public ScannerMain(ILogDirWatcher watcher, IScanLogFile scanner)
+        private ScannerEventLister _eventListener; 
+        public ScannerMainApplicationRoot(ILogDirWatcher watcher, IScanLogFile scanner, IEventBus eventBus)
         {
             _watcher = watcher;
             _scanner = scanner;
+            _eventBus = eventBus;
+            _eventListener = new ScannerEventLister(scanner);
+            _eventBus.AddConsumer(_eventListener);
+            
         }
 
         public void Start()
         {
             Stop();
-            _executor = new ScannerWatcherExecutor(new ScannerEventLister(_scanner), _watcher);
+            _executor = new ScannerWatcherExecutor(_eventBus, _watcher);
             _executor.Start();
         }
 

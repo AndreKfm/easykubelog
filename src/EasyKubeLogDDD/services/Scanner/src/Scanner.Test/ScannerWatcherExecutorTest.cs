@@ -13,7 +13,7 @@ namespace Scanner.Domain.Test
         [Fact]
         public void Create()
         {
-            Mock<IEventListener> listener = new Mock<IEventListener>();
+            Mock<IEventBus> listener = new Mock<IEventBus>();
             Mock<ILogDirWatcher> watcher = new Mock<ILogDirWatcher>();
             ScannerWatcherExecutor executor = new ScannerWatcherExecutor(listener.Object, watcher.Object);
         }
@@ -21,7 +21,7 @@ namespace Scanner.Domain.Test
         [Fact]
         public void StartStop()
         {
-            Mock<IEventListener> listener = new Mock<IEventListener>();
+            Mock<IEventBus> listener = new Mock<IEventBus>();
             Mock<ILogDirWatcher> watcher = new Mock<ILogDirWatcher>();
             ScannerWatcherExecutor executor = new ScannerWatcherExecutor(listener.Object, watcher.Object);
             executor.Start();
@@ -31,7 +31,7 @@ namespace Scanner.Domain.Test
         [Fact]
         public void CheckChange()
         {
-            Mock<IEventListener> listener = new Mock<IEventListener>();
+            Mock<IEventBus> listener = new Mock<IEventBus>();
             Mock<ILogDirWatcher> watcherMock = new Mock<ILogDirWatcher>();
 
             var collection = new List<FileEntry>(new FileEntry[] {new FileEntry { FileName = "dummy", ChangeType = FileSystemWatcherChangeType.Changed } });
@@ -69,7 +69,7 @@ namespace Scanner.Domain.Test
         [Fact]
         public void CheckAllChangeTypes()
         {
-            Mock<IEventListener> listener = new Mock<IEventListener>();
+            Mock<IEventBus> listener = new Mock<IEventBus>();
             Mock<ILogDirWatcher> watcherMock = new Mock<ILogDirWatcher>();
 
             var listenerInterface = listener.Object;

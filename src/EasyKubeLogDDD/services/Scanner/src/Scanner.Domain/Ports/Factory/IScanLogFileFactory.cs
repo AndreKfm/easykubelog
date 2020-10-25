@@ -10,6 +10,6 @@ namespace Scanner.Domain.Ports.Factory
 {
     public interface IScanLogFileFactory
     {
-        public IScanLogFile CreateScanLogFile(IEventListener listener);
+        public IScanLogFile CreateScanLogFile(IEventBus listener);
     }
 }
