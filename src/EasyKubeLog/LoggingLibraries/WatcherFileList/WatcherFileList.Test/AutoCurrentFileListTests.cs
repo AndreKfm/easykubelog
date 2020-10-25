@@ -84,7 +84,6 @@ namespace WatcherFileListClasses.Test
             Assert.True(lastOutput == mustBeThis2);
             Assert.True(lastFileName == "file2.txt");
 
-
         }
     }
 }

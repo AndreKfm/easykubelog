@@ -9,11 +9,12 @@ using Scanner.Domain.Events;
 using Scanner.Domain.Ports.Query;
 using Scanner.Domain.Shared;
 
+
 namespace Scanner.Infrastructure.Adapter.ScanLogFiles
 {
     public class ScanLogFile : IScanLogFile
     {
-        private AutoCurrentFileList _fileList;
+        private readonly AutoCurrentFileList _fileList;
 
         public ScanLogFile()
         {
@@ -31,7 +32,7 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
         }
     }
 
-    public class AutoCurrentFileList 
+    public class AutoCurrentFileList
     {
 
         public AutoCurrentFileList()
@@ -72,81 +73,63 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
             }
         }
 
-        const int MaxContentLengthToForwardForEachScanInBytes  = 65536;
+        const int MaxContentLengthToForwardForEachScanInBytes = 65536;
 
         private void FileChanged(string entryFileName)
         {
-            var list = _fileList.GetList();
-            var file = list.TryGetValue(entryFileName, out CurrentFileEntry value) == true ? value.CurrentFile : null;
+            var list = _fileList;
+            list.TryGetValue(entryFileName, out CurrentFileEntry? value);
 
-            if (file == null)
+            if (value == null)
             {
                 AddFile(entryFileName);
-                file = list[entryFileName].CurrentFile;
+                list.TryGetValue(entryFileName, out value);
             }
 
             int maxLoop = 1000; // Just to play it safe if something severly gone wrong -> thousand read calls should be enough 
 
-            for (; ; )
+            if (value != null)
             {
+                for (; ; )
+                {
 
-                (string content, ReadLine sizeExceeded)
-                    = file.ReadLineFromCurrentPositionToEnd(MaxContentLengthToForwardForEachScanInBytes);
+                    (string content, ReadLine sizeExceeded)
+                        = value.CurrentFile.ReadLineFromCurrentPositionToEnd(MaxContentLengthToForwardForEachScanInBytes);
 
-                Console.WriteLine($"#### ENTRY: {content}");
-                if (sizeExceeded == ReadLine.BufferSufficient || (--maxLoop <= 0))
-                    break;
+                    Console.WriteLine($"#### ENTRY: {content}");
+                    if (sizeExceeded == ReadLine.BufferSufficient || (--maxLoop <= 0))
+                        break;
+                }
             }
         }
 
         private void RemoveFile(string entryFileName)
         {
-            throw new NotImplementedException();
+            _fileList.TryGetValue(entryFileName, out CurrentFileEntry? value);
+            if (value != null)
+            {
+                _fileList = _fileList.Remove(entryFileName);
+                value.CurrentFile.Dispose();
+            }
         }
 
         private void AddFile(string entryFileName)
         {
             var fileStream = new FileReadOnlyWrapper(entryFileName);
-            _fileList.AddFile(new CurrentFileEntry(entryFileName, fileStream));
+            _fileList = _fileList.Add(entryFileName, new CurrentFileEntry(entryFileName, fileStream));
         }
 
-        private readonly WatcherCurrentFileList _fileList = new WatcherCurrentFileList();
+
+        private ImmutableDictionary<string, CurrentFileEntry> _fileList = ImmutableDictionary<string, CurrentFileEntry>.Empty;
     }
 
-    public class WatcherCurrentFileList
-    {
-
-        public bool AddFile(CurrentFileEntry currentFileEntry)
-        {
-            var old = _fileList;
-            _fileList = _fileList.Add(currentFileEntry.FileName, currentFileEntry);
-            return (old != _fileList);
-        }
-
-        public bool RemoveFile(string fileName)
-        {
-            var old = _fileList;
-            if (!_fileList.ContainsKey(fileName))
-                return false;
-            _fileList = _fileList.Remove(fileName);
-            return (old != _fileList);
-        }
-
-
-        public ImmutableDictionary<string, CurrentFileEntry> GetList()
-        {
-            return _fileList;
-        }
-
-        ImmutableDictionary<string, CurrentFileEntry> _fileList = ImmutableDictionary<string, CurrentFileEntry>.Empty;
-    }
 
     public enum ReadLine
     {
         BufferSufficient,
         ReadLineContentExceedsSize // Will be returned if the internal buffer was too small to read all data
     }
-    public interface IFile
+    public interface IFile : IDisposable
     {
         (string line, ReadLine sizeExceeded)
             ReadLineFromCurrentPositionToEnd(long maxStringSize = 6000); // Read all data as string from current position to the last occurrence
@@ -184,16 +167,15 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
     public interface IFileSeeker
     {
         // ReSharper disable once UnusedMemberInSuper.Global
-        string SeekLastLineFromCurrentAndPositionOnStartOfItAndReturnReadLine(IFileStream stream);
         // ReSharper disable once UnusedMemberInSuper.Global
         bool SeekLastLineFromCurrentAndPositionOnStartOfIt(IFileStream stream);
     }
 
     public class FileSeeker : IFileSeeker
     {
-        private byte[] _buffer;
+        private byte[]? _buffer;
 
-        bool SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(IFileStream stream, int steps) //, bool skipNearbyCRLF = true)
+        private bool SeekNextLineFeedInNegativeDirectionAndPositionStreamOnIt(IFileStream stream, int steps) //, bool skipNearbyCRLF = true)
         {
             if (_buffer == null || (_buffer.Length != steps)) _buffer = new byte[steps];
             Span<byte> buffer = _buffer.AsSpan();
@@ -237,7 +219,7 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
         }
 
         // ReSharper disable once UnusedMethodReturnValue.Local
-        bool SetPositionRelative(IFileStream stream, long offset)
+        private bool SetPositionRelative(IFileStream stream, long offset)
         {
             var current = stream.Position;
 
@@ -248,7 +230,7 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
             return (newPos - current) == offset; // We assume that we won't position more than Int32.Max
         }
 
-        void SetPosition(IFileStream stream, long position)
+        private void SetPosition(IFileStream stream, long position)
         {
             stream.Seek(position, SeekOrigin.Begin);
         }
@@ -283,44 +265,6 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
             return true;
         }
 
-        public string SeekLastLineFromCurrentAndPositionOnStartOfItAndReturnReadLine(IFileStream stream)
-        {
-            if (!SeekLastLineFromCurrentAndPositionOnStartOfIt(stream))
-                return null;
-
-            var current = stream.Position;
-
-            string result = String.Empty;
-            for (; ; )
-            {
-                int read = stream.Read(_buffer);
-                //var xxxremove_me_directly = System.Text.Encoding.Default.GetString(_buffer);
-                Span<byte> buffer = _buffer.AsSpan();
-                var index = buffer.IndexOf((byte)'\n');
-                if (index != -1)
-                {
-
-                    // We don't want to have a '\r' at the end of our log line
-                    if (index > 0 && buffer[index - 1] == '\r')
-                        --index;
-                    if (index > 0)
-                        result += System.Text.Encoding.Default.GetString(_buffer, 0, index);
-                    break;
-                }
-                if ((read == buffer.Length) && (_buffer[buffer.Length - 1] == '\r'))
-                {
-                    // Perhaps we haven't found a \n but it could be a \r at the end - if so don't copy \r
-                    result += System.Text.Encoding.Default.GetString(_buffer, 0, buffer.Length - 2);
-                }
-                else
-                    result += System.Text.Encoding.Default.GetString(_buffer);
-            }
-            SetPosition(stream, current); // Reset so we will read the next line backwards on the next call
-            if (current == 0 && result == String.Empty)
-                return null; // We cannot differentiate between String.Empty nothing found and String.Empty = empty log 
-                             // (though by definition right now a log is not empty) but to prevent errors just return null == nothing found
-            return result;
-        }
     }
 
 
@@ -344,7 +288,8 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
 
     public class FileStreamWrapper : IFileStream, IFileStreamWriter
     {
-        private FileStream _stream;
+        private readonly FileStream _stream;
+        private bool _disposed = false;
         private readonly FileSeeker _seeker = new FileSeeker();
 
         public FileStreamWrapper(string path, FileMode mode, FileAccess access, FileShare share)
@@ -368,8 +313,9 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
 
         public void Dispose()
         {
+            if (_disposed) return;
             _stream?.Dispose();
-            _stream = null;
+            _disposed = true;
         }
 
         public int Read(Span<byte> buffer)
@@ -407,25 +353,25 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
     {
         private long _currentPosition;
         private readonly string _fileName;
-        private IFileStream _stream;
+        private readonly IFileStream _stream;
 
-        private byte[] _localBuffer; // We hold the buffer in a local variable for reuse - since we don't
-                                     // want to have the GC to do that much
+        private byte[]? _localBuffer; // We hold the buffer in a local variable for reuse - since we don't
+                                      // want to have the GC to do that much
 
         private int _reallocateCounter;
         private readonly int _reallocateAfterXCountsLowerThan50Percent = 20; // If a smaller buffer would have reallocated for 20 times - then assume
                                                                              // we have allocated a really big one and free it again
 
-        public FileReadOnlyWrapper(string fileName, IFileStream stream = null)
+        public FileReadOnlyWrapper(string fileName)
         {
             _fileName = fileName;
-            _stream = stream; // Can be passed for mocking - otherwise it will be generated internally by a wrapper implementation
+            (_stream, _currentPosition) = InitializeNewStream(fileName);
         }
 
         public void Dispose()
         {
             _stream?.Dispose();
-            _stream = null;
+            _currentPosition = -1;
         }
 
 
@@ -433,9 +379,6 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
         // Will be used for unit testing only - since Moq cannot handle Span<byte>
         public string FOR_UNIT_TEST_SLOW_FUNCTION_ReadLineCharByCharTillCRLF()
         {
-            if (_stream == null)
-                return String.Empty;
-
             byte[] buf = new byte[1];
             int index = 0;
             var pos = _stream.Position;
@@ -467,42 +410,46 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
             }
             return result;
         }
-        private bool InitializeNewStream()
+        static (FileStreamWrapper, long) InitializeNewStream(string fileName)
         {
-            _stream = new FileStreamWrapper(_fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            _stream.Seek(0, SeekOrigin.End);
-            _currentPosition = _stream.Position;
+            var stream = new FileStreamWrapper(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
 
-            // Seek back to the last line - if we don't do that we will miss the first written line
-
-            var foundLine = _stream.SeekLastLineFromCurrentAndPositionOnStartOfIt();
-            if (!foundLine)
-                return false; // There is no line feed - that is by definition wrong - so let's what has been written
-            _currentPosition = _stream.Position;
-            return true;
+            var currentPosition = SeekLastLine(stream);
+            return (stream, currentPosition);
         }
+
+        static long SeekLastLine(IFileStream stream)
+        {
+            stream.Seek(0, SeekOrigin.End);
+            var foundLine = stream.SeekLastLineFromCurrentAndPositionOnStartOfIt();
+            if (!foundLine)
+                return -1;
+            var currentPosition = stream.Position;
+            return currentPosition;
+        }
+
+
 
 
         public (string line, ReadLine sizeExceeded) InternalReadLineFromCurrentPositionToEnd(long maxStringSize)
         {
             try
             {
+                if (_currentPosition == -1) _currentPosition = SeekLastLine(_stream);
                 ReadLine sizeExceeded = ReadLine.BufferSufficient;
-                if (_stream == null)
-                {
-                    if (!InitializeNewStream())
-                    {
-                        Trace.TraceError("InternalReadLineFromCurrentPositionToEnd - initialize stream failed");
-                        return (String.Empty, ReadLine.BufferSufficient);
-                    }
-                }
-                else
-                {
-                    _stream.Seek(_currentPosition, SeekOrigin.Begin);
-                }
+                _stream.Seek(_currentPosition, SeekOrigin.Begin);
 
                 long current = _stream.Position;
                 long maxToRead = _stream.Length - current;
+
+                if (maxToRead < 0)
+                {
+                    // Normally this shouldn't happen - somehow the file has a lower size than on start
+                    // which would mean somebody deleted file content
+                    _currentPosition = SeekLastLine(_stream);
+                    return (String.Empty, sizeExceeded);
+                }
+
                 long toRead = maxToRead;
                 if (toRead > maxStringSize)
                 {
@@ -554,7 +501,7 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
                 buffer = _localBuffer.AsSpan().Slice(0, lastIndex);
             }
             else
-                _currentPosition = _stream.Position;
+                _currentPosition = _stream?.Position ?? 0;
         }
 
         private void CheckIfBufferNeedsReallocation(long toRead)
