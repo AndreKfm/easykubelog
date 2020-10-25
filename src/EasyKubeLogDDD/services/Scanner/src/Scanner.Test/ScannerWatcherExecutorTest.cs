@@ -21,29 +21,27 @@ namespace Scanner.Domain.Test
         [Fact]
         public void StartStop()
         {
-            Mock<ILogFileChanged> changeCallback = new Mock<ILogFileChanged>();
             Mock<IEventListener> listener = new Mock<IEventListener>();
             Mock<ILogDirWatcher> watcher = new Mock<ILogDirWatcher>();
             ScannerWatcherExecutor executor = new ScannerWatcherExecutor(listener.Object, watcher.Object);
-            executor.Start(changeCallback.Object);
+            executor.Start();
             executor.Stop();
         }
 
         [Fact]
         public void CheckChange()
         {
-            Mock<ILogFileChanged> changeCallback = new Mock<ILogFileChanged>();
             Mock<IEventListener> listener = new Mock<IEventListener>();
             Mock<ILogDirWatcher> watcherMock = new Mock<ILogDirWatcher>();
 
-            var collection = new List<FileEntry>(new FileEntry[] {new FileEntry("dummy", FileSystemWatcherChangeType.Changed)});
+            var collection = new List<FileEntry>(new FileEntry[] {new FileEntry { FileName = "dummy", ChangeType = FileSystemWatcherChangeType.Changed } });
 
             watcherMock.Setup(x => x.GetChangedFiles()).Returns(collection.AsReadOnly);
 
             var watcher = watcherMock.Object;
 
             ScannerWatcherExecutor executor = new ScannerWatcherExecutor(listener.Object, watcher);
-            executor.Start(changeCallback.Object);
+            executor.Start();
 
             var changes = watcher.GetChangedFiles();
 
@@ -58,11 +56,11 @@ namespace Scanner.Domain.Test
         {
             var collection = new List<FileEntry>(new FileEntry[]
             {
-                new FileEntry("changed", FileSystemWatcherChangeType.Changed),
-                new FileEntry("created", FileSystemWatcherChangeType.Created),
-                new FileEntry("deleted", FileSystemWatcherChangeType.Deleted),
-                new FileEntry("error", FileSystemWatcherChangeType.Error),
-                new FileEntry("rename", FileSystemWatcherChangeType.Rename)
+                new FileEntry{FileName = "changed", ChangeType = FileSystemWatcherChangeType.Changed},
+                new FileEntry{FileName = "created", ChangeType = FileSystemWatcherChangeType.Created},
+                new FileEntry{FileName = "deleted", ChangeType = FileSystemWatcherChangeType.Deleted},
+                new FileEntry{FileName = "error",   ChangeType = FileSystemWatcherChangeType.Error    },
+                new FileEntry{FileName = "rename",  ChangeType = FileSystemWatcherChangeType.Rename  }
             });
             return collection.AsReadOnly();
         }
@@ -71,19 +69,17 @@ namespace Scanner.Domain.Test
         [Fact]
         public void CheckAllChangeTypes()
         {
-            Mock<ILogFileChanged> changeCallback = new Mock<ILogFileChanged>();
             Mock<IEventListener> listener = new Mock<IEventListener>();
             Mock<ILogDirWatcher> watcherMock = new Mock<ILogDirWatcher>();
 
             var listenerInterface = listener.Object;
-            var changeInterface = changeCallback.Object;
 
             var collection = GetCollection();
             watcherMock.Setup(x => x.GetChangedFiles()).Returns(collection);
             var watcher = watcherMock.Object;
 
             ScannerWatcherExecutor executor = new ScannerWatcherExecutor(listenerInterface, watcher);
-            executor.Start(changeInterface);
+            executor.Start();
 
             var changes = watcher.GetChangedFiles();
 

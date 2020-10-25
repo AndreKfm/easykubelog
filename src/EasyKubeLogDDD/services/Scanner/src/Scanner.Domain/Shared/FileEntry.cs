@@ -16,14 +16,9 @@ namespace Scanner.Domain.Shared
         All = Created | Rename | Deleted | Changed | Dispose | Error
     }
 
-    public struct FileEntry
+    public record FileEntry
     {
-        public FileEntry(string fileName, FileSystemWatcherChangeType changeType)
-        {
-            FileName = fileName;
-            ChangeType = changeType;
-        }
-        public string FileName { get; private set; }
-        public FileSystemWatcherChangeType ChangeType { get; private set; }
+    public string FileName;
+    public FileSystemWatcherChangeType ChangeType;
     }
 }

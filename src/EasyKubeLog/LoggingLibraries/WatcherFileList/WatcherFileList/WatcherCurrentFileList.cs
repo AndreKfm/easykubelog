@@ -26,6 +26,7 @@ namespace WatcherFileListClasses
     }
 
 
+
     public class WatcherCurrentFileList : ICurrentFileList
     {
 

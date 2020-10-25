@@ -1,14 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\EasyKubeLog\LoggingLibraries\DirectoryWatcher\DirectoryWatcher\DirectoryWatcher.csproj" />
     <ProjectReference Include="..\..\..\Shared\SharedKernel.csproj" />
   </ItemGroup>
 

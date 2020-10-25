@@ -4,18 +4,12 @@ using Scanner.Domain.Ports;
 using Scanner.Infrastructure.Adapter;
 using Scanner.Infrastructure.Adapter.LogDirWatcher;
 using Scanner.Infrastructure.Adapter.LogDirWatcher.ManualDirectoryScan;
+using Scanner.Infrastructure.Adapter.ScanLogFiles;
 
 namespace Scanner.Main.Cli
 {
 
 
-    class LogFileChangedHandler : ILogFileChanged
-    {
-        public void LogFileChanged(string logFilePath)
-        {
-            Console.WriteLine($"Log file changed: {logFilePath}");
-        }
-    }
 
     class Program
     {
@@ -25,13 +19,14 @@ namespace Scanner.Main.Cli
                 new ManualDirectoryScanAndGenerateDifferenceToLastScan(new ManualDirectoryScanAndGenerateDifferenceToLastScanSettings(@"d:\test\polldir"),
                     new ManualScanDirectory());
 
-            LogFileChangedHandler handler = new LogFileChangedHandler();
             LogDirectoryWatcher watcher = new LogDirectoryWatcher(pollDirectoryForChanges);
 
-            ScannerMain main = new ScannerMain(watcher, handler);
+            ScanLogFile scanner = new ScanLogFile();
+
+            ScannerMain main = new ScannerMain(watcher, scanner);
 
             Console.WriteLine("Starting scanner");
-            main.Start(handler);
+            main.Start();
             Console.ReadKey();
             Console.WriteLine("Stopping scanner");
             main.Stop();

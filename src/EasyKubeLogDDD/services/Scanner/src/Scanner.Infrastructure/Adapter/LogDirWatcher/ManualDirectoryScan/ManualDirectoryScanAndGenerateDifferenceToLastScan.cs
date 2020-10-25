@@ -90,7 +90,7 @@ namespace Scanner.Infrastructure.Adapter.LogDirWatcher.ManualDirectoryScan
             foreach (var file in current)
             {
                 Trace.TraceInformation($"Reporting changes in directory: {_settings.ScanDirectory}  file: {file} changetype: {changeType}");
-                _changeQueue.Add(new FileEntry(file.Key, changeType));
+                _changeQueue.Add(new FileEntry{ FileName=file.Key, ChangeType = changeType });
             }
         }
 
