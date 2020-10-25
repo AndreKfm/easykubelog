@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Scanner.Domain.Events
 {
-    public class DirScanBaseEvent : Event
+    public record DirScanBaseEvent : Event
     {
         public DirScanBaseEvent(string directory)
         {

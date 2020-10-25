@@ -112,14 +112,14 @@ namespace Scanner.Domain
         private readonly IEventBus _eventBus;
 
         private ScannerWatcherExecutor? _executor;
-        private ScannerEventLister _eventListener; 
+
         public ScannerMainApplicationRoot(ILogDirWatcher watcher, IScanLogFile scanner, IEventBus eventBus)
         {
             _watcher = watcher;
             _scanner = scanner;
             _eventBus = eventBus;
-            _eventListener = new ScannerEventLister(scanner);
-            _eventBus.AddConsumer(_eventListener);
+            ScannerEventLister eventListener = new ScannerEventLister(scanner);
+            _eventBus.AddConsumer(eventListener);
             
         }
 

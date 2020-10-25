@@ -2,6 +2,7 @@
 using Scanner.Domain.Shared;
 using Xunit;
 using Moq;
+using Scanner.Infrastructure.Adapter.EventQueue;
 using Scanner.Infrastructure.Adapter.ScanLogFiles;
 
 namespace Scanner.Infrastructure.Test
@@ -14,7 +15,7 @@ namespace Scanner.Infrastructure.Test
         public void SimpleCreate()
         {
 
-            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList();
+            AutoCurrentFileList autoCurrentFileList = new AutoCurrentFileList(new CentralEventQueue());
             Assert.True(autoCurrentFileList != null);
         }
 

@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using Scanner.Domain.Entities;
 using Scanner.Domain.Events;
+using Scanner.Domain.Ports;
 using Scanner.Domain.Ports.Query;
 using Scanner.Domain.Shared;
 
@@ -16,9 +17,9 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
     {
         private readonly AutoCurrentFileList _fileList;
 
-        public ScanLogFile()
+        public ScanLogFile(IEventProducer eventProducer)
         {
-            _fileList = new AutoCurrentFileList();
+            _fileList = new AutoCurrentFileList(eventProducer);
         }
 
         public void ScanLogFiles(ReadOnlyCollection<FileEntry> fileChanges)
@@ -34,9 +35,11 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
 
     public class AutoCurrentFileList
     {
+        private readonly IEventProducer _producer;
 
-        public AutoCurrentFileList()
+        public AutoCurrentFileList(IEventProducer producer)
         {
+            _producer = producer;
         }
 
 
@@ -77,6 +80,8 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
 
         private void FileChanged(string entryFileName)
         {
+            _producer.PostEvent(new CheckLogFileStart(entryFileName));
+
             var list = _fileList;
             list.TryGetValue(entryFileName, out CurrentFileEntry? value);
 
@@ -101,6 +106,8 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
                         break;
                 }
             }
+            _producer.PostEvent(new CheckLogFileCompleted(entryFileName));
+
         }
 
         private void RemoveFile(string entryFileName)

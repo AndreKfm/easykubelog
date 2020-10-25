@@ -37,10 +37,6 @@ namespace Scanner.Main.Cli
 
             IApplicationMain mainRoot = CreateApplicationRoot(container);
 
-            //var app = new CommandLineApplication<Program>();
-            //app.Conventions
-            //    .UseDefaultConventions()
-            //    .UseConstructorInjection(serviceProvider);
 
             if (mainRoot != null)
             {
@@ -68,12 +64,11 @@ namespace Scanner.Main.Cli
 
             ILogDirWatcher watcher = new LogDirectoryWatcher(pollDirectoryForChanges);
 
-            IScanLogFile scanner = new ScanLogFile();
-
 
             serviceCollection.AddSingleton(watcher);
-            serviceCollection.AddSingleton(scanner);
             serviceCollection.AddSingleton<IEventBus, CentralEventQueue>();
+            serviceCollection.AddSingleton<IEventProducer>(x => x.GetService<IEventBus>()?.GetProducer());
+            serviceCollection.AddSingleton<IScanLogFile, ScanLogFile>();
 
             var container = serviceCollection.BuildServiceProvider();
             container.GetService<IEventBus>()?.Start();
@@ -88,8 +83,7 @@ namespace Scanner.Main.Cli
                     var name = p.GetName().Name;
                     return (String.IsNullOrEmpty(name) == false) && (name.EndsWith(".Domain"));
                 }).Select(a =>
-                    a.GetTypes().Where(type =>
-                        type.IsClass && type.FullName != null && type.FullName.EndsWith("ApplicationRoot")))
+                    a.GetTypes().Where(type => type.IsClass && type.GetInterface("IApplicationMain") != null))
                 .SelectMany(p => p.Select(p => p));
 
             IApplicationMain mainRoot = null;

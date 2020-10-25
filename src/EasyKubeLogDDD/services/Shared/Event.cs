@@ -6,7 +6,7 @@ namespace SharedKernel
 {
 
 
-    public class Event
+    public record Event
     {
         public string Name
         {

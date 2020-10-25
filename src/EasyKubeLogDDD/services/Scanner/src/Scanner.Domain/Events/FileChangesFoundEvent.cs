@@ -6,7 +6,7 @@ using Scanner.Domain.Shared;
 
 namespace Scanner.Domain.Events
 {
-    public class FileChangesFoundEvent : DirScanBaseEvent
+    public record FileChangesFoundEvent : DirScanBaseEvent
     {
         public ReadOnlyCollection<FileEntry> ChangeList { get; }
 

@@ -5,14 +5,14 @@ using SharedKernel;
 
 namespace Scanner.Domain.Events
 {
-    public class StartDirScanEvent : DirScanBaseEvent
+    public record StartDirScanEvent : DirScanBaseEvent
     {
         public StartDirScanEvent(string directory) : base(directory)
         {
         }
     }
 
-    public class StopDirScanEvent : DirScanBaseEvent
+    public record StopDirScanEvent : DirScanBaseEvent
     {
         public StopDirScanEvent(string directory) : base(directory)
         {
