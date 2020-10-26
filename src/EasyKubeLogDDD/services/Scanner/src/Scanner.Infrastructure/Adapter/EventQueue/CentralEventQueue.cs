@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Channels;
@@ -53,8 +54,10 @@ namespace Scanner.Infrastructure.Adapter.EventQueue
         {
             try
             {
+                List<Task> taskList = new List<Task>();
                 while (token.IsCancellationRequested == false)
                 {
+                    Console.WriteLine("Looping");
 
                     await _eventList.Reader.WaitToReadAsync(token);
                     if (token.IsCancellationRequested)
@@ -62,10 +65,17 @@ namespace Scanner.Infrastructure.Adapter.EventQueue
                     if (!_eventList.Reader.TryRead(out Event? newEvent))
                         break;
 
-                    foreach (var consumer in _consumerList)
+                    if (newEvent != null)
                     {
-                        consumer.NewEventReceived(newEvent);
+                        Event eventLocal = newEvent;
+                        foreach (var consumer in _consumerList)
+                        {
+                            taskList.Add(Task.Run(() => consumer.NewEventReceived(eventLocal)));
+                        }
+                        await Task.WhenAll(taskList);
+                        taskList.Clear();
                     }
+
                 }
             }
             catch (OperationCanceledException e)
@@ -88,7 +98,7 @@ namespace Scanner.Infrastructure.Adapter.EventQueue
         {
             for (;;)
             {
-                var token = _token?.Token ?? new CancellationToken();
+                var token = _token?.Token ?? new CancellationToken(); // New call shouldn't happen at all
                 await _eventList.Writer.WaitToWriteAsync(token);
                 if (_eventList.Writer.TryWrite(newEvent))
                     break;

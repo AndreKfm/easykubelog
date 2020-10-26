@@ -102,6 +102,17 @@ namespace Scanner.Infrastructure.Adapter.ScanLogFiles
                         = value.CurrentFile.ReadLineFromCurrentPositionToEnd(MaxContentLengthToForwardForEachScanInBytes);
 
                     Console.WriteLine($"#### ENTRY: {content}");
+
+                    List<LogEntry> listLogEntries = new List<LogEntry>();
+
+                    foreach (var line in content.Split('\n'))
+                    {
+                        var entry = LogEntry.Parse(content);
+                        listLogEntries.Add(entry);
+                    }
+                    _producer.PostEvent(new NewLogEntriesFoundEvent { LogEntries = listLogEntries.AsReadOnly()});
+
+
                     if (sizeExceeded == ReadLine.BufferSufficient || (--maxLoop <= 0))
                         break;
                 }

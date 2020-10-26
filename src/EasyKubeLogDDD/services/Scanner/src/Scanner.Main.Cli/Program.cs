@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Scanner.Domain;
 using Scanner.Domain.Events;
 using Scanner.Domain.Ports;
@@ -30,12 +31,16 @@ namespace Scanner.Main.Cli
 
     class Program
     {
+
+
+
         static void Main(string[] args)
         {
-            using var container = CreateServiceCollection();
+            using var container = CreateServiceCollection(s => s.AddSingleton<IApplicationMain, ScannerMainApplicationRoot>());
 
 
-            IApplicationMain mainRoot = CreateApplicationRoot(container);
+            //IApplicationMain mainRoot = CreateApplicationRoot(container);
+            var mainRoot = container.GetService<IApplicationMain>();
 
 
             if (mainRoot != null)
@@ -52,10 +57,9 @@ namespace Scanner.Main.Cli
 
         }
 
-        private static ServiceProvider CreateServiceCollection()
+        private static ServiceProvider CreateServiceCollection(Action<ServiceCollection> addMoreClasses)
         {
             var serviceCollection = new ServiceCollection();
-
 
             ManualDirectoryScanAndGenerateDifferenceToLastScan pollDirectoryForChanges =
                 new ManualDirectoryScanAndGenerateDifferenceToLastScan(
@@ -69,6 +73,8 @@ namespace Scanner.Main.Cli
             serviceCollection.AddSingleton<IEventBus, CentralEventQueue>();
             serviceCollection.AddSingleton<IEventProducer>(x => x.GetService<IEventBus>()?.GetProducer());
             serviceCollection.AddSingleton<IScanLogFile, ScanLogFile>();
+            addMoreClasses(serviceCollection);
+
 
             var container = serviceCollection.BuildServiceProvider();
             container.GetService<IEventBus>()?.Start();

@@ -15,22 +15,57 @@ using SharedKernel.RootInterfaces;
 namespace Scanner.Domain
 {
 
+    //internal class WaitForEventFileChangesFoundEvent : IEventConsumer
+    //{
+    //    private readonly string _directory;
+
+    //    public WaitForEventFileChangesFoundEvent(string directory)
+    //    {
+    //        _directory = directory;
+    //    }
+    //    TaskCompletionSource _taskCompletion = new TaskCompletionSource();
+
+
+    //    public async Task GetWaiter()
+    //    {
+    //        await _taskCompletion.Task;
+    //        _taskCompletion = new TaskCompletionSource();
+    //    }
+
+    //    public void NewEventReceived(Event newEvent)
+    //    {
+    //        switch (newEvent)
+    //        {
+    //            case FileChangesFoundEvent changed:
+    //            {
+    //                if (changed.Directory == _directory) 
+    //                    _taskCompletion.SetResult();
+    //                break;
+    //            }
+    //        }
+    //    }
+    //}
+
     internal class ScannerWatcherExecutor
     {
         private readonly IEventProducer _eventProducer;
+        private readonly IEventBus _eventBus;
         private readonly ILogDirWatcher _watcher;
         private CancellationTokenSource? _source;
         private Task? _watcherTask;
 
+
         public ScannerWatcherExecutor(IEventBus eventBus, ILogDirWatcher watcher)
         {
             _eventProducer = eventBus.GetProducer();
+            _eventBus = eventBus;
             _watcher = watcher;
         }
 
         public void Start()
         {
             _eventProducer.PostEvent(new StartDirScanEvent(_watcher.GetCurrentDirectory()));
+
 
             Stop();
             _source = new CancellationTokenSource();
@@ -55,20 +90,21 @@ namespace Scanner.Domain
                     Task.Delay(TimeSpan.FromSeconds(1), token).Wait(token);
                     if (token.IsCancellationRequested == false)
                     {
-                        _eventProducer.PostEvent(new StartDirScanEvent(_watcher.GetCurrentDirectory()));
+                        _eventProducer.PostEvent(new StartDirScanEvent(_watcher.GetCurrentDirectory())).Wait(token);
                         _watcher.ScanDirectory();
                         var changeList = _watcher.GetChangedFiles();
                         if (changeList.Count > 0)
                         {
-                            _eventProducer.PostEvent(new FileChangesFoundEvent(_watcher.GetCurrentDirectory(), changeList));
+                            _eventProducer.PostEvent(new FileChangesFoundEvent(_watcher.GetCurrentDirectory(), changeList)).Wait(token);
                         }
-                        _eventProducer.PostEvent(new DirScanCompletedEvent(_watcher.GetCurrentDirectory()));
+                        _eventProducer.PostEvent(new DirScanCompletedEvent(_watcher.GetCurrentDirectory())).Wait(token);
                     }
                 }
             }
             catch (OperationCanceledException)
             {
             }
+
         }
     }
 

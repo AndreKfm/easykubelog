@@ -35,7 +35,7 @@ namespace Scanner.Infrastructure.Adapter.LogDirWatcher.ManualDirectoryScan
 
         public ReadOnlyCollection<FileEntry> GetChangedFiles()
         {
-            return new ReadOnlyCollection<FileEntry>(_changeQueue);
+            return new ReadOnlyCollection<FileEntry>(new List<FileEntry>(_changeQueue));
         }
      
 
